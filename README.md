@@ -6,7 +6,9 @@ benchmark, spanning Korea, the US, and China.
 
 [cybermetric]: https://github.com/cybermetric/CyberMetric
 
-## Results (2026-09-17, CyberMetric-2000, reasoning off except GLM)
+## Results (CyberMetric-2000)
+
+### Reasoning off (except GLM, which can't disable it) — run 2026-09-17
 
 | Rank | Country | Model | Accuracy | Correct/Total |
 |---|---|---|---|---|
@@ -16,28 +18,52 @@ benchmark, spanning Korea, the US, and China.
 | 4 | 🇺🇸 US | GPT-5.6 Luna | 93.85% | 1877/2000 |
 | 5 | 🇨🇳 CN | DeepSeek V4.1 Flash | 93.55% | 1871/2000 |
 
-**Bottom line: all 5 models are statistically tied.** The gap between rank 1
-and rank 5 is 1.55 percentage points, below the ~2.2pp threshold needed for a
-95%-confidence difference at n=2000 (see [Statistical notes](#statistical-notes)).
-Don't read this table as "GLM beats DeepSeek" — read it as "these 5
-similarly-priced models perform indistinguishably on cybersecurity knowledge
-MCQs," which is itself the finding.
+Gap between rank 1 and rank 5: 1.55pp.
 
-**Known confound**: GLM 5.3 Flash's OpenRouter endpoint rejects
-`reasoning: {enabled: false}` ("Reasoning is mandatory for this endpoint"), so
-it's the only model in this table answering with reasoning on. A
-reasoning-controlled follow-up (all 5 models with reasoning explicitly on) was
-started 2026-09-18 to isolate this effect — see [Status](#status) below.
+### Reasoning explicitly on for all 5 — run 2026-09-18
+
+| Rank | Country | Model | Accuracy | Correct/Total |
+|---|---|---|---|---|
+| 1 | 🇰🇷 KR | Solar Pro 4 | 94.85% | 1897/2000 |
+| 1 | 🇨🇳 CN | GLM 5.3 Flash | 94.85% | 1897/2000 |
+| 3 | 🇨🇳 CN | Qwen3.8 Flash | 94.35% | 1887/2000 |
+| 4 | 🇨🇳 CN | DeepSeek V4.1 Flash | 94.25% | 1885/2000 |
+| 5 | 🇺🇸 US | GPT-5.6 Luna | 94.10% | 1882/2000 |
+
+Gap between rank 1 and rank 5: 0.75pp.
+
+**Bottom line: all 5 models are statistically tied, in both conditions.**
+Both gaps (1.55pp, 0.75pp) are below the ~2.2pp threshold needed for a
+95%-confidence difference at n=2000 (see [Statistical notes](#statistical-notes)).
+Don't read either table as "model X beats model Y" — read it as "these 5
+similarly-priced models perform indistinguishably on cybersecurity knowledge
+MCQs, whether or not they're allowed to reason," which is itself the finding.
+
+### Does reasoning help? (per-model, off → on)
+
+| Model | Reasoning off | Reasoning on | Delta |
+|---|---|---|---|
+| Solar Pro 4 | 94.75% | 94.85% | +0.10pp |
+| GPT-5.6 Luna | 93.85% | 94.10% | +0.25pp |
+| DeepSeek V4.1 Flash | 93.55% | 94.25% | +0.70pp |
+| GLM 5.3 Flash | 95.10%\* | 94.85% | -0.25pp |
+| Qwen3.8 Flash | 94.05% | 94.35% | +0.30pp |
+
+\* GLM's "off" run still had reasoning on (mandatory) — its delta is test-retest
+noise, not an on/off effect, and usefully shows run-to-run variance is ~0.25pp
+at this sample size.
+
+**No model shows a statistically meaningful effect from reasoning** — every
+delta is under 1pp, far below the ~2-3pp needed for significance at n=2000
+per arm. On a pure-knowledge MCQ benchmark like CyberMetric, letting these
+models "think longer" doesn't measurably change the outcome.
 
 ## Status
 
-- ✅ **Baseline (reasoning off, GLM mandatory-on)** — complete, 2026-09-17, table above.
-- 🔄 **Reasoning-on (all 5 models)** — in progress as of 2026-09-18, results will
-  be appended to this README under a new section once done
-  (`results_reasoning_on/summary.json`).
-- ⏳ **Token-budget calibration** — `calibrate_tokens.py` written but not yet
-  run; will document the minimum `max_tokens` needed per model to avoid
-  truncated reasoning (see [Token budget calibration](#token-budget-calibration)).
+- ✅ **Baseline (reasoning off, GLM mandatory-on)** — complete, 2026-09-17.
+- ✅ **Reasoning-on (all 5 models)** — complete, 2026-09-18.
+- ✅ **Token-budget calibration** — complete, 2026-09-18, see
+  [Token budget calibration](#token-budget-calibration).
 
 ## Models under test
 
@@ -146,16 +172,37 @@ Writes `calibration/report.md` (human-readable table: recommended
 `calibration/calibration.log`. Kept at low concurrency (default 5) by design
 so it doesn't compete for rate limit with a concurrent `run_eval.py` run.
 
-Known data point so far (from manual probing during development, not yet a
-full calibration run): Solar Pro 4 needed up to ~4000 tokens on some
-questions with reasoning on; GLM 5.3 Flash's worst case on the full 2000-set
-was ~330 tokens (reasoning + answer combined).
+### Results (probe_size=30, seed=42, run 2026-09-18)
+
+| Model | Recommended `max_tokens` | Max reasoning tokens seen | p50 tokens used |
+|---|---|---|---|
+| Solar Pro 4 | **8000** | 4816 | 683 |
+| GPT-5.6 Luna | **500** | 221 | 5 |
+| DeepSeek V4.1 Flash | **2000** | 1921 | 54 |
+| GLM 5.3 Flash (reasoning mandatory) | **1000** | 250 | 111 |
+| Qwen3.8 Flash | **8000** | 706 | 108 |
+
+Two clear clusters: **GPT-5.6 Luna barely reasons at all** on these questions
+(p50 of 5 tokens — its default reasoning effort seems to treat simple MCQs as
+not worth thinking about), while **Solar Pro 4 has a long tail** — most
+questions need well under 1000 tokens (p50 683) but a handful spike past
+4800, which is exactly why the full reasoning-on run above still logged 4
+truncation errors at `max_tokens=4000`. Qwen3.8 Flash has the same pattern at
+a smaller scale (p50 108, one outlier needing >4000). DeepSeek and GLM are
+comfortably bounded (2000 and 1000 respectively cover the full probe with
+zero truncations).
+
+**Practical takeaway**: if re-running with reasoning on, use `max_tokens=8000`
+for Solar Pro 4 and Qwen3.8 Flash specifically rather than one shared value
+for all 5 — a single global budget either wastes headroom on the
+cheap-to-reason models or still occasionally truncates the expensive ones.
 
 ## Output
 
 - `results/<model>.jsonl` — per-question log (question, correct answer, model's answer, raw response, correctness, error)
 - `results/summary.json` — per-model accuracy summary, updated every 50 completions during a run
-- `calibration/report.md` / `report.json` — token-budget calibration results (once run)
+- `results_reasoning_on/summary.json` — same, for the `--reasoning on` run
+- `calibration/report.md` / `report.json` — token-budget calibration results
 
 ## Estimated cost
 
