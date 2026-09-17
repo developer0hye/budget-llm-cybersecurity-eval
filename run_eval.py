@@ -45,6 +45,14 @@ MODELS = {
 # instead, so the hidden reasoning tokens don't eat the whole cap.
 REASONING_MANDATORY = {"z-ai/glm-5.3-flash"}
 
+# Some providers' rate limits are much tighter than others. Sharing one
+# global --concurrency across all 5 models starves these: observed 18/20
+# calls failing with 429 for qwen/qwen3.8-flash at concurrency=30 shared
+# across 5 models, vs 0/2000 errors when it ran alone at concurrency=6.
+# Cap these specific models regardless of --concurrency; everyone else
+# still shares the global limit.
+MODEL_CONCURRENCY_CAP = {"qwen/qwen3.8-flash": 6}
+
 ANSWER_RE = re.compile(r"\b([ABCD])\b")
 
 
@@ -70,7 +78,7 @@ async def call_model(
     api_key: str,
     reasoning_on: bool,
     retries: int = 6,
-) -> str:
+) -> tuple[str, dict]:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -119,7 +127,12 @@ async def call_model(
                     raise RuntimeError(
                         f"empty content, finish_reason={data['choices'][0].get('finish_reason')}"
                     )
-                return content.strip()
+                usage = data.get("usage", {})
+                return content.strip(), {
+                    "prompt_tokens": usage.get("prompt_tokens"),
+                    "completion_tokens": usage.get("completion_tokens"),
+                    "cost": usage.get("cost"),
+                }
         except Exception as e:  # noqa: BLE001
             last_err = e
             await asyncio.sleep(1.5 * (attempt + 1))
@@ -156,17 +169,18 @@ async def run_one(
     q: dict,
     progress: Progress,
     reasoning_on: bool,
-) -> tuple[str, int, str | None, str | None, str | None]:
+) -> tuple[str, int, str | None, str | None, str | None, dict | None]:
     async with sem:
         prompt = build_prompt(q)
+        usage = None
         try:
-            raw = await call_model(session, model_id, prompt, api_key, reasoning_on)
+            raw, usage = await call_model(session, model_id, prompt, api_key, reasoning_on)
             letter = extract_letter(raw)
             err = None
         except Exception as e:  # noqa: BLE001
             raw, letter, err = None, None, str(e)
     progress.tick()
-    return model_name, idx, letter, raw, err
+    return model_name, idx, letter, raw, err, usage
 
 
 async def main_async(args):
@@ -189,23 +203,41 @@ async def main_async(args):
     print(f"Scheduling {total_calls} calls across {len(targets)} models, concurrency={args.concurrency}")
     progress = Progress(total_calls)
 
-    sem = asyncio.Semaphore(args.concurrency)
+    # One semaphore per model, so a globally shared --concurrency doesn't
+    # starve/overload individual providers with tighter rate limits.
+    sems = {
+        name: asyncio.Semaphore(min(args.concurrency, MODEL_CONCURRENCY_CAP.get(model_id, args.concurrency)))
+        for name, model_id in targets.items()
+    }
+    capped = {n: MODEL_CONCURRENCY_CAP[mid] for n, mid in targets.items() if mid in MODEL_CONCURRENCY_CAP}
+    if capped:
+        print(f"Per-model concurrency caps in effect: {capped}")
 
     # Open one log file per model up front and write each result the moment
     # it comes back, instead of buffering everything in memory until the
     # whole run finishes. This lets you `tail -f results/<model>.jsonl` (or
     # `watch cat results/summary.json`) to see real progress mid-run.
     log_files = {name: (out_dir / f"{name}.jsonl").open("w") for name in targets}
-    stats = {name: {"total": 0, "answered": 0, "correct": 0, "errors": 0} for name in targets}
+    stats = {
+        name: {
+            "total": 0, "answered": 0, "correct": 0, "errors": 0,
+            "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0,
+        }
+        for name in targets
+    }
 
     def write_summary():
         summary = {}
+        total_cost = 0.0
         for name, s in stats.items():
             summary[name] = {
                 "model_id": targets[name],
                 **s,
+                "cost_usd": round(s["cost_usd"], 6),
                 "accuracy": round(s["correct"] / s["total"] * 100, 2) if s["total"] else 0.0,
             }
+            total_cost += s["cost_usd"]
+        summary["_total_cost_usd"] = round(total_cost, 6)
         with (out_dir / "summary.json").open("w") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
         return summary
@@ -214,12 +246,12 @@ async def main_async(args):
         connector = aiohttp.TCPConnector(limit=args.concurrency)
         async with aiohttp.ClientSession(connector=connector) as session:
             tasks = [
-                run_one(session, sem, api_key, name, model_id, idx, q, progress, args.reasoning == "on")
+                run_one(session, sems[name], api_key, name, model_id, idx, q, progress, args.reasoning == "on")
                 for name, model_id in targets.items()
                 for idx, q in enumerate(questions)
             ]
             for coro in asyncio.as_completed(tasks):
-                model_name, idx, letter, raw, err = await coro
+                model_name, idx, letter, raw, err, usage = await coro
                 q = questions[idx]
                 is_correct = letter == q["solution"] if letter else False
 
@@ -231,6 +263,10 @@ async def main_async(args):
                     s["answered"] += 1
                     if is_correct:
                         s["correct"] += 1
+                if usage:
+                    s["prompt_tokens"] += usage.get("prompt_tokens") or 0
+                    s["completion_tokens"] += usage.get("completion_tokens") or 0
+                    s["cost_usd"] += usage.get("cost") or 0.0
 
                 log_files[model_name].write(
                     json.dumps(
@@ -241,6 +277,7 @@ async def main_async(args):
                             "model_raw": raw,
                             "correct": is_correct,
                             "error": err,
+                            "usage": usage,
                         },
                         ensure_ascii=False,
                     )
@@ -256,10 +293,15 @@ async def main_async(args):
     print()
 
     summary = write_summary()
+    model_rows = {k: v for k, v in summary.items() if not k.startswith("_")}
     print("=== Results ===")
-    for name, s in sorted(summary.items(), key=lambda x: -x[1]["accuracy"]):
-        print(f"{name:24s} {s['accuracy']:6.2f}%  (correct {s['correct']}/{s['total']}, errors {s['errors']})")
-    print(f"\nDetailed results: {out_dir}/")
+    for name, s in sorted(model_rows.items(), key=lambda x: -x[1]["accuracy"]):
+        print(
+            f"{name:24s} {s['accuracy']:6.2f}%  (correct {s['correct']}/{s['total']}, errors {s['errors']}, "
+            f"cost ${s['cost_usd']:.4f})"
+        )
+    print(f"\nTotal cost this run: ${summary['_total_cost_usd']:.4f}")
+    print(f"Detailed results: {out_dir}/")
 
 
 def main():

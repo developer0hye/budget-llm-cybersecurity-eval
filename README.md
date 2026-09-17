@@ -199,17 +199,63 @@ cheap-to-reason models or still occasionally truncates the expensive ones.
 
 ## Output
 
-- `results/<model>.jsonl` — per-question log (question, correct answer, model's answer, raw response, correctness, error)
-- `results/summary.json` — per-model accuracy summary, updated every 50 completions during a run
+- `results/<model>.jsonl` — per-question log (question, correct answer, model's answer, raw response, correctness, error, token usage)
+- `results/summary.json` — per-model accuracy + token usage + `cost_usd`, plus a `_total_cost_usd` grand total; updated every 50 completions during a run
 - `results_reasoning_on/summary.json` — same, for the `--reasoning on` run
 - `calibration/report.md` / `report.json` — token-budget calibration results
 
-## Estimated cost
+## Cost
 
-2000 questions x 5 models = 10,000 calls per full run. ~200 input tokens per
-question. Reasoning-off calls cap output at 16 tokens; GLM (reasoning
-mandatory) and any `--reasoning on` run use a much larger budget (see
-[Token budget calibration](#token-budget-calibration)). All 5 models are
-budget-tier, so the reasoning-off run cost well under $1 (based on OpenRouter
-weighted-average pricing checked 2026-09-17); a reasoning-on run costs more
-per call but is still a few dollars at most for the full 10,000-call sweep.
+`run_eval.py` now records real per-call cost from OpenRouter's `usage.cost`
+field (added 2026-09-18) into each `results*/summary.json` as `cost_usd` per
+model plus a `_total_cost_usd` grand total, and prints it at the end of a run.
+Earlier runs (both tables above) predate this and don't have per-run cost
+broken out.
+
+**Actual total spend on this project's API key as of 2026-09-18: $2.62**
+(checked via `GET /api/v1/auth/key`, field `usage`). This is the key's
+lifetime total, **not** just the two documented 10,000-call runs — it
+includes every smoke test (`--limit 20/40/10/60` during development),
+ad-hoc debugging `curl` calls, the Qwen 429 investigation, and the
+`calibrate_tokens.py` probing, on top of the two full runs. Don't read $2.62
+as "cost of the documented results" — read it as "total cost of building and
+running this whole project." Any run from this point forward reports its own
+precise cost in its `summary.json`.
+
+Rough scale for a single full run: 2000 questions x 5 models = 10,000 calls,
+~200 input tokens/question, output capped at 16 tokens for reasoning-off
+(1000-8000 for reasoning-on, see [calibration](#token-budget-calibration)) —
+each full run costs well under $1 at reasoning off, a few dollars at
+reasoning on.
+
+## Known failure modes
+
+Two distinct causes produce the same symptom (`429 Too Many Requests`) and
+need different fixes — check the response body, not just the status code.
+
+**1. Our own concurrency overwhelming a provider's per-key rate limit.**
+Symptom: consistent 429s for one model when run alongside others at high
+shared `--concurrency`. Fix: `MODEL_CONCURRENCY_CAP` in `run_eval.py` caps
+specific models below the global `--concurrency` regardless of what's
+passed on the command line (currently `qwen/qwen3.8-flash: 6`, found by
+comparing a mixed 5-model run at concurrency=30, which threw errors on 18/20
+Qwen calls, against a solo Qwen run at concurrency=6, which had 0/2000
+errors).
+
+**2. OpenRouter's upstream shared pool for a model being saturated —
+external, transient, and outside this script's control.** Symptom: 429s on
+*every* call to one model, even fully sequential with no concurrency at all.
+The error body's `error.metadata.limit_source` says
+`"upstream_provider_shared_pool"` and `error.metadata.raw` explicitly says
+the model "is temporarily rate-limited upstream" (observed for
+`qwen/qwen3.8-flash` on 2026-09-18, while `deepseek/deepseek-v4.1-flash`
+succeeded at the same moment on the same key). No amount of retry/backoff
+tuning fixes this — it means OpenRouter's free/shared routing capacity for
+that model is exhausted account-wide, not just for this key. Wait and retry
+later, or add your own upstream provider key under
+[openrouter.ai/settings/integrations](https://openrouter.ai/settings/integrations)
+to get a dedicated quota instead of the shared pool.
+
+If a model that worked cleanly in an earlier run starts erroring, check
+`error.metadata.limit_source` in the failing response before assuming the
+script regressed.
