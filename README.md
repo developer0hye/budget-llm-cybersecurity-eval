@@ -1,0 +1,168 @@
+# CyberMetric Budget-Tier Model Comparison (KR / US / CN)
+
+Compares the cybersecurity knowledge of 5 similarly-priced OpenRouter models
+(anchored to Upstage Solar Pro 4's price tier) using the [CyberMetric][cybermetric]
+benchmark, spanning Korea, the US, and China.
+
+[cybermetric]: https://github.com/cybermetric/CyberMetric
+
+## Results (2026-09-17, CyberMetric-2000, reasoning off except GLM)
+
+| Rank | Country | Model | Accuracy | Correct/Total |
+|---|---|---|---|---|
+| 1 | 🇨🇳 CN | GLM 5.3 Flash | 95.10% | 1902/2000 |
+| 2 | 🇰🇷 KR | Solar Pro 4 | 94.75% | 1895/2000 |
+| 3 | 🇨🇳 CN | Qwen3.8 Flash | 94.05% | 1881/2000 |
+| 4 | 🇺🇸 US | GPT-5.6 Luna | 93.85% | 1877/2000 |
+| 5 | 🇨🇳 CN | DeepSeek V4.1 Flash | 93.55% | 1871/2000 |
+
+**Bottom line: all 5 models are statistically tied.** The gap between rank 1
+and rank 5 is 1.55 percentage points, below the ~2.2pp threshold needed for a
+95%-confidence difference at n=2000 (see [Statistical notes](#statistical-notes)).
+Don't read this table as "GLM beats DeepSeek" — read it as "these 5
+similarly-priced models perform indistinguishably on cybersecurity knowledge
+MCQs," which is itself the finding.
+
+**Known confound**: GLM 5.3 Flash's OpenRouter endpoint rejects
+`reasoning: {enabled: false}` ("Reasoning is mandatory for this endpoint"), so
+it's the only model in this table answering with reasoning on. A
+reasoning-controlled follow-up (all 5 models with reasoning explicitly on) was
+started 2026-09-18 to isolate this effect — see [Status](#status) below.
+
+## Status
+
+- ✅ **Baseline (reasoning off, GLM mandatory-on)** — complete, 2026-09-17, table above.
+- 🔄 **Reasoning-on (all 5 models)** — in progress as of 2026-09-18, results will
+  be appended to this README under a new section once done
+  (`results_reasoning_on/summary.json`).
+- ⏳ **Token-budget calibration** — `calibrate_tokens.py` written but not yet
+  run; will document the minimum `max_tokens` needed per model to avoid
+  truncated reasoning (see [Token budget calibration](#token-budget-calibration)).
+
+## Models under test
+
+| Country | Model | OpenRouter ID | Released (per OpenRouter) |
+|---|---|---|---|
+| KR | Solar Pro 4 | `upstage/solar-pro4` | 2026-08-10 |
+| US | GPT-5.6 Luna | `openai/gpt-5.6-luna` | 2026-07 |
+| CN | DeepSeek V4.1 Flash | `deepseek/deepseek-v4.1-flash` | 2026-09 |
+| CN | GLM 5.3 Flash | `z-ai/glm-5.3-flash` | 2026-08-28 |
+| CN | Qwen3.8 Flash | `qwen/qwen3.8-flash` | 2026-08-26 |
+
+Selection criterion: all 5 sit in roughly the same OpenRouter weighted-average
+price band as Solar Pro 4 (~$0.03-0.10 input / ~$0.4-1.3 output per 1M
+tokens at the time of the run — see git history of this README for the exact
+numbers checked on 2026-09-17). Prices and "latest budget-tier model per
+provider" drift on the order of days to weeks; re-verify before trusting an
+old run's model selection.
+
+## Benchmark: CyberMetric
+
+[CyberMetric](https://github.com/cybermetric/CyberMetric) (Tihanyi et al.,
+arXiv:2402.07688, Computer Science Symposium in Russia, 2024 — 120 citations /
+13 influential citations on Semantic Scholar as of 2026-09). Multiple-choice
+Q&A generated via RAG from NIST standards, RFCs, and cybersecurity textbooks,
+covering 9 domains (pentest, cryptography, network/IoT security, information
+security governance, compliance, cloud security, etc.), human-validated.
+
+We use the **2000-question tier**: narrower margin of error than the
+80/500-question tiers (±1.6pp vs ±3.1pp at 500) while still finishing in
+~10-15 minutes, and unlike the 10000-question tier it isn't flagged by the
+authors as having an estimated 2-3% label-error rate.
+
+The dataset is **not vendored in this repo** — the upstream repo has no
+LICENSE file, so redistribution rights are unclear. `download_data.sh` fetches
+it fresh from `github.com/cybermetric/CyberMetric` at setup time.
+
+## Statistical notes
+
+When reporting results publicly: the gap between two models needs to be
+roughly **2.2 percentage points or more** to be statistically meaningful at
+95% confidence (this combines both models' standard errors — each model's own
+accuracy has ~±1.6pp margin of error at n=2000, and comparing two adds those
+in quadrature). Smaller gaps should be reported as "statistically tied," not
+as one model beating another.
+
+## Setup
+
+```bash
+git clone <this-repo>
+cd cybersecurity_eval
+uv venv .venv
+uv pip install --python .venv/bin/python -r requirements.txt
+./download_data.sh
+cp .env.example .env   # then fill in your own OPENROUTER_API_KEY
+```
+
+## Run
+
+The script runs all questions for all models on a single asyncio event loop,
+bounded by `--concurrency` in-flight requests at a time (default 30). Results
+are written incrementally as each call completes — `tail -f
+results/<model>.jsonl` or `watch -n2 cat results/summary.json` to watch a run
+live.
+
+```bash
+source .venv/bin/activate
+export OPENROUTER_API_KEY=sk-or-...
+
+# Smoke test: 20 questions across all 5 models (~100 calls)
+python3 run_eval.py --limit 20
+
+# Full run, reasoning off (except GLM, which can't disable it)
+python3 run_eval.py
+
+# Full run, reasoning explicitly on for all 5 models
+python3 run_eval.py --reasoning on --out results_reasoning_on --concurrency 20
+
+# Only specific models
+python3 run_eval.py --models solar-pro4 glm-5.3-flash
+
+# Push concurrency higher if you're not hitting 429s
+python3 run_eval.py --concurrency 50
+```
+
+**Reproducing this run exactly**: `python3 run_eval.py --dataset
+data/CyberMetric-2000-v1.json` with the `MODELS` dict as it stands in this
+commit, no `--reasoning` flag (defaults to off), `--concurrency 30`. Run on
+2026-09-17. Re-running later will hit whatever weights OpenRouter currently
+routes those model IDs to — point releases can change silently.
+
+## Token budget calibration
+
+`calibrate_tokens.py` finds the smallest `max_tokens` that avoids truncated
+answers (reasoning eating the whole budget, leaving `content: null`) for each
+model with reasoning on, by testing a random probe sample at increasing
+budgets (250 → 500 → 1000 → 2000 → 4000 → 8000) and recording actual
+`completion_tokens` / `reasoning_tokens` usage at each step:
+
+```bash
+python3 calibrate_tokens.py --probe-size 30 --budgets 250 500 1000 2000 4000 8000
+```
+
+Writes `calibration/report.md` (human-readable table: recommended
+`max_tokens` per model, observed max/p50 token usage) and
+`calibration/report.json` (full per-budget results) plus an append-only
+`calibration/calibration.log`. Kept at low concurrency (default 5) by design
+so it doesn't compete for rate limit with a concurrent `run_eval.py` run.
+
+Known data point so far (from manual probing during development, not yet a
+full calibration run): Solar Pro 4 needed up to ~4000 tokens on some
+questions with reasoning on; GLM 5.3 Flash's worst case on the full 2000-set
+was ~330 tokens (reasoning + answer combined).
+
+## Output
+
+- `results/<model>.jsonl` — per-question log (question, correct answer, model's answer, raw response, correctness, error)
+- `results/summary.json` — per-model accuracy summary, updated every 50 completions during a run
+- `calibration/report.md` / `report.json` — token-budget calibration results (once run)
+
+## Estimated cost
+
+2000 questions x 5 models = 10,000 calls per full run. ~200 input tokens per
+question. Reasoning-off calls cap output at 16 tokens; GLM (reasoning
+mandatory) and any `--reasoning on` run use a much larger budget (see
+[Token budget calibration](#token-budget-calibration)). All 5 models are
+budget-tier, so the reasoning-off run cost well under $1 (based on OpenRouter
+weighted-average pricing checked 2026-09-17); a reasoning-on run costs more
+per call but is still a few dollars at most for the full 10,000-call sweep.

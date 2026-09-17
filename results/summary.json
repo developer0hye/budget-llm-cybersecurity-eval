@@ -1,0 +1,42 @@
+{
+  "solar-pro4": {
+    "model_id": "upstage/solar-pro4",
+    "total": 2000,
+    "answered": 2000,
+    "correct": 1895,
+    "errors": 0,
+    "accuracy": 94.75
+  },
+  "gpt-5.6-luna": {
+    "model_id": "openai/gpt-5.6-luna",
+    "total": 2000,
+    "answered": 2000,
+    "correct": 1877,
+    "errors": 0,
+    "accuracy": 93.85
+  },
+  "deepseek-v4.1-flash": {
+    "model_id": "deepseek/deepseek-v4.1-flash",
+    "total": 2000,
+    "answered": 2000,
+    "correct": 1871,
+    "errors": 0,
+    "accuracy": 93.55
+  },
+  "glm-5.3-flash": {
+    "model_id": "z-ai/glm-5.3-flash",
+    "total": 2000,
+    "answered": 1999,
+    "correct": 1902,
+    "errors": 1,
+    "accuracy": 95.1
+  },
+  "qwen3.8-flash": {
+    "model_id": "qwen/qwen3.8-flash",
+    "total": 2000,
+    "answered": 2000,
+    "correct": 1881,
+    "errors": 0,
+    "accuracy": 94.05
+  }
+}
