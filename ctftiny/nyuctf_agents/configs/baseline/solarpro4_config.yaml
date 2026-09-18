@@ -1,7 +1,7 @@
 experiment:
   name: "NYU_Baseline_solarpro4"
   debug: True
-  skip_exist: False
+  skip_exist: True
 
 
 parameter:
