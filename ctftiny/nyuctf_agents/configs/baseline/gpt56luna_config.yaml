@@ -1,5 +1,5 @@
 experiment:
-  name: "NYU_Baseline_qwen38flash"
+  name: "NYU_Baseline_gpt56luna"
   debug: True
   skip_exist: False
 
@@ -8,7 +8,7 @@ parameter:
   max_rounds: 12
   max_cost: 1.5
   backend: "openai"
-  model: "qwen/qwen3.8-flash"
+  model: "openai/gpt-5.6-luna"
 
 prompts:
   system: |

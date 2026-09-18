@@ -1,5 +1,5 @@
 experiment:
-  name: "NYU_Baseline_qwen38flash"
+  name: "NYU_Baseline_solarpro4"
   debug: True
   skip_exist: False
 
@@ -8,7 +8,7 @@ parameter:
   max_rounds: 12
   max_cost: 1.5
   backend: "openai"
-  model: "qwen/qwen3.8-flash"
+  model: "upstage/solar-pro4"
 
 prompts:
   system: |
