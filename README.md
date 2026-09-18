@@ -58,12 +58,45 @@ delta is under 1pp, far below the ~2-3pp needed for significance at n=2000
 per arm. On a pure-knowledge MCQ benchmark like CyberMetric, letting these
 models "think longer" doesn't measurably change the outcome.
 
+## Phase 2: CTF-solving agent evaluation
+
+CyberMetric above measures pure cybersecurity *knowledge* (MCQs). A companion
+project in [`ctftiny/`](ctftiny/) measures practical CTF-*solving* skill for
+the same 5 models, using NYU's [nyuctf_agents][nyuctf-agents] baseline agent
+harness against real CTF challenges in a Docker sandbox, plus
+[CTFJudge][ctfjudge] for trajectory grading. Full methodology, setup, and
+results: [`ctftiny/README.md`](ctftiny/README.md).
+
+[nyuctf-agents]: https://github.com/NYU-LLM-CTF/nyuctf_agents
+[ctfjudge]: https://github.com/NYU-LLM-CTF/CTFJudge
+
+### Solve rate (12-challenge stratified sample, 2/category, run 2026-09-18)
+
+| Model | Solve rate (n=10 attempted) | Avg wall time/run | Total cost |
+|---|---|---|---|
+| DeepSeek V4.1 Flash | 5/10 (50%) | 222s | $0.104 |
+| Qwen3.8 Flash | 3/10 (30%) | 186s | $0.099 |
+| GLM 5.3 Flash | 3/10 (30%) | 284s | $0.078 |
+| GPT-5.6 Luna | 2/10 (20%) | 115s | $0.108 |
+| Solar Pro4 | 1/10 (10%) | 98s | $0.090 |
+
+**This ranking is not statistically significant.** n=10 paired challenges
+gives very little power — a paired McNemar exact test on every model pair
+finds none reach p<0.10 (the largest gap, DeepSeek vs Solar Pro4, is
+p=0.125). Don't cite the table above as "model X beats model Y"; see
+[`ctftiny/README.md`](ctftiny/README.md#results-baseline-agent-run-2026-09-18)
+for the full statistical treatment, per-challenge solve matrix, and what the
+sample *can* actually support (wall-time spread, cost, infra-failure
+handling).
+
 ## Status
 
 - ✅ **Baseline (reasoning off, GLM mandatory-on)** — complete, 2026-09-17.
 - ✅ **Reasoning-on (all 5 models)** — complete, 2026-09-18.
 - ✅ **Token-budget calibration** — complete, 2026-09-18, see
   [Token budget calibration](#token-budget-calibration).
+- ✅ **Phase 2 (CTF-solving agent eval)** — 5-model baseline run complete,
+  2026-09-18, see above. Full CCI/CTFJudge scoring not yet run.
 
 ## Models under test
 
