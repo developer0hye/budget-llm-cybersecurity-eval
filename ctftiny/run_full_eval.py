@@ -50,7 +50,7 @@ MODELS = {
 
 LOGDIR = "logs_baseline/eval_full"
 TIMEOUT_S = 900
-CONCURRENCY = 4
+CONCURRENCY = 6
 RESULTS_PATH = ROOT / "eval_results_full.jsonl"
 SUMMARY_PATH = ROOT / "eval_summary_full.json"
 PORTS_PATH = ROOT / "challenge_ports.json"
@@ -81,11 +81,15 @@ def load_done_pairs():
     return done
 
 
-MIN_FREE_GB = 8
+# Docker's VM disk (Docker.raw) now lives on /Volumes/T7 (symlinked in from
+# ~/Library/Containers/com.docker.docker/Data/vms/0/data), not the internal
+# disk, after two ENOSPC crashes on internal-only storage. Both still need a
+# floor: T7 against Docker growth, "/" for the project's own small writes.
+MIN_FREE_GB = {"/": 5, "/Volumes/T7": 15}
 DISK_CHECK_INTERVAL_S = 30
 
 
-def free_gb(path="/"):
+def free_gb(path):
     st = os.statvfs(path)
     return st.f_bavail * st.f_frsize / (1024 ** 3)
 
@@ -102,13 +106,15 @@ def wait_for_disk_space():
     catches up, rather than plow forward into a repeat crash.
     """
     warned = False
-    while free_gb() < MIN_FREE_GB:
+    while any(free_gb(p) < min_gb for p, min_gb in MIN_FREE_GB.items()):
         if not warned:
-            print(f"[disk] only {free_gb():.1f}GB free, pausing new launches until >{MIN_FREE_GB}GB", flush=True)
+            low = {p: round(free_gb(p), 1) for p in MIN_FREE_GB}
+            print(f"[disk] low free space {low}, pausing new launches until above {MIN_FREE_GB}", flush=True)
             warned = True
         time.sleep(DISK_CHECK_INTERVAL_S)
     if warned:
-        print(f"[disk] {free_gb():.1f}GB free, resuming", flush=True)
+        ok = {p: round(free_gb(p), 1) for p in MIN_FREE_GB}
+        print(f"[disk] {ok} free, resuming", flush=True)
 
 
 def run_one(model_key: str, challenge: str, ports: list) -> dict:
@@ -164,10 +170,29 @@ def run_one(model_key: str, challenge: str, ports: list) -> dict:
     return result
 
 
+def ensure_ctfnet():
+    """The agent's base container joins a `ctfnet` bridge network that
+    upstream's setup_baseline.sh creates once, by hand -- it isn't baked
+    into any image, so a fresh/reset Docker daemon (e.g. after relocating
+    Docker's VM disk) silently drops it, and every job then fails at
+    `docker run --network ctfnet` before ever reaching a challenge. This bit
+    us once already (71 rows falsely marked as failures); check for it on
+    every launch instead of relying on remembering to re-run setup."""
+    exists = subprocess.run(
+        ["docker", "network", "ls", "--format", "{{.Name}}"],
+        capture_output=True, text=True,
+    ).stdout.split()
+    if "ctfnet" not in exists:
+        print("[setup] ctfnet network missing, creating it", flush=True)
+        subprocess.run(["docker", "network", "create", "ctfnet"], check=True)
+
+
 def main():
     if "OPENROUTER_API_KEY" not in os.environ:
         print("ERROR: export OPENROUTER_API_KEY first", file=sys.stderr)
         sys.exit(1)
+
+    ensure_ctfnet()
 
     all_challenges, challenge_ports = load_challenge_ports()
     done = load_done_pairs()

@@ -1,0 +1,47 @@
+{
+  "qwen3.8-flash": {
+    "n": 200,
+    "attempted": 134,
+    "no_log": 66,
+    "solved": 40,
+    "solve_rate_of_attempted": 0.29850746268656714,
+    "total_cost_usd": 1.5473,
+    "avg_wall_time_s_attempted": 219.1
+  },
+  "solar-pro4": {
+    "n": 200,
+    "attempted": 88,
+    "no_log": 112,
+    "solved": 9,
+    "solve_rate_of_attempted": 0.10227272727272728,
+    "total_cost_usd": 0.6957,
+    "avg_wall_time_s_attempted": 81.0
+  },
+  "gpt-5.6-luna": {
+    "n": 200,
+    "attempted": 175,
+    "no_log": 25,
+    "solved": 40,
+    "solve_rate_of_attempted": 0.22857142857142856,
+    "total_cost_usd": 3.3781,
+    "avg_wall_time_s_attempted": 164.5
+  },
+  "deepseek-v4.1-flash": {
+    "n": 200,
+    "attempted": 169,
+    "no_log": 31,
+    "solved": 59,
+    "solve_rate_of_attempted": 0.34911242603550297,
+    "total_cost_usd": 1.6194,
+    "avg_wall_time_s_attempted": 322.2
+  },
+  "glm-5.3-flash": {
+    "n": 200,
+    "attempted": 118,
+    "no_log": 82,
+    "solved": 46,
+    "solve_rate_of_attempted": 0.3898305084745763,
+    "total_cost_usd": 1.0257,
+    "avg_wall_time_s_attempted": 263.1
+  }
+}
