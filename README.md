@@ -72,21 +72,23 @@ results: [`ctftiny/README.md`](ctftiny/README.md).
 
 ### Full 200-challenge run, all 5 models, run 2026-09-19 (1000 jobs, $8.27 total)
 
-`attempted` counts differ sharply by model (88-175/200) for reasons tied to
-two operational incidents during the run (documented in `ctftiny/README.md`)
-— the raw table below should **not** be read as a ranking. The clean
-comparison is the 63 challenges all 5 models actually completed: there,
-**Solar Pro4 solves significantly fewer than every other model**
-(McNemar p<0.001 in all 4 pairwise tests against it); the other 4 models are
-statistically indistinguishable from each other.
+`attempted` counts differ sharply by model (83-175/200) for reasons tied to
+three operational incidents during the run (documented in `ctftiny/README.md`,
+including one — orphaned processes killed mid-conversation during a Docker
+restart — caught only in a later audit) — the raw table below should
+**not** be read as a ranking. The clean comparison is the 61 challenges all
+5 models actually completed: there, **Solar Pro4 solves significantly
+fewer than every other model** (McNemar p<0.001 in all 4 pairwise tests
+against it); the other 4 models are statistically indistinguishable from
+each other.
 
-| Model | Attempted/200 | Solve rate (of attempted) | Solve rate (n=63 all-attempted) | Total cost |
+| Model | Attempted/200 | Solve rate (of attempted) | Solve rate (n=61 all-attempted) | Total cost |
 |---|---|---|---|---|
-| DeepSeek V4.1 Flash | 169 | 34.9% | 47.6% | $1.62 |
-| GLM 5.3 Flash | 118 | 39.0% | 41.3% | $1.03 |
-| Qwen3.8 Flash | 134 | 29.9% | 38.1% | $1.55 |
-| GPT-5.6 Luna | 175 | 22.9% | 36.5% | $3.38 |
-| Solar Pro4 | 88 | 10.2% | 12.7% | $0.70 |
+| DeepSeek V4.1 Flash | 169 | 34.9% | 47.5% | $1.62 |
+| GLM 5.3 Flash | 118 | 39.0% | 41.0% | $1.03 |
+| Qwen3.8 Flash | 134 | 29.9% | 39.3% | $1.55 |
+| GPT-5.6 Luna | 175 | 22.9% | 36.1% | $3.38 |
+| Solar Pro4 | 83 | 10.8% | 13.1% | $0.70 |
 
 **Every model here scores at or above 2024's tool-enhanced SOTA (EnIGMA +
 Claude 3.5 Sonnet: 13.5%), and most score near or above a model

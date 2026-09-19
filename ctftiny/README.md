@@ -214,10 +214,32 @@ run covers every challenge in NYU CTF Bench's test split, for all 5 models
      hand, via `setup_baseline.sh`) — after the T7 migration, this silently
      failed the *base* environment container for every model until caught.
      `run_full_eval.py` now creates it automatically if missing.
-  - Rows corrupted by these two incidents (8 + 71) were identified by their
+  3. **Found during a post-hoc audit, not during the run itself:** the
+     `docker kill -9` used to force-restart Docker Desktop as part of fix
+     #1 killed 5 in-flight solar-pro4 conversations mid-tool-call. Those
+     partial trajectories got written to disk (ending abruptly inside a
+     `tool_calls` block, no `solved`/`max_rounds`/`max_cost` reached), and
+     because the 5 baseline configs still had `skip_exist: true` set (see
+     the n=10 re-run section below), the next attempt at those exact
+     (model, challenge) pairs silently reused the broken file instead of
+     running fresh — a `docker run` here, not a `docker run` there,
+     compounding the earlier `skip_exist` incident with a *third* cause.
+     Detected by a wall-time signature (all 5 clustered at 0.84–0.88s,
+     impossible for a real docker-based run) and confirmed by inspecting
+     the raw logs (conversation cut off mid-tool-call, timestamps landing
+     exactly in the `kill -9` window) and by checking all 19
+     `finish_reason: unknown` rows in the dataset for the same signature —
+     only these 5 matched; the other 14 (across multiple models) are
+     genuine API-level failures, the same class as the 8MB-input-limit
+     case documented earlier in this file. These 5 rows were reclassified
+     from `attempted` to infra-failure (not retried — see the caveat
+     below for why retrying failures specifically isn't done here); the
+     table and n=63 analysis below already reflect this correction.
+  - Rows corrupted by incidents 1 and 2 (8 + 71) were identified by their
     error signature and stripped so those specific (model, challenge) pairs
-    got a real retry, not counted as failures. See the commit messages for
-    exact detection logic.
+    got a real retry, not counted as failures. Rows corrupted by incident 3
+    (5, all solar-pro4) were reclassified but deliberately **not** retried.
+    See the commit messages for exact detection logic.
 - Full per-run data: [`eval_results_full.jsonl`](eval_results_full.jsonl)
   (1000 rows). Aggregated: [`eval_summary_full.json`](eval_summary_full.json).
 
@@ -228,20 +250,20 @@ run covers every challenge in NYU CTF Bench's test split, for all 5 models
 | DeepSeek V4.1 Flash | 169 | 59 | 34.9% | 322s | $1.62 |
 | GLM 5.3 Flash | 118 | 46 | 39.0% | 263s | $1.03 |
 | Qwen3.8 Flash | 134 | 40 | 29.9% | 219s | $1.55 |
-| GPT-5.6 Luna | 175 | 40 | 22.9% | 165s | $3.38 |
-| Solar Pro4 | 88 | 9 | 10.2% | 81s | $0.70 |
+| GPT-5.6 Luna | 175 | 40 | 22.9% | 164s | $3.38 |
+| Solar Pro4 | 83 | 9 | 10.8% | 86s | $0.70 |
 
 **Total cost across all 5 models, 1000 jobs: $8.27.**
 
 ### The caveat: "attempted" isn't a clean denominator, don't rank this table
 
-Attempted counts range from 88 to 175 out of 200, and the gap isn't
+Attempted counts range from 83 to 175 out of 200, and the gap isn't
 random noise — it correlates with *when* each model's jobs ran relative to
-the two incidents above. Solar-pro4's queue position put more of its jobs
-through both incident windows than any other model. A spot-check after
-full stabilization (re-running one of solar-pro4's failed
+the three incidents above. Solar-pro4's queue position put more of its
+jobs through all three incident windows than any other model. A spot-check
+after full stabilization (re-running one of solar-pro4's failed
 `docker-compose` challenges by hand, cache warm, no concurrent load)
-**succeeded**, meaning at least some of its 112 `no_log` count is
+**succeeded**, meaning at least some of its 117 `no_log` count is
 recoverable transient failure, not permanently broken challenge infra.
 
 Retrying only the failures was considered and rejected — that would be
@@ -252,39 +274,43 @@ done, so **the table above should not be read as a ranking.**
 
 ### The comparison that *is* clean: challenges all 5 models actually attempted
 
-Restricting to the **63 challenges where all 5 models produced a real
-trajectory** (no infra failure for anyone) controls for the attempted-count
-problem directly — every model's rate here is over the identical
-denominator, and solar-pro4's cases are ones it did complete.
+Restricting to the **61 challenges where all 5 models produced a real
+trajectory** (no infra failure for anyone, after the incident-3 correction
+above) controls for the attempted-count problem directly — every model's
+rate here is over the identical denominator, and solar-pro4's cases are
+ones it did genuinely complete.
 
-| Model | Solved (of 63) | Solve rate |
+| Model | Solved (of 61) | Solve rate |
 |---|---|---|
-| DeepSeek V4.1 Flash | 30 | 47.6% |
-| GLM 5.3 Flash | 26 | 41.3% |
-| Qwen3.8 Flash | 24 | 38.1% |
-| GPT-5.6 Luna | 23 | 36.5% |
-| Solar Pro4 | 8 | 12.7% |
+| DeepSeek V4.1 Flash | 29 | 47.5% |
+| GLM 5.3 Flash | 25 | 41.0% |
+| Qwen3.8 Flash | 24 | 39.3% |
+| GPT-5.6 Luna | 22 | 36.1% |
+| Solar Pro4 | 8 | 13.1% |
 
-Pairwise McNemar exact test on this n=63 set:
+Pairwise McNemar exact test on this n=61 set:
 
 | Pair | b, c | p |
 |---|---|---|
-| Solar Pro4 vs DeepSeek V4.1 Flash | 0, 22 | **<0.0001** |
-| Solar Pro4 vs GLM 5.3 Flash | 0, 18 | **<0.0001** |
-| Solar Pro4 vs GPT-5.6 Luna | 1, 16 | **0.0003** |
+| Solar Pro4 vs DeepSeek V4.1 Flash | 0, 21 | **<0.0001** |
+| Solar Pro4 vs GLM 5.3 Flash | 0, 17 | **<0.0001** |
+| Solar Pro4 vs GPT-5.6 Luna | 1, 15 | **0.0005** |
 | Qwen3.8 Flash vs Solar Pro4 | 17, 1 | **0.0001** |
 | GPT-5.6 Luna vs DeepSeek V4.1 Flash | 2, 9 | 0.065 |
-| Qwen3.8 Flash vs DeepSeek V4.1 Flash | 2, 8 | 0.109 |
+| Qwen3.8 Flash vs DeepSeek V4.1 Flash | 2, 7 | 0.180 |
 | every other pair | — | ≥0.29 |
 
-**This is a real, significant finding at n=63: Solar Pro4 solves fewer of
+**This is a real, significant finding at n=61: Solar Pro4 solves fewer of
 the challenges it actually completes than every other model, at
 conventional significance.** The other 4 models are statistically
-indistinguishable from each other. Note this doesn't fully clear the
-caveat above either — it controls for *which* challenges got compared, not
-for whether solar-pro4's specific 88 completed attempts are a
-representative (vs. easier-than-average) subset of the 200; that would need
-the uniform full re-run.
+indistinguishable from each other. This conclusion is stable — it barely
+moved when a post-hoc audit found and corrected 2 additional tainted
+solar-pro4 rows inside this set (n=63→61, p-values if anything got
+slightly stronger). Note this still doesn't fully clear the caveat above
+either — it controls for *which* challenges got compared, not for whether
+solar-pro4's specific 83 completed attempts are a representative (vs.
+easier-than-average) subset of the 200; that would need the uniform full
+re-run.
 
 ### How this compares to the published literature
 
@@ -337,7 +363,12 @@ re-launching for real. The numbers below are from that final, genuine run.
   methodology section describes (2 per category, `random.seed(42)`,
   10 effective after the symmetric port-5000 exclusion below).
 - **Budget**: `max_rounds: 12`, `max_cost: 1.5` per (model, challenge) run,
-  concurrency 3. `max_cost` never bound in any of the 60 runs.
+  concurrency 3. `max_cost` never bound in any of the 60 runs. 37 hit
+  `max_rounds`, 12 solved, 10 were the symmetric port-5000 exclusion, and
+  1 (Solar Pro4 on `2020f-rev-rap`) hit a genuine `finish_reason: unknown`
+  — Upstage's API rejected a tool call with a 400 because Solar Pro4 sent
+  malformed JSON arguments (unbalanced escaping in a Python one-liner).
+  Real model behavior, not a pipeline bug — kept in the data as-is.
 - **Infra exclusion, symmetric across all 5 models**: 2 of the 12 challenges
   (`2021q-cry-ecc_pop_quiz`, `2021f-for-no_time_to_register`) hardcode their
   challenge server to host port 5000, which macOS's AirPlay Receiver
@@ -381,7 +412,7 @@ test on the win/loss pairs), not a two-proportion test:
 
 **No pair reaches even p<0.10.** Don't cite this table's ranking as a
 finding — see the full-200 run above for the comparison that actually
-clears significance (Solar Pro4 vs. everyone else, n=63, p<0.001).
+clears significance (Solar Pro4 vs. everyone else, n=61, p<0.001).
 
 ### What this sample *can* support
 
@@ -437,7 +468,7 @@ python3 run_all_models.py   # ~60-90 min wall clock, concurrency=3
 
 - A **uniform full re-run of all 1000 jobs** under identical
   post-stabilization conditions — the only fix that would fully resolve the
-  attempted-count caveat above rather than just control for it on the n=63
+  attempted-count caveat above rather than just control for it on the n=61
   intersection.
 - Full end-to-end CCI scoring via CTFJudge on any of the ~1200 trajectories
   produced across both runs (needs a challenge with both a baseline

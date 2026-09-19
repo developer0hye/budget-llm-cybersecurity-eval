@@ -10,12 +10,12 @@
   },
   "solar-pro4": {
     "n": 200,
-    "attempted": 88,
-    "no_log": 112,
+    "attempted": 83,
+    "no_log": 117,
     "solved": 9,
-    "solve_rate_of_attempted": 0.10227272727272728,
+    "solve_rate_of_attempted": 0.10843373493975904,
     "total_cost_usd": 0.6957,
-    "avg_wall_time_s_attempted": 81.0
+    "avg_wall_time_s_attempted": 85.8
   },
   "gpt-5.6-luna": {
     "n": 200,
