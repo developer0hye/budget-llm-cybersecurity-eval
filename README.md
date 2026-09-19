@@ -105,8 +105,9 @@ for the full literature comparison and the caveats behind both tables.
 - ✅ **Token-budget calibration** — complete, 2026-09-18, see
   [Token budget calibration](#token-budget-calibration).
 - ✅ **Phase 2 (CTF-solving agent eval)** — full 200-challenge run (1000
-  jobs) complete, 2026-09-19, see above. Full CCI/CTFJudge scoring not yet
-  run.
+  jobs, $8.27) and a clean re-run of the original n=10 sample (60 jobs,
+  $0.45) both complete, 2026-09-19 — **$8.72 total for phase 2**. See
+  above and `ctftiny/README.md`. Full CCI/CTFJudge scoring not yet run.
 
 ## Models under test
 
