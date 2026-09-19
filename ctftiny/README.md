@@ -188,7 +188,133 @@ export OPENROUTER_API_KEY=sk-or-v1-...
 python3 run_evaluation.py --trajectory trajs/<challenge>.json --writeup writeups/<challenge>.txt
 ```
 
-## Results (baseline agent, run 2026-09-18)
+## Results (full 200-challenge run, all 5 models, run 2026-09-19)
+
+The n=10 preliminary sample below (run 2026-09-18) is kept for its own
+record but is superseded by this run for anything about solve rate. This
+run covers every challenge in NYU CTF Bench's test split, for all 5 models
+— 1000 (model, challenge) jobs total.
+
+### Methodology
+
+- **Full 200-challenge test split**, `max_rounds: 12`, `max_cost: 1.5`,
+  concurrency 6, port-locked (see `run_full_eval.py`) so challenges sharing
+  a docker-compose host port (up to 28 challenges share port 8000 alone)
+  don't race each other.
+- **Two operational incidents during this run, both documented in commit
+  history** (`8820d01`, `a8b2c41`) rather than hidden:
+  1. Docker Desktop's VM disk (`Docker.raw`) grew unboundedly on the
+     internal disk from challenge-image pulls and doesn't reliably shrink
+     when images are deleted inside it — two ENOSPC crashes. Fixed by
+     relocating Docker's data directory to the external T7 SSD (`~/Library
+     /Containers/com.docker.docker/Data/vms/0/data` symlinked to
+     `/Volumes/T7/scratch/docker-vm-data`), which has far more headroom.
+  2. The `ctfnet` Docker network that the baseline agent's container joins
+     doesn't persist across a fresh Docker VM (upstream creates it once, by
+     hand, via `setup_baseline.sh`) — after the T7 migration, this silently
+     failed the *base* environment container for every model until caught.
+     `run_full_eval.py` now creates it automatically if missing.
+  - Rows corrupted by these two incidents (8 + 71) were identified by their
+    error signature and stripped so those specific (model, challenge) pairs
+    got a real retry, not counted as failures. See the commit messages for
+    exact detection logic.
+- Full per-run data: [`eval_results_full.jsonl`](eval_results_full.jsonl)
+  (1000 rows). Aggregated: [`eval_summary_full.json`](eval_summary_full.json).
+
+### Results table — read the caveat below before using this table
+
+| Model | Attempted/200 | Solved | Solve rate (of attempted) | Avg wall time | Total cost |
+|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | 169 | 59 | 34.9% | 322s | $1.62 |
+| GLM 5.3 Flash | 118 | 46 | 39.0% | 263s | $1.03 |
+| Qwen3.8 Flash | 134 | 40 | 29.9% | 219s | $1.55 |
+| GPT-5.6 Luna | 175 | 40 | 22.9% | 165s | $3.38 |
+| Solar Pro4 | 88 | 9 | 10.2% | 81s | $0.70 |
+
+**Total cost across all 5 models, 1000 jobs: $8.27.**
+
+### The caveat: "attempted" isn't a clean denominator, don't rank this table
+
+Attempted counts range from 88 to 175 out of 200, and the gap isn't
+random noise — it correlates with *when* each model's jobs ran relative to
+the two incidents above. Solar-pro4's queue position put more of its jobs
+through both incident windows than any other model. A spot-check after
+full stabilization (re-running one of solar-pro4's failed
+`docker-compose` challenges by hand, cache warm, no concurrent load)
+**succeeded**, meaning at least some of its 112 `no_log` count is
+recoverable transient failure, not permanently broken challenge infra.
+
+Retrying only the failures was considered and rejected — that would be
+selection on the outcome (models get unequal amounts of a "second, easier
+attempt," which is itself a new confound). The honest fix is a uniform
+re-run of all 1000 jobs under identical conditions, which hasn't been
+done, so **the table above should not be read as a ranking.**
+
+### The comparison that *is* clean: challenges all 5 models actually attempted
+
+Restricting to the **63 challenges where all 5 models produced a real
+trajectory** (no infra failure for anyone) controls for the attempted-count
+problem directly — every model's rate here is over the identical
+denominator, and solar-pro4's cases are ones it did complete.
+
+| Model | Solved (of 63) | Solve rate |
+|---|---|---|
+| DeepSeek V4.1 Flash | 30 | 47.6% |
+| GLM 5.3 Flash | 26 | 41.3% |
+| Qwen3.8 Flash | 24 | 38.1% |
+| GPT-5.6 Luna | 23 | 36.5% |
+| Solar Pro4 | 8 | 12.7% |
+
+Pairwise McNemar exact test on this n=63 set:
+
+| Pair | b, c | p |
+|---|---|---|
+| Solar Pro4 vs DeepSeek V4.1 Flash | 0, 22 | **<0.0001** |
+| Solar Pro4 vs GLM 5.3 Flash | 0, 18 | **<0.0001** |
+| Solar Pro4 vs GPT-5.6 Luna | 1, 16 | **0.0003** |
+| Qwen3.8 Flash vs Solar Pro4 | 17, 1 | **0.0001** |
+| GPT-5.6 Luna vs DeepSeek V4.1 Flash | 2, 9 | 0.065 |
+| Qwen3.8 Flash vs DeepSeek V4.1 Flash | 2, 8 | 0.109 |
+| every other pair | — | ≥0.29 |
+
+**This is a real, significant finding at n=63: Solar Pro4 solves fewer of
+the challenges it actually completes than every other model, at
+conventional significance.** The other 4 models are statistically
+indistinguishable from each other. Note this doesn't fully clear the
+caveat above either — it controls for *which* challenges got compared, not
+for whether solar-pro4's specific 88 completed attempts are a
+representative (vs. easier-than-average) subset of the 200; that would need
+the uniform full re-run.
+
+### How this compares to the published literature
+
+| Source | Model | Method | Solve rate on NYU CTF Bench (200) |
+|---|---|---|---|
+| [Original paper](https://arxiv.org/html/2406.05590v2) (2024) | GPT-4 | Same baseline harness, 5 attempts/challenge, 48h budget | ~3.7% (best of the paper's models) |
+| [EnIGMA](https://arxiv.org/html/2409.16165) (2024) | Claude 3.5 Sonnet | Enhanced tool-use agent, pass@1, $3 budget | 13.5% (SOTA at publication) |
+| [CTF-Dojo](https://arxiv.org/pdf/2508.18370) (2025) | 32B, fine-tuned on 486 execution-verified CTF trajectories | pass@1 | 31.9% |
+| This run | 5 budget-tier models | Same baseline harness as the original paper, 1 attempt, 12 rounds | 10.2%–39.0% |
+
+**Read this as a caveat about the numbers above, not a boast.** Every model
+here scores at or above the 2024 SOTA-with-better-tooling (EnIGMA), and
+four of five score near or above CTF-Dojo's number — a model *specifically
+fine-tuned* on CTF-solving trajectories — despite this run using the
+*weaker* plain baseline harness (no tool-use enhancements) and a *harsher*
+protocol (1 attempt, 12 rounds vs. the original paper's 5 attempts / 48
+hours). That combination is hard to explain by "these models got better at
+reasoning" alone. The more likely explanation is **training data
+contamination**: these are real 2017–2023 CTF competition challenges, and
+writeups for them are public on the web — a 2026-era model has had far more
+opportunity to see them during training than GPT-4/Claude 3 (2023-2024
+training cutoffs). Treat the absolute solve-rate numbers in this project as
+upper bounds on genuine problem-solving capability, not clean measurements
+of it.
+
+## Preliminary results (n=10 sample, run 2026-09-18)
+
+**Superseded by the full run above for solve rate.** Kept for its own
+record — same challenges, smaller and cleaner sample, no infra-failure
+imbalance across models (see its own caveats below).
 
 ### Methodology
 
@@ -290,25 +416,31 @@ python3 run_all_models.py   # ~60-90 min wall clock, concurrency=3
 
 ## Current status
 
-- All 5 models run on the 12-challenge sample above. Format adapter
-  (`adapt_baseline_trajectory.py`) verified against CTFJudge's own
-  parsing/formatting code, but the **full CTFJudge/CCI pipeline has not
-  been run on any of these 60 new trajectories** — that's LLM-judge scoring
-  against a reference writeup, a separate phase from the solve-rate numbers
-  above, and still blocked on writeups not existing for these challenges in
-  `CTFJudge/writeups/`.
+- All 5 models run on the **full 200-challenge test split** (1000 jobs) —
+  see [Results](#results-full-200-challenge-run-all-5-models-run-2026-09-19)
+  above. The n=10 stratified sample (below) is scheduled to be re-run once
+  more, cleanly, now that Docker/T7/`ctfnet` are all stable, purely to get
+  an accurate cost figure for that fixed 12-challenge set — its current
+  `eval_results.jsonl`/`eval_summary.json` predate the incidents above and
+  are unaffected by them, but a clean re-run costs little and removes any
+  doubt.
+- Format adapter (`adapt_baseline_trajectory.py`) verified against
+  CTFJudge's own parsing/formatting code, but the **full CTFJudge/CCI
+  pipeline has not been run on any trajectory from either run** — that's
+  LLM-judge scoring against a reference writeup, a separate phase from the
+  solve-rate numbers above, and still blocked on writeups not existing for
+  most of these challenges in `CTFJudge/writeups/`.
 
 ### Not done yet
 
-- Full end-to-end CCI scoring via CTFJudge on any of the 60 trajectories
-  from this run (needs a challenge with both a baseline trajectory *and* an
-  existing writeup — `2023q-web-smug_dino` has a writeup already in this
-  fork but no baseline trajectory yet).
-- A larger challenge sample. n=10 has essentially no power to separate
-  budget-tier models on solve rate (see above) — distinguishing e.g. a 50%
-  from a 30% true solve rate at conventional significance would need on the
-  order of 50-100+ paired challenges, not 10. NYU CTF Bench's own paper
-  reports full-test-split baseline numbers at `max_rounds: 30`, three times
-  this run's budget.
+- A **uniform full re-run of all 1000 jobs** under identical
+  post-stabilization conditions — the only fix that would fully resolve the
+  attempted-count caveat above rather than just control for it on the n=63
+  intersection.
+- Full end-to-end CCI scoring via CTFJudge on any of the ~1200 trajectories
+  produced across both runs (needs a challenge with both a baseline
+  trajectory *and* an existing writeup — `2023q-web-smug_dino` has a
+  writeup already in this fork and now has trajectories from both runs,
+  so this is the natural next challenge to score).
 - Token/cost calibration for the agent harness itself (the CyberMetric
   project's `calibrate_tokens.py` has no CTF-agent equivalent).

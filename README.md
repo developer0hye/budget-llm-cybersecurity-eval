@@ -70,24 +70,33 @@ results: [`ctftiny/README.md`](ctftiny/README.md).
 [nyuctf-agents]: https://github.com/NYU-LLM-CTF/nyuctf_agents
 [ctfjudge]: https://github.com/NYU-LLM-CTF/CTFJudge
 
-### Solve rate (12-challenge stratified sample, 2/category, run 2026-09-18)
+### Full 200-challenge run, all 5 models, run 2026-09-19 (1000 jobs, $8.27 total)
 
-| Model | Solve rate (n=10 attempted) | Avg wall time/run | Total cost |
-|---|---|---|---|
-| DeepSeek V4.1 Flash | 5/10 (50%) | 222s | $0.104 |
-| Qwen3.8 Flash | 3/10 (30%) | 186s | $0.099 |
-| GLM 5.3 Flash | 3/10 (30%) | 284s | $0.078 |
-| GPT-5.6 Luna | 2/10 (20%) | 115s | $0.108 |
-| Solar Pro4 | 1/10 (10%) | 98s | $0.090 |
+`attempted` counts differ sharply by model (88-175/200) for reasons tied to
+two operational incidents during the run (documented in `ctftiny/README.md`)
+— the raw table below should **not** be read as a ranking. The clean
+comparison is the 63 challenges all 5 models actually completed: there,
+**Solar Pro4 solves significantly fewer than every other model**
+(McNemar p<0.001 in all 4 pairwise tests against it); the other 4 models are
+statistically indistinguishable from each other.
 
-**This ranking is not statistically significant.** n=10 paired challenges
-gives very little power — a paired McNemar exact test on every model pair
-finds none reach p<0.10 (the largest gap, DeepSeek vs Solar Pro4, is
-p=0.125). Don't cite the table above as "model X beats model Y"; see
-[`ctftiny/README.md`](ctftiny/README.md#results-baseline-agent-run-2026-09-18)
-for the full statistical treatment, per-challenge solve matrix, and what the
-sample *can* actually support (wall-time spread, cost, infra-failure
-handling).
+| Model | Attempted/200 | Solve rate (of attempted) | Solve rate (n=63 all-attempted) | Total cost |
+|---|---|---|---|---|
+| DeepSeek V4.1 Flash | 169 | 34.9% | 47.6% | $1.62 |
+| GLM 5.3 Flash | 118 | 39.0% | 41.3% | $1.03 |
+| Qwen3.8 Flash | 134 | 29.9% | 38.1% | $1.55 |
+| GPT-5.6 Luna | 175 | 22.9% | 36.5% | $3.38 |
+| Solar Pro4 | 88 | 10.2% | 12.7% | $0.70 |
+
+**Every model here scores at or above 2024's tool-enhanced SOTA (EnIGMA +
+Claude 3.5 Sonnet: 13.5%), and most score near or above a model
+specifically fine-tuned for CTF-solving (CTF-Dojo: 31.9%)** — using the
+*plain, weaker* baseline harness and a *harsher* protocol (1 attempt, 12
+rounds) than either. That's more consistent with training-data
+contamination (these are real, public 2017-2023 CTF challenges with public
+writeups) than with genuine capability gains — see
+[`ctftiny/README.md`](ctftiny/README.md#how-this-compares-to-the-published-literature)
+for the full literature comparison and the caveats behind both tables.
 
 ## Status
 
@@ -95,8 +104,9 @@ handling).
 - ✅ **Reasoning-on (all 5 models)** — complete, 2026-09-18.
 - ✅ **Token-budget calibration** — complete, 2026-09-18, see
   [Token budget calibration](#token-budget-calibration).
-- ✅ **Phase 2 (CTF-solving agent eval)** — 5-model baseline run complete,
-  2026-09-18, see above. Full CCI/CTFJudge scoring not yet run.
+- ✅ **Phase 2 (CTF-solving agent eval)** — full 200-challenge run (1000
+  jobs) complete, 2026-09-19, see above. Full CCI/CTFJudge scoring not yet
+  run.
 
 ## Models under test
 
