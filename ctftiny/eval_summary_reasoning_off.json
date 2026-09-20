@@ -1,0 +1,29 @@
+{
+  "qwen3.8-flash": {
+    "n": 200,
+    "attempted": 172,
+    "no_log": 28,
+    "solved": 22,
+    "solve_rate_of_attempted": 0.12790697674418605,
+    "total_cost_usd": 1.268,
+    "avg_wall_time_s_attempted": 200.0
+  },
+  "deepseek-v4.1-flash": {
+    "n": 200,
+    "attempted": 163,
+    "no_log": 37,
+    "solved": 39,
+    "solve_rate_of_attempted": 0.2392638036809816,
+    "total_cost_usd": 1.2129,
+    "avg_wall_time_s_attempted": 293.9
+  },
+  "gpt-5.6-luna": {
+    "n": 200,
+    "attempted": 156,
+    "no_log": 44,
+    "solved": 19,
+    "solve_rate_of_attempted": 0.12179487179487179,
+    "total_cost_usd": 1.9063,
+    "avg_wall_time_s_attempted": 116.1
+  }
+}

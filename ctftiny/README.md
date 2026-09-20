@@ -6,9 +6,12 @@ questions); this directory sets up a pipeline to measure practical CTF-*solving*
 skill for the same budget-tier models, using two existing open-source projects
 from NYU's LLM-CTF group rather than building an agent harness from scratch.
 
-**Status: all 5 models run on a 12-challenge sample.** See
-[Results](#results-baseline-agent-run-2026-09-18) below — and read the
-statistical-power caveat before drawing any conclusion from the ranking.
+**Status: all 5 models run on the full 200-challenge test split, plus a
+reasoning-controlled re-run of 4 of them.** See
+[Results](#results-full-200-challenge-run-all-5-models-run-2026-09-19) and
+[Reasoning confound](#reasoning-confound-models-never-got-an-explicit-onoff-setting)
+below — read the attempted-count and reasoning-confound caveats before
+citing any ranking from this project.
 
 ## What's here
 
@@ -336,6 +339,129 @@ training cutoffs). Treat the absolute solve-rate numbers in this project as
 upper bounds on genuine problem-solving capability, not clean measurements
 of it.
 
+## Reasoning confound: models never got an explicit on/off setting
+
+A statistical audit of this project (2026-09-20) found that `nyuctf_agents`'
+baseline harness never sets OpenRouter's `reasoning` parameter explicitly —
+every model in the full-200 run above (and the n=10 sample below) ran on
+whatever its provider defaults to when the parameter is omitted, and that
+default is **not uniform across models**. Sampling the `reasoning` field in
+~100-112 raw assistant turns per model across 10 trajectory files found:
+
+| Model | Reasoning present (sampled) |
+|---|---|
+| Solar Pro 4 | 0/112 (0%) |
+| GPT-5.6 Luna | 40/110 (36%) |
+| GLM 5.3 Flash | 88/106 (83%) |
+| DeepSeek V4.1 Flash | 85/88 (97%) |
+| Qwen3.8 Flash | 107/107 (100%) |
+
+These are **empirically observed frequencies from our own sampled trajectory
+logs**, not documented API defaults — OpenRouter doesn't publish per-model
+default reasoning rates. This directly confounds the headline finding above
+("Solar Pro4 solves significantly fewer than every other model"): Solar
+Pro4's near-zero reasoning usage could be the real cause, not weaker
+CTF-solving capability on its own.
+
+**Fix**: `openai_backend.py` and `run_baseline.py` now support an explicit
+tri-state `reasoning_enabled` (`None` = untouched upstream behavior, `True`/
+`False` = forced via OpenRouter's `extra_body: {"reasoning": {"enabled":
+...}}`). GLM 5.3 Flash is excluded from the off-condition re-run — its
+reasoning is mandatory and can't be disabled (confirmed in the CyberMetric
+project). New configs: `solarpro4_reasoning_config.yaml` (on),
+`qwen38flash_reasoningoff_config.yaml`, `deepseekv41flash_reasoningoff_config.yaml`,
+`gpt56luna_reasoningoff_config.yaml` (off). Drivers:
+`run_solarpro4_reasoning.py`, `run_reasoning_off.py`. **Manipulation
+check** (sampled 15 trajectory files per re-run): Solar Pro4's forced-ON
+run actually reasoned on 171/171 (100%) sampled assistant turns; all three
+forced-OFF re-runs reasoned on 0/175, 1/184, 0/186 sampled turns
+(Qwen/DeepSeek/Luna respectively) — the flag reliably does what it says.
+
+### Results
+
+All 5 models' reasoning-controlled data is now complete (2026-09-20, 800
+additional jobs: 200 Solar Pro4 reasoning-on + 600 reasoning-off across
+Qwen3.8 Flash / DeepSeek V4.1 Flash / GPT-5.6 Luna). Full data:
+[`eval_results_solarpro4_reasoning.jsonl`](eval_results_solarpro4_reasoning.jsonl),
+[`eval_results_reasoning_off.jsonl`](eval_results_reasoning_off.jsonl).
+
+| Model | Condition | Attempted | Solved | Solve rate | Cost |
+|---|---|---|---|---|---|
+| Solar Pro 4 | default (0% reasoning) | 83 | 9 | 10.8% | $0.70 |
+| Solar Pro 4 | reasoning forced **ON** | 147 | 19 | 12.9% | $1.74 |
+| Qwen3.8 Flash | default (~100% reasoning) | 134 | 40 | 29.9% | $1.55 |
+| Qwen3.8 Flash | reasoning forced **OFF** | 172 | 22 | 12.8% | $1.27 |
+| DeepSeek V4.1 Flash | default (~97% reasoning) | 169 | 59 | 34.9% | $1.62 |
+| DeepSeek V4.1 Flash | reasoning forced **OFF** | 163 | 39 | 23.9% | $1.21 |
+| GPT-5.6 Luna | default (~36% reasoning) | 175 | 40 | 22.9% | $3.38 |
+| GPT-5.6 Luna | reasoning forced **OFF** | 156 | 19 | 12.2% | $1.91 |
+
+**Total cost of the reasoning-controlled re-runs: $1.74 + $1.27 + $1.21 +
+$1.91 = $6.13** (on top of the original $8.27 full-200 run).
+
+### Within-model: does reasoning help, paired McNemar (on vs off, same challenges)
+
+| Model | n (common attempted) | b, c | p | Verdict |
+|---|---|---|---|---|
+| Solar Pro 4 (off→on) | 81 | 1, 6 | 0.125 | not significant |
+| Qwen3.8 Flash (on→off) | 131 | 21, 2 | **0.0001** | **significant — reasoning helps** |
+| DeepSeek V4.1 Flash (on→off) | 162 | 23, 4 | **0.0003** | **significant — reasoning helps** |
+| GPT-5.6 Luna (on→off) | 156 | 22, 2 | **<0.0001** | **significant — reasoning helps** |
+
+**Reasoning meaningfully helps 3 of 4 models on this CTF-solving task** —
+Qwen3.8 Flash, DeepSeek V4.1 Flash, and GPT-5.6 Luna all solve
+significantly fewer challenges with reasoning forced off. Solar Pro4 is the
+outlier: forcing its reasoning on (verified to actually engage, see the
+manipulation check above) did **not** produce a statistically significant
+improvement, despite the raw rate moving from 10.8% to 12.9%.
+
+### The reasoning-controlled cross-model comparison (the new headline finding)
+
+The original n=61 "all 5 attempted" comparison above found Solar Pro4
+significantly worse than *every* other model — but that comparison never
+controlled for reasoning, and the other 4 models' natural reasoning rates
+ranged from 36% to 100%. Restricting to the **80 challenges all 4
+non-GLM models attempted with reasoning uniformly OFF** (GLM excluded —
+can't disable reasoning) gives the cleanest apples-to-apples comparison in
+this project:
+
+| Model | Solved (of 80) | Solve rate |
+|---|---|---|
+| DeepSeek V4.1 Flash | 24 | 30.0% |
+| Qwen3.8 Flash | 15 | 18.8% |
+| GPT-5.6 Luna | 15 | 18.8% |
+| Solar Pro 4 | 9 | 11.3% |
+
+Pairwise McNemar within this fixed n=80:
+
+| Pair | b, c | p |
+|---|---|---|
+| DeepSeek V4.1 Flash vs Solar Pro 4 | 15, 0 | **0.0001** |
+| DeepSeek V4.1 Flash vs Qwen3.8 Flash | 11, 2 | **0.0225** |
+| DeepSeek V4.1 Flash vs GPT-5.6 Luna | 11, 2 | **0.0225** |
+| Qwen3.8 Flash vs Solar Pro 4 | 7, 1 | 0.070 |
+| GPT-5.6 Luna vs Solar Pro 4 | 8, 2 | 0.109 |
+| Qwen3.8 Flash vs GPT-5.6 Luna | 6, 6 | 1.000 |
+
+**This changes the headline finding.** With reasoning genuinely controlled
+(not just nominally the "same setting" but verified via the manipulation
+check above): **DeepSeek V4.1 Flash is significantly better than all 3
+other models**, but **Solar Pro4 is no longer significantly different from
+Qwen3.8 Flash (p=0.070) or GPT-5.6 Luna (p=0.109)** — only from DeepSeek.
+Qwen3.8 Flash and GPT-5.6 Luna are statistically indistinguishable from
+each other (p=1.000). The original "Solar Pro4 is worse than everyone"
+finding was **partly an artifact of the reasoning confound**: 2 of the 3
+significant pairs against Solar Pro4 in the original n=61 analysis
+(vs Qwen, vs Luna) do not survive once reasoning is held constant. The
+comparison against DeepSeek does survive and gets *more* significant
+(p=0.0001 here vs p<0.0001 in the original, similar strength) — DeepSeek's
+CTF-solving edge looks real regardless of reasoning setting.
+
+**Caveat carried over from the original n=61 analysis**: this still uses
+each model's *attempted* subset (83-172 of 200 per model), not the full
+200 — the attempted-count imbalance and its own caveats (see above) still
+apply on top of the reasoning control.
+
 ## Preliminary results (n=10 sample, re-run 2026-09-19)
 
 **Superseded by the full run above for solve rate.** Kept for its own
@@ -455,8 +581,17 @@ python3 run_all_models.py   # ~60-90 min wall clock, concurrency=3
   under stable, post-incident conditions to get an accurate cost figure for
   that fixed 12-challenge set (see
   [Preliminary results](#preliminary-results-n10-sample-re-run-2026-09-19)
-  below) — total cost across both runs combined: **$8.72** ($8.27 full-200
-  + $0.45 n=10).
+  below).
+- **Reasoning-controlled re-run complete, 2026-09-20** (800 more jobs,
+  $6.13) — see [Reasoning confound](#reasoning-confound-models-never-got-an-explicit-onoff-setting)
+  above. Found the original full-200 run never set an explicit reasoning
+  on/off parameter (each model used its provider default, 0%-100%
+  depending on model) and that this partly explains the original
+  "Solar Pro4 worse than everyone" finding — with reasoning controlled,
+  Solar Pro4 is no longer significantly different from Qwen3.8 Flash or
+  GPT-5.6 Luna, only from DeepSeek V4.1 Flash. **Total cost across all
+  phase 2 runs: $14.85** ($8.27 full-200 + $0.45 n=10 + $6.13
+  reasoning-controlled).
 - Format adapter (`adapt_baseline_trajectory.py`) verified against
   CTFJudge's own parsing/formatting code, but the **full CTFJudge/CCI
   pipeline has not been run on any trajectory from either run** — that's

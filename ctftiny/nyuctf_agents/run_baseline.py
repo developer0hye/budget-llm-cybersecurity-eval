@@ -51,6 +51,7 @@ def main():
     parser.add_argument("--disable-markdown", default=False, action="store_true", help="don't render Markdown formatting in messages")
     parser.add_argument("-m", "--max-rounds", type=int, default=10, help="maximum number of rounds to run")
     parser.add_argument("--max-cost", type=float, default=10, help="maximum cost of the conversation to run")
+    parser.add_argument("--reasoning-enabled", action="store_true", default=None, help="explicitly request reasoning ON (OpenRouter 'reasoning': {'enabled': true}). Omit this flag (leave None) to match upstream: no explicit request, provider default applies. Explicit OFF is config-only (reasoning_enabled: false in YAML), since this flag has no CLI way to express it.")
 
     # Log directory options
     parser.add_argument("--skip-exist", action="store_true", help="Skip existing logs and experiments")
@@ -76,6 +77,7 @@ def main():
         args.backend = config_parameter.get("backend", args.backend)
         args.model = config_parameter.get("model", args.model)
         args.max_cost = config_parameter.get("max_cost", args.max_cost)
+        args.reasoning_enabled = config_parameter.get("reasoning_enabled", args.reasoning_enabled)
         args.name = config_experiment.get("name", args.name)
         args.debug = config_experiment.get("debug", args.debug)
         args.skip_exist = config_experiment.get("skip_exist", args.skip_exist)

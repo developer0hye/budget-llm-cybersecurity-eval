@@ -32,31 +32,50 @@ Gap between rank 1 and rank 5: 1.55pp.
 
 Gap between rank 1 and rank 5: 0.75pp.
 
-**Bottom line: all 5 models are statistically tied, in both conditions.**
-Both gaps (1.55pp, 0.75pp) are below the ~2.2pp threshold needed for a
-95%-confidence difference at n=2000 (see [Statistical notes](#statistical-notes)).
-Don't read either table as "model X beats model Y" — read it as "these 5
-similarly-priced models perform indistinguishably on cybersecurity knowledge
-MCQs, whether or not they're allowed to reason," which is itself the finding.
+**Corrected finding: "all tied" only holds for the reasoning-on condition**
+(see [Statistical notes](#statistical-notes) — an earlier version of this
+section used a rank-gap threshold that doesn't hold up under review). All 5
+models answer the *same* 2000 questions each run, which makes this matched
+data — the statistically correct comparison is McNemar's paired test per
+question pair, not the gap between rank 1 and rank 5:
+
+- **Reasoning off**: 3 of 10 pairwise McNemar tests are significant at
+  p<0.05 — DeepSeek V4.1 Flash vs GLM 5.3 Flash (p=0.008), GPT-5.6 Luna vs
+  GLM 5.3 Flash (p=0.027), Solar Pro 4 vs DeepSeek V4.1 Flash (p=0.035). The
+  other 7 pairs are not significant. GLM's mandatory reasoning (see \* below)
+  makes its "reasoning off" row not truly apples-to-apples, which plausibly
+  explains why GLM drives 2 of these 3 pairs.
+- **Reasoning on**: all 10 pairs are not significant (p≥0.15) — "statistically
+  tied" holds cleanly here.
+- **Multiple-comparisons caveat**: 10 pairwise tests were run per condition;
+  none of the 3 nominally-significant reasoning-off pairs survive a
+  Bonferroni correction (α=0.05/10=0.005). Treat them as suggestive, not
+  conclusive.
+
+Don't read either table as "model X beats model Y" outright — the
+reasoning-on table supports "these 5 similarly-priced models perform
+indistinguishably," but the reasoning-off table has real (if
+multiple-comparisons-fragile) daylight between a few pairs.
 
 ### Does reasoning help? (per-model, off → on)
 
-| Model | Reasoning off | Reasoning on | Delta |
-|---|---|---|---|
-| Solar Pro 4 | 94.75% | 94.85% | +0.10pp |
-| GPT-5.6 Luna | 93.85% | 94.10% | +0.25pp |
-| DeepSeek V4.1 Flash | 93.55% | 94.25% | +0.70pp |
-| GLM 5.3 Flash | 95.10%\* | 94.85% | -0.25pp |
-| Qwen3.8 Flash | 94.05% | 94.35% | +0.30pp |
+| Model | Reasoning off | Reasoning on | Delta | McNemar p (paired, off vs on) |
+|---|---|---|---|---|
+| Solar Pro 4 | 94.75% | 94.85% | +0.10pp | 0.912 |
+| GPT-5.6 Luna | 93.85% | 94.10% | +0.25pp | 0.645 |
+| DeepSeek V4.1 Flash | 93.55% | 94.25% | +0.70pp | 0.211 |
+| GLM 5.3 Flash | 95.10%\* | 94.85% | -0.25pp | 0.568 |
+| Qwen3.8 Flash | 94.05% | 94.35% | +0.30pp | 0.617 |
 
 \* GLM's "off" run still had reasoning on (mandatory) — its delta is test-retest
 noise, not an on/off effect, and usefully shows run-to-run variance is ~0.25pp
 at this sample size.
 
-**No model shows a statistically meaningful effect from reasoning** — every
-delta is under 1pp, far below the ~2-3pp needed for significance at n=2000
-per arm. On a pure-knowledge MCQ benchmark like CyberMetric, letting these
-models "think longer" doesn't measurably change the outcome.
+**No model shows a statistically meaningful effect from reasoning** — paired
+McNemar's test (matched per-question, off vs on) gives p≥0.21 for every
+model. This isn't just "the deltas look small," it's a proper non-significant
+result on matched data. On a pure-knowledge MCQ benchmark like CyberMetric,
+letting these models "think longer" doesn't measurably change the outcome.
 
 ## Phase 2: CTF-solving agent evaluation
 
@@ -82,6 +101,14 @@ fewer than every other model** (McNemar p<0.001 in all 4 pairwise tests
 against it); the other 4 models are statistically indistinguishable from
 each other.
 
+**Superseded in part, see below**: this run never set an explicit
+reasoning on/off parameter, so each model ran at whatever its provider
+defaults to (0% to 100%, measured) — a confound. A follow-up
+reasoning-controlled re-run found DeepSeek V4.1 Flash's edge survives, but
+2 of Solar Pro4's 4 "significantly worse" pairings (vs Qwen3.8 Flash, vs
+GPT-5.6 Luna) do not — see [Reasoning-controlled re-run](#reasoning-controlled-re-run-2026-09-20)
+below.
+
 | Model | Attempted/200 | Solve rate (of attempted) | Solve rate (n=61 all-attempted) | Total cost |
 |---|---|---|---|---|
 | DeepSeek V4.1 Flash | 169 | 34.9% | 47.5% | $1.62 |
@@ -100,6 +127,36 @@ writeups) than with genuine capability gains — see
 [`ctftiny/README.md`](ctftiny/README.md#how-this-compares-to-the-published-literature)
 for the full literature comparison and the caveats behind both tables.
 
+### Reasoning-controlled re-run, 2026-09-20
+
+A statistical audit found `nyuctf_agents`' baseline harness never sets an
+explicit `reasoning` on/off parameter, so the run above let each model
+default to its provider's own behavior — measured (by sampling raw
+trajectory logs) at 0% (Solar Pro 4) to 100% (Qwen3.8 Flash). Fixed by
+adding explicit reasoning control and re-running: Solar Pro 4 with
+reasoning forced **on** (200 more jobs), and Qwen3.8 Flash / DeepSeek
+V4.1 Flash / GPT-5.6 Luna with reasoning forced **off** (600 more jobs;
+GLM 5.3 Flash excluded — its reasoning is mandatory). $6.13 additional
+cost. Full data, methodology, and manipulation checks:
+[`ctftiny/README.md`](ctftiny/README.md#reasoning-confound-models-never-got-an-explicit-onoff-setting).
+
+**Two findings**:
+
+1. **Reasoning helps 3 of 4 models, not Solar Pro 4.** Paired McNemar
+   (same challenges, on vs off): Qwen3.8 Flash (p=0.0001), DeepSeek V4.1
+   Flash (p=0.0003), and GPT-5.6 Luna (p<0.0001) all solve significantly
+   *fewer* challenges with reasoning off. Solar Pro 4's own on-vs-off
+   comparison is not significant (p=0.125), even though its forced-on
+   reasoning was verified to actually engage (100% of sampled turns).
+2. **The original "Solar Pro4 worse than everyone" finding was partly a
+   reasoning-confound artifact.** Restricting to the 80 challenges all 4
+   non-GLM models attempted with reasoning uniformly **off** — the
+   cleanest apples-to-apples comparison in this project — DeepSeek V4.1
+   Flash remains significantly better than all 3 others (p≤0.023), but
+   **Solar Pro 4 is no longer significantly different from Qwen3.8 Flash
+   (p=0.070) or GPT-5.6 Luna (p=0.109)**, only from DeepSeek. Qwen3.8
+   Flash and GPT-5.6 Luna are statistically tied (p=1.000).
+
 ## Status
 
 - ✅ **Baseline (reasoning off, GLM mandatory-on)** — complete, 2026-09-17.
@@ -108,8 +165,17 @@ for the full literature comparison and the caveats behind both tables.
   [Token budget calibration](#token-budget-calibration).
 - ✅ **Phase 2 (CTF-solving agent eval)** — full 200-challenge run (1000
   jobs, $8.27) and a clean re-run of the original n=10 sample (60 jobs,
-  $0.45) both complete, 2026-09-19 — **$8.72 total for phase 2**. See
-  above and `ctftiny/README.md`. Full CCI/CTFJudge scoring not yet run.
+  $0.45) both complete, 2026-09-19. Full CCI/CTFJudge scoring not yet run.
+- ✅ **Statistical audit (both benchmarks)** — complete, 2026-09-20. Found
+  and fixed a broken significance-threshold derivation in this README (see
+  [Statistical notes](#statistical-notes)) and an undisclosed reasoning
+  confound in phase 2 (models were never given an explicit reasoning
+  on/off setting, so each ran at whatever its provider defaults to —
+  0% to 100% depending on model).
+- ✅ **Reasoning-controlled re-run (phase 2)** — complete, 2026-09-20, 800
+  jobs, $6.13. See [Reasoning-controlled re-run](#reasoning-controlled-re-run-2026-09-20)
+  above and `ctftiny/README.md`. **$14.85 total for phase 2** ($8.27 +
+  $0.45 + $6.13).
 
 ## Models under test
 
@@ -148,12 +214,33 @@ it fresh from `github.com/cybermetric/CyberMetric` at setup time.
 
 ## Statistical notes
 
-When reporting results publicly: the gap between two models needs to be
-roughly **2.2 percentage points or more** to be statistically meaningful at
-95% confidence (this combines both models' standard errors — each model's own
-accuracy has ~±1.6pp margin of error at n=2000, and comparing two adds those
-in quadrature). Smaller gaps should be reported as "statistically tied," not
-as one model beating another.
+All 5 models answer the *same* 2000 questions per run, which makes this
+**matched/paired data**. The statistically correct comparison is
+**McNemar's exact test** on a per-question basis (used throughout the
+results above), not a threshold on the raw accuracy gap between two models.
+
+An earlier version of this section claimed a gap needed "~2.2 percentage
+points" to be meaningful, derived by "combining both models' ~±1.6pp margins
+of error." That derivation doesn't actually reproduce and was corrected
+2026-09-20:
+
+- 2.19pp is the **single-model** 95%-CI margin at conservative p=0.5
+  (`1.96 * sqrt(0.5×0.5/2000) × 100`) — not a combined two-model threshold.
+- Properly combining two independent models' margins in quadrature (an
+  unpaired two-proportion z-test) gives **~3.10pp** at conservative p=0.5,
+  or **~1.47pp** using the models' actual observed accuracy (~94%) instead
+  of the conservative p=0.5 assumption.
+- Neither of those matches the original "~2.2pp" cleanly, and neither is
+  actually the right test for this data: the two-proportion z-test assumes
+  independent samples, but these are the same 2000 questions answered by
+  every model. **McNemar's paired test is the correct comparison** and is
+  more statistically powerful than any threshold-on-the-gap approach here —
+  it's what recovers the 3 significant reasoning-off pairs that a naive
+  "gap < 2.2pp → tied" reading would have missed entirely.
+- Multiple-comparisons caveat: with 10 pairwise tests per condition, ~0.5
+  false positives are expected by chance at uncorrected α=0.05. None of
+  this run's 3 nominally-significant pairs survive Bonferroni correction
+  (α=0.05/10=0.005) — see the reasoning-off results above.
 
 ## Setup
 

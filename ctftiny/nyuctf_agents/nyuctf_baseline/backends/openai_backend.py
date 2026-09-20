@@ -98,11 +98,25 @@ class OpenAIBackend(Backend):
 
     @backoff.on_exception(backoff.expo, RateLimitError, max_tries=5)
     def _call_model(self):
+        kwargs = {}
+        # OpenRouter-specific, not a standard OpenAI SDK parameter -- must go
+        # through extra_body. Upstream never sets this, so every model runs
+        # on whatever its provider defaults to when unspecified, which is
+        # NOT uniform across models (observed: solar-pro4 never reasons by
+        # default, qwen3.8-flash always does) -- a real confound when
+        # comparing models this way. Tri-state: None (default) leaves
+        # upstream behavior untouched; True/False explicitly forces
+        # reasoning on/off via the config's reasoning_enabled (or
+        # --reasoning-enabled on the CLI, which can only express True).
+        reasoning_enabled = getattr(self.args, "reasoning_enabled", None)
+        if reasoning_enabled is not None:
+            kwargs["extra_body"] = {"reasoning": {"enabled": bool(reasoning_enabled)}}
         return self.client.chat.completions.create(
             model=self.model,
             messages=self.messages,
             tools=self.tool_schemas,
             tool_choice="auto",
+            **kwargs,
         )
 
     def _message(self, content : str, role : str) -> dict[str,str]:
