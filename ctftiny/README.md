@@ -410,6 +410,21 @@ inflated.
   protecting it at all — this collapsed worker concurrency from 6 to
   effectively 1 for 15+ minutes during the retry batch before being
   diagnosed and fixed (see [Appendix B](#appendix-b-operational-incident-log)).
+- [`strip_docker_sock.py`](strip_docker_sock.py) — **63 of the 200 test-split
+  challenges bind-mount the host's `/var/run/docker.sock` into the challenge
+  container as shipped** (2 more run `privileged: true`), a leftover from the
+  original CSAW challenges using docker-in-docker to spawn per-player
+  instances. A container holding the host Docker socket can create further
+  containers with arbitrary mounts, i.e. it is equivalent to root on the
+  host — and this benchmark exists to have an LLM agent find and exploit
+  bugs in exactly those services, so a successful exploit lands code
+  execution inside a container that can reach the host. Auditing all 1,732
+  trajectories from the runs above found no agent ever went near it (every
+  solve just read the flag, and the agent's own container has no socket:
+  it runs as `docker run -d --rm --network ctfnet --platform linux/amd64
+  ctfenv`, with no mounts at all), but the path shouldn't be open. This
+  module removes those mounts, and the three drivers call it at startup
+  since re-downloading the dataset restores them.
 - **Two deadlock bugs in the retry-batch drivers, found by a Codex code
   review of the pipeline**: `ensure_port_free()`'s `docker ps`/`docker
   kill` cleanup calls had no `timeout=`, so a single hung Docker call

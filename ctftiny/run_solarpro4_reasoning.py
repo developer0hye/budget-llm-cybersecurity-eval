@@ -30,6 +30,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from dynamic_ports import ensure_dynamic_ports
+from strip_docker_sock import strip_all
 
 ROOT = Path(__file__).parent.resolve()
 NYUCTF_DIR = ROOT / "nyuctf_agents"
@@ -189,6 +190,11 @@ def main():
         sys.exit(1)
 
     ensure_ctfnet()
+    # 63 of the 200 test challenges bind-mount the host Docker socket as
+    # shipped; a successful agent exploit in one of those containers would
+    # reach the host. Re-downloading the dataset restores the mounts, so
+    # strip them on every run rather than once by hand.
+    strip_all()
 
     all_challenges, challenge_ports = load_challenge_ports()
     done = load_done_challenges()
