@@ -84,28 +84,30 @@ Each model answered the **same 2000 questions**, once with reasoning left
 at its provider default (effectively off; GLM 5.3 Flash cannot disable
 reasoning) and once with reasoning explicitly forced on for all 5.
 
-### Results — reasoning off (2026-09-17)
+### Results
 
-| Rank | Country | Model | Accuracy | Correct/Total |
+Accuracy on the same 2000 questions, in both reasoning conditions. Ranked
+by the reasoning-on column — the apples-to-apples one, since GLM 5.3 Flash
+cannot disable reasoning and its "off" row is therefore not a true
+off-condition.
+
+| Rank | Country | Model | Reasoning off | Reasoning on |
 |---|---|---|---|---|
-| 1 | 🇨🇳 CN | GLM 5.3 Flash\* | 95.10% | 1902/2000 |
-| 2 | 🇰🇷 KR | Solar Pro 4 | 94.75% | 1895/2000 |
-| 3 | 🇨🇳 CN | Qwen3.8 Flash | 94.05% | 1881/2000 |
-| 4 | 🇺🇸 US | GPT-5.6 Luna | 93.85% | 1877/2000 |
-| 5 | 🇨🇳 CN | DeepSeek V4.1 Flash | 93.55% | 1871/2000 |
+| 1 | 🇰🇷 KR | Solar Pro 4 | 94.75% | **94.85%** |
+| 1 | 🇨🇳 CN | GLM 5.3 Flash\* | 95.10% | **94.85%** |
+| 3 | 🇨🇳 CN | Qwen3.8 Flash | 94.05% | **94.35%** |
+| 4 | 🇨🇳 CN | DeepSeek V4.1 Flash | 93.55% | **94.25%** |
+| 5 | 🇺🇸 US | GPT-5.6 Luna | 93.85% | **94.10%** |
 
-\* GLM 5.3 Flash's reasoning is mandatory and cannot be disabled — its "off"
-row is not a true off-condition; see [Cross-model significance](#cross-model-significance) below.
+\* GLM's "off" run still had reasoning on (mandatory).
 
-### Results — reasoning explicitly on for all 5 (2026-09-18)
-
-| Rank | Country | Model | Accuracy | Correct/Total |
-|---|---|---|---|---|
-| 1 | 🇰🇷 KR | Solar Pro 4 | 94.85% | 1897/2000 |
-| 1 | 🇨🇳 CN | GLM 5.3 Flash | 94.85% | 1897/2000 |
-| 3 | 🇨🇳 CN | Qwen3.8 Flash | 94.35% | 1887/2000 |
-| 4 | 🇨🇳 CN | DeepSeek V4.1 Flash | 94.25% | 1885/2000 |
-| 5 | 🇺🇸 US | GPT-5.6 Luna | 94.10% | 1882/2000 |
+**Verdict: the 5 models are statistically indistinguishable.** With
+reasoning on for all of them, all 10 pairwise McNemar tests are
+non-significant (p ≥ 0.13). With reasoning at each model's default, 3 of 10
+pairs are nominally significant but **none survive Bonferroni correction**,
+and GLM's mandatory reasoning plausibly explains 2 of those 3. A 1.3pp
+spread across 2000 questions is not a ranking — don't cite one of these
+models as beating another on this benchmark.
 
 ### Statistical methodology
 
@@ -120,7 +122,8 @@ throughout — see [Limitations](#limitations).
 
 ### Cross-model significance
 
-**Reasoning off** (n=2000 per pair):
+<details>
+<summary>Full pairwise McNemar tests, reasoning off (n=2000 per pair)</summary>
 
 | Pair | b, c | p |
 |---|---|---|
@@ -135,39 +138,21 @@ throughout — see [Limitations](#limitations).
 | Solar Pro 4 vs GLM 5.3 Flash | 53, 60 | 0.5727 |
 | GPT-5.6 Luna vs Qwen3.8 Flash | 50, 54 | 0.7688 |
 
-3 of 10 pairs are nominally significant (p<0.05); **none survive Bonferroni
-correction** (α = 0.05/10 = 0.005). GLM 5.3 Flash's mandatory reasoning
-plausibly explains 2 of the 3 — its "off" condition isn't a true off
-condition for GLM specifically.
+3 of 10 pairs are nominally significant (p<0.05); none survive Bonferroni
+correction (α = 0.05/10 = 0.005). Under reasoning-on, all 10 pairs are
+non-significant (p ≥ 0.13).
 
-**Reasoning on** (n=2000 per pair): all 10 pairs are not significant
-(p ≥ 0.13) — the 5 models are statistically indistinguishable under this
-condition.
-
-**Reading the two tables together**: "these 5 similarly-priced models
-perform indistinguishably on cybersecurity knowledge MCQs" holds cleanly
-for the reasoning-on condition; the reasoning-off condition has real, if
-multiple-comparisons-fragile, daylight between a few pairs. Don't cite
-either table as "model X beats model Y" without naming the condition and
-the correction status.
+</details>
 
 ### Does reasoning help accuracy?
 
-| Model | Reasoning off | Reasoning on | Delta | McNemar p (paired) |
-|---|---|---|---|---|
-| Solar Pro 4 | 94.75% | 94.85% | +0.10pp | 0.912 |
-| GPT-5.6 Luna | 93.85% | 94.10% | +0.25pp | 0.645 |
-| DeepSeek V4.1 Flash | 93.55% | 94.25% | +0.70pp | 0.211 |
-| GLM 5.3 Flash\* | 95.10% | 94.85% | −0.25pp | 0.568 |
-| Qwen3.8 Flash | 94.05% | 94.35% | +0.30pp | 0.617 |
+**No — not for any of the 5 models.** Paired McNemar on the same 2000
+questions, off vs. on: Solar Pro 4 p=0.912, GPT-5.6 Luna p=0.645, DeepSeek
+V4.1 Flash p=0.211, GLM 5.3 Flash p=0.568, Qwen3.8 Flash p=0.617. Deltas
+run −0.25pp to +0.70pp, within the ~0.25pp test-retest noise at this sample
+size. This is a proper non-significant result on matched data, not just
+"the deltas look small."
 
-\* GLM's "off" run still had reasoning on (mandatory); its delta reflects
-test-retest noise (~0.25pp run-to-run variance at this sample size), not a
-real on/off effect.
-
-**No model shows a statistically meaningful effect from reasoning on this
-benchmark** — paired McNemar gives p ≥ 0.21 for every model, a proper
-non-significant result on matched data, not just "the deltas look small."
 Contrast this with [Part 2](#part-2--ctf-solving-agent-evaluation-phase-2),
 where reasoning has a large, significant effect for most of the same
 models — the type of task matters more than the model for whether
@@ -228,34 +213,22 @@ Treating timeouts as non-solves instead — which raises the sample to n=196 —
 leaves **all 6 pairwise p-values identical**, since those challenges went
 unsolved by every model and contribute no discordant pairs.
 
-### Results — uncontrolled full-200 run (each model at its provider default)
-
-| Rank | Country | Model | Attempted/200 | Solved | Solve rate | Cost |
-|---|---|---|---|---|---|---|
-| 1 | 🇨🇳 CN | DeepSeek V4.1 Flash | 194 | 70 | 36.1% | $1.81 |
-| 2 | 🇨🇳 CN | GLM 5.3 Flash | 174 | 62 | 35.6% | $2.34 |
-| 3 | 🇨🇳 CN | Qwen3.8 Flash | 188 | 48 | 25.5% | $2.18 |
-| 4 | 🇺🇸 US | GPT-5.6 Luna | 196 | 43 | 21.9% | $3.73 |
-| 5 | 🇰🇷 KR | Solar Pro 4 | 195 | 13 | 6.7% | $1.79 |
-
-Reasoning defaults differ per model here (0%–100% measured), so this ranking
-is **not** apples-to-apples — use the n=190 table above for model claims.
-Solve rates are of *attempted*, and the attempted counts are uneven for
-infrastructure reasons, not capability; the restricted n=166 all-5-attempted
-subset and the caveat that retry-recovered challenges are systematically
-harder are both in [`ctftiny/README.md`](ctftiny/README.md#results-uncontrolled-full-200-run-2026-09-19).
-
 ### Does reasoning help? (paired, same challenges, on vs. off)
 
-| Model | n | p | Verdict |
-|---|---|---|---|
-| Qwen3.8 Flash | 187 | **<0.0001** | reasoning helps |
-| DeepSeek V4.1 Flash | 191 | **<0.0001** | reasoning helps |
-| GPT-5.6 Luna | 196 | **<0.0001** | reasoning helps |
-| Solar Pro 4 | 192 | 0.146 | no measurable effect |
+**Yes — for 3 of the 4 testable models, strongly.** Qwen3.8 Flash (n=187),
+DeepSeek V4.1 Flash (n=191) and GPT-5.6 Luna (n=196) all lose solve rate
+when reasoning is disabled, p<0.0001 each. Solar Pro 4 is the exception
+(n=192, p=0.146) — no measurable effect, and the forced-on condition was
+verified to actually engage reasoning. This is the opposite of [Part 1's
+CyberMetric result](#does-reasoning-help-accuracy), where reasoning moves
+nothing for any model: the type of task decides whether reasoning pays off,
+more than the model does.
 
-The opposite of [Part 1's CyberMetric result](#does-reasoning-help-accuracy),
-where reasoning moves nothing for any model.
+GLM 5.3 Flash cannot be tested here at all (mandatory reasoning). The
+earlier **uncontrolled** full-200 run — every model at its own provider
+default, so not apples-to-apples — plus per-model cost, attempted counts,
+and the n=166 all-5-attempted subset are in
+[`ctftiny/README.md`](ctftiny/README.md#results-uncontrolled-full-200-run-2026-09-19).
 
 ## Limitations
 
@@ -342,7 +315,8 @@ Writes `calibration/report.md` / `calibration/report.json` plus an
 append-only `calibration/calibration.log`. Low concurrency by default
 (5) so it doesn't compete for rate limit with a concurrent `run_eval.py`.
 
-**Results (probe_size=30, seed=42, run 2026-09-18)**:
+<details>
+<summary><b>Calibrated budgets (probe_size=30, seed=42, run 2026-09-18)</b></summary>
 
 | Model | Recommended `max_tokens` | Max reasoning tokens seen | p50 tokens used |
 |---|---|---|---|
@@ -358,6 +332,8 @@ under 1000 tokens, but occasional spikes past 4800/4000) — this is why the
 reasoning-on run above logged 4 truncation errors at `max_tokens=4000`. If
 re-running with reasoning on, use `max_tokens=8000` for Solar Pro 4 and
 Qwen3.8 Flash specifically rather than one shared budget for all 5.
+
+</details>
 
 ### Output files
 
