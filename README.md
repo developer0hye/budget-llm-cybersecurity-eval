@@ -201,6 +201,62 @@ longer significantly different from GPT-5.6 Luna** — it is still
 significantly worse than DeepSeek, and (at a suggestive, not fully
 conclusive level) worse than Qwen3.8 Flash again once the sample grew.
 
+### Results — reasoning-controlled comparison (n=190, the one to cite)
+
+The 190 challenges all 4 testable models attempted with reasoning uniformly
+off. GLM 5.3 Flash is excluded — its reasoning cannot be disabled.
+
+| Rank | Country | Model | Solved (of 190) | Solve rate |
+|---|---|---|---|---|
+| 1 | 🇨🇳 CN | DeepSeek V4.1 Flash | 41 | 21.6% |
+| 2 | 🇨🇳 CN | Qwen3.8 Flash | 23 | 12.1% |
+| 3 | 🇺🇸 US | GPT-5.6 Luna | 19 | 10.0% |
+| 4 | 🇰🇷 KR | Solar Pro 4 | 13 | 6.8% |
+
+Pairwise McNemar: DeepSeek beats all 3 others (p ≤ 0.0005); Solar Pro 4 vs
+Qwen3.8 Flash p=0.013 (suggestive); Solar Pro 4 vs GPT-5.6 Luna p=0.180 and
+Qwen3.8 Flash vs GPT-5.6 Luna p=0.455 (both not significant). Full table:
+[`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n190).
+
+**Why 190 and not 200**: a paired test needs both models to have actually
+attempted the same challenge, so the comparison uses the challenges all 4
+attempted. 10 drop out, none for model-quality reasons — 2 fail to start
+for every model (`2019f-web-biometric`, a Debian package 404 at image build;
+`2023q-web-rainbow_notes`, a Docker/runc bug on Apple Silicon), and 8 lose a
+single model each to a 900s timeout (6) or a one-off compose failure (2).
+Treating timeouts as non-solves instead — which raises the sample to n=196 —
+leaves **all 6 pairwise p-values identical**, since those challenges went
+unsolved by every model and contribute no discordant pairs.
+
+### Results — uncontrolled full-200 run (each model at its provider default)
+
+| Rank | Country | Model | Attempted/200 | Solved | Solve rate | Cost |
+|---|---|---|---|---|---|---|
+| 1 | 🇨🇳 CN | DeepSeek V4.1 Flash | 194 | 70 | 36.1% | $1.81 |
+| 2 | 🇨🇳 CN | GLM 5.3 Flash | 174 | 62 | 35.6% | $2.34 |
+| 3 | 🇨🇳 CN | Qwen3.8 Flash | 188 | 48 | 25.5% | $2.18 |
+| 4 | 🇺🇸 US | GPT-5.6 Luna | 196 | 43 | 21.9% | $3.73 |
+| 5 | 🇰🇷 KR | Solar Pro 4 | 195 | 13 | 6.7% | $1.79 |
+
+Reasoning defaults differ per model here (0%–100% measured), so this ranking
+is **not** apples-to-apples — use the n=190 table above for model claims.
+Solve rates are of *attempted*, and the attempted counts are uneven for
+infrastructure reasons, not capability; the restricted n=166 all-5-attempted
+subset and the caveat that retry-recovered challenges are systematically
+harder are both in [`ctftiny/README.md`](ctftiny/README.md#results-uncontrolled-full-200-run-2026-09-19).
+
+### Does reasoning help? (paired, same challenges, on vs. off)
+
+| Model | n | p | Verdict |
+|---|---|---|---|
+| Qwen3.8 Flash | 187 | **<0.0001** | reasoning helps |
+| DeepSeek V4.1 Flash | 191 | **<0.0001** | reasoning helps |
+| GPT-5.6 Luna | 196 | **<0.0001** | reasoning helps |
+| Solar Pro 4 | 192 | 0.146 | no measurable effect |
+
+The opposite of [Part 1's CyberMetric result](#does-reasoning-help-accuracy),
+where reasoning moves nothing for any model.
+
 ## Limitations
 
 - **Matched-data comparisons require paired tests.** Every result in this

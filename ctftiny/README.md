@@ -149,10 +149,28 @@ p<0.0001); the difference vs. DeepSeek survives fully. GLM 5.3 Flash cannot
 be placed in this comparison at all, since its reasoning cannot be disabled
 to match the other 4.
 
-This comparison inherits the attempted-count caveat from the uncontrolled
-run below — it uses each model's *attempted* subset (not the full 200),
-though at n=190 of a possible 200 this now covers 95% of the challenge
-pool — see [Limitations](#limitations).
+**Why n=190 rather than 200**: a paired test requires both models in a pair
+to have attempted the same challenge, so this restricts to the challenges
+all 4 attempted. The 10 that drop out do so for infrastructure reasons, not
+model behavior: 2 fail to start for every model (`2019f-web-biometric` — a
+Debian package 404 during image build; `2023q-web-rainbow_notes` — the
+Docker/runc bug in [Appendix B](#appendix-b-operational-incident-log)), and
+8 lose exactly one model each to a 900s timeout (6 cases: Qwen3.8 Flash 1,
+DeepSeek V4.1 Flash 4, Solar Pro 4 1) or a one-off docker-compose failure
+(2 cases, both Solar Pro 4). Per-model attempted counts in this condition
+are 194–198 of 200.
+
+**Sensitivity check**: treating a timeout as a non-solve rather than as
+missing data — defensible, since the model did get its full budget — raises
+the sample to n=196 and leaves **all six pairwise p-values unchanged**
+(0.0129, <0.0001, 0.1796, 0.0005, 0.4545, 0.0001). Those 6 challenges went
+unsolved by all 4 models, so they add no discordant pairs for McNemar to
+use. The conclusions here do not depend on that choice.
+
+This comparison still inherits the attempted-count caveat from the
+uncontrolled run below — it uses each model's *attempted* subset — though
+at n=190 of a possible 200 it now covers 95% of the challenge pool; see
+[Limitations](#limitations).
 
 ## Results: does reasoning help, per model
 
