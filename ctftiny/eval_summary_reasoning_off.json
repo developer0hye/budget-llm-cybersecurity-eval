@@ -1,12 +1,12 @@
 {
   "qwen3.8-flash": {
-    "n": 200,
-    "attempted": 199,
+    "n": 199,
+    "attempted": 198,
     "no_log": 1,
     "solved": 23,
-    "solve_rate_of_attempted": 0.11557788944723618,
+    "solve_rate_of_attempted": 0.11616161616161616,
     "total_cost_usd": 1.5041,
-    "avg_wall_time_s_attempted": 190.7
+    "avg_wall_time_s_attempted": 191.4
   },
   "deepseek-v4.1-flash": {
     "n": 200,
