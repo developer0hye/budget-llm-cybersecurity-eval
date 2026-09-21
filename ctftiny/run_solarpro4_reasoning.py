@@ -142,7 +142,10 @@ def run_one(challenge: str, ports: list) -> dict:
     env = dict(os.environ)
     result = {"model": MODEL_KEY, "challenge": challenge}
 
-    locks = [_port_locks[p] for p in sorted(ports)]
+    # dict.fromkeys de-dupes while keeping order; acquiring the same
+    # non-reentrant Lock twice would self-deadlock the worker and
+    # strand every later job needing that port.
+    locks = [_port_locks[p] for p in sorted(dict.fromkeys(ports))]
     for lock in locks:
         lock.acquire()
     # Started only after the lock is held, so wall_time_s doesn't include

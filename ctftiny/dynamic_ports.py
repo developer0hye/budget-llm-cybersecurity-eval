@@ -114,8 +114,21 @@ def ensure_dynamic_ports(challenge: str, ports: list) -> list:
             # for 15+ minutes after this exact situation recurred across
             # several of the 24 previously-remapped port-5000 challenges).
             # Recover by reading the port actually in the file right now.
+            # Pick a port the file actually publishes that this challenge's
+            # port list doesn't already cover. Without the `not in new_ports`
+            # guard, a multi-port challenge whose metadata is stale for one
+            # port resolves it to a port already in the list -- e.g.
+            # 2019f-web-biometric is recorded as ['15000', '5001'] but the
+            # file publishes 5001 and 49186, so 15000 recovered to 5001 and
+            # the caller ended up locking the same port twice. Acquiring one
+            # non-reentrant Lock twice is an immediate self-deadlock that
+            # also strands every later job needing that port (found live
+            # during the 2026-09-22 gap-fill: the whole pool went idle with
+            # 8 jobs queued).
             actual_ports = re.findall(r'(?<!\d)(\d+):\d+', text)
-            actual = next((p for p in actual_ports if p != str(port)), None)
+            declared = {str(p) for p in ports}
+            actual = next((p for p in actual_ports
+                           if p not in declared and p not in new_ports), None)
             if actual and _port_is_free(actual):
                 print(f"[port] {challenge}: stale port {port} not in file, using its actual "
                       f"current port {actual} instead (already free)", flush=True)
@@ -133,10 +146,12 @@ def ensure_dynamic_ports(challenge: str, ports: list) -> list:
                 else:
                     new_ports.append(actual)
             else:
-                print(f"[port] WARNING: {challenge} host port {port} is occupied, not found in "
-                      f"{compose_path}, and no other port found either -- leaving as-is, job "
-                      f"will likely fail", flush=True)
-                new_ports.append(port)
+                # Every port the file publishes is already covered by an
+                # earlier entry, so this stale one names nothing real. Drop
+                # it rather than keep a value that only creates false lock
+                # contention.
+                print(f"[port] {challenge}: stale port {port} not in {compose_path.name} and "
+                      f"its other ports are already covered -- dropping it", flush=True)
             continue
         print(f"[port] {challenge}: host port {port} occupied, remapped to {new_port}", flush=True)
         text = new_text

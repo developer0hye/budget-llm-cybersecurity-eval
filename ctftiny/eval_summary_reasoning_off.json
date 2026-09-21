@@ -1,29 +1,29 @@
 {
   "qwen3.8-flash": {
     "n": 200,
-    "attempted": 197,
-    "no_log": 3,
+    "attempted": 199,
+    "no_log": 1,
     "solved": 23,
-    "solve_rate_of_attempted": 0.116751269035533,
-    "total_cost_usd": 1.5013,
-    "avg_wall_time_s_attempted": 191.9
+    "solve_rate_of_attempted": 0.11557788944723618,
+    "total_cost_usd": 1.5041,
+    "avg_wall_time_s_attempted": 190.7
   },
   "deepseek-v4.1-flash": {
     "n": 200,
-    "attempted": 194,
-    "no_log": 6,
+    "attempted": 198,
+    "no_log": 2,
     "solved": 41,
-    "solve_rate_of_attempted": 0.211340206185567,
-    "total_cost_usd": 1.394,
-    "avg_wall_time_s_attempted": 284.1
+    "solve_rate_of_attempted": 0.20707070707070707,
+    "total_cost_usd": 1.4358,
+    "avg_wall_time_s_attempted": 287.7
   },
   "gpt-5.6-luna": {
     "n": 200,
-    "attempted": 198,
-    "no_log": 2,
+    "attempted": 199,
+    "no_log": 1,
     "solved": 19,
-    "solve_rate_of_attempted": 0.09595959595959595,
-    "total_cost_usd": 2.675,
-    "avg_wall_time_s_attempted": 123.4
+    "solve_rate_of_attempted": 0.09547738693467336,
+    "total_cost_usd": 2.6794,
+    "avg_wall_time_s_attempted": 123.1
   }
 }

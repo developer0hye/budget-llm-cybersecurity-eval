@@ -1,47 +1,47 @@
 {
   "qwen3.8-flash": {
     "n": 200,
-    "attempted": 188,
-    "no_log": 12,
+    "attempted": 189,
+    "no_log": 11,
     "solved": 48,
-    "solve_rate_of_attempted": 0.2553191489361702,
-    "total_cost_usd": 2.1755,
-    "avg_wall_time_s_attempted": 258.0
+    "solve_rate_of_attempted": 0.25396825396825395,
+    "total_cost_usd": 2.1816,
+    "avg_wall_time_s_attempted": 258.4
   },
   "solar-pro4": {
     "n": 200,
-    "attempted": 195,
-    "no_log": 5,
+    "attempted": 198,
+    "no_log": 2,
     "solved": 13,
-    "solve_rate_of_attempted": 0.06666666666666667,
-    "total_cost_usd": 1.7879,
-    "avg_wall_time_s_attempted": 140.3
+    "solve_rate_of_attempted": 0.06565656565656566,
+    "total_cost_usd": 1.8013,
+    "avg_wall_time_s_attempted": 143.4
   },
   "gpt-5.6-luna": {
     "n": 200,
-    "attempted": 196,
-    "no_log": 4,
+    "attempted": 199,
+    "no_log": 1,
     "solved": 43,
-    "solve_rate_of_attempted": 0.2193877551020408,
-    "total_cost_usd": 3.7269,
-    "avg_wall_time_s_attempted": 164.8
+    "solve_rate_of_attempted": 0.21608040201005024,
+    "total_cost_usd": 3.7923,
+    "avg_wall_time_s_attempted": 165.3
   },
   "deepseek-v4.1-flash": {
     "n": 200,
-    "attempted": 194,
-    "no_log": 6,
+    "attempted": 197,
+    "no_log": 3,
     "solved": 70,
-    "solve_rate_of_attempted": 0.36082474226804123,
-    "total_cost_usd": 1.8097,
-    "avg_wall_time_s_attempted": 327.8
+    "solve_rate_of_attempted": 0.3553299492385787,
+    "total_cost_usd": 1.8338,
+    "avg_wall_time_s_attempted": 329.9
   },
   "glm-5.3-flash": {
     "n": 200,
-    "attempted": 174,
-    "no_log": 26,
+    "attempted": 179,
+    "no_log": 21,
     "solved": 62,
-    "solve_rate_of_attempted": 0.3563218390804598,
-    "total_cost_usd": 2.3431,
-    "avg_wall_time_s_attempted": 292.0
+    "solve_rate_of_attempted": 0.3463687150837989,
+    "total_cost_usd": 2.3941,
+    "avg_wall_time_s_attempted": 292.7
   }
 }

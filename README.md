@@ -39,10 +39,10 @@ score gaps — see [Statistical methodology](#statistical-methodology) and
   longer significantly distinguishable from GPT-5.6 Luna (one of the 3
   models it was originally reported as significantly behind), though a
   significant-at-a-suggestive-level gap against Qwen3.8 Flash re-emerges
-  once the common sample nearly triples (n=80→190). Full analysis:
-  [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n190).
+  once the common sample more than doubles (n=80→196). Full analysis:
+  [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
 - **4 of 5 models exceed 2024's tool-enhanced CTF-solving SOTA; Solar Pro
-  4 does not.** Absolute solve rates otherwise range 6.7%–36.1%, with the
+  4 does not.** Absolute solve rates otherwise range 6.6%–35.5%, with the
   top end approaching a CTF-specialized fine-tuned model, despite a weaker
   harness and a harsher single-attempt protocol — read the high end as a
   likely training-data contamination signal (2017–2023 challenges with
@@ -172,62 +172,67 @@ end-to-end). Full methodology, architecture, data, and results:
 [ctfjudge]: https://github.com/NYU-LLM-CTF/CTFJudge
 
 **Headline result** (see `ctftiny/README.md` for the full statistical
-workup): a full 200-challenge run per model (1000 jobs, $11.84 after a
-later retry batch closed most infra-caused gaps) initially found Solar Pro
-4 solving significantly fewer challenges than every other model. That
-comparison never controlled for reasoning — a follow-up audit found the
-harness had never set an explicit reasoning parameter, so each model
-defaulted to its provider's own behavior (0% to 100% reasoning usage,
-measured). A reasoning-controlled re-run (800 more jobs, $8.09) found the
-effect is partly a confound: with reasoning held uniformly off across the
-4 testable models on a fixed common sample of 190, DeepSeek V4.1 Flash
-remains significantly better than all 3 others, and **Solar Pro 4 is no
-longer significantly different from GPT-5.6 Luna** — it is still
-significantly worse than DeepSeek, and (at a suggestive, not fully
-conclusive level) worse than Qwen3.8 Flash again once the sample grew.
+workup): a full 200-challenge run per model (1000 jobs, $12.00) initially
+found Solar Pro 4 solving significantly fewer challenges than every other
+model. That comparison never controlled for reasoning — a follow-up audit
+found the harness had never set an explicit reasoning parameter, so each
+model defaulted to its provider's own behavior (0% to 100% reasoning usage,
+measured). A reasoning-controlled re-run (800 more jobs, $8.14) found the
+effect is partly a confound: with reasoning held uniformly off across the 4
+testable models, DeepSeek V4.1 Flash remains significantly better than all 3
+others, and **Solar Pro 4 is no longer significantly different from GPT-5.6
+Luna** — it is still significantly worse than DeepSeek, and (at a
+suggestive, not fully conclusive level) worse than Qwen3.8 Flash.
 
-### Results — reasoning-controlled comparison (n=190, the one to cite)
+### Results
 
-The 190 challenges all 4 testable models attempted with reasoning uniformly
-off. GLM 5.3 Flash is excluded — its reasoning cannot be disabled.
+Solve rate on the 185 challenges all 4 testable models attempted in **both**
+reasoning conditions. GLM 5.3 Flash is excluded — its reasoning cannot be
+disabled, so it has no off-condition.
 
-| Rank | Country | Model | Solved (of 190) | Solve rate |
+| Rank | Country | Model | Reasoning off | Reasoning on |
 |---|---|---|---|---|
-| 1 | 🇨🇳 CN | DeepSeek V4.1 Flash | 41 | 21.6% |
-| 2 | 🇨🇳 CN | Qwen3.8 Flash | 23 | 12.1% |
-| 3 | 🇺🇸 US | GPT-5.6 Luna | 19 | 10.0% |
-| 4 | 🇰🇷 KR | Solar Pro 4 | 13 | 6.8% |
+| 1 | 🇨🇳 CN | DeepSeek V4.1 Flash | 21.6% | **36.8%** |
+| 2 | 🇨🇳 CN | Qwen3.8 Flash | 12.4% | **25.9%** |
+| 3 | 🇺🇸 US | GPT-5.6 Luna | 10.3% | **23.2%** |
+| 4 | 🇰🇷 KR | Solar Pro 4 | 7.0% | **10.3%** |
 
-Pairwise McNemar: DeepSeek beats all 3 others (p ≤ 0.0005); Solar Pro 4 vs
-Qwen3.8 Flash p=0.013 (suggestive); Solar Pro 4 vs GPT-5.6 Luna p=0.180 and
-Qwen3.8 Flash vs GPT-5.6 Luna p=0.455 (both not significant). Full table:
-[`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n190).
+"On" is forced for Solar Pro 4; for the other three it is each provider's
+default, measured at ~100% (Qwen3.8 Flash), ~97% (DeepSeek V4.1 Flash) and
+~36% (GPT-5.6 Luna) reasoning usage.
 
-**Why 190 and not 200**: a paired test needs both models to have actually
-attempted the same challenge, so the comparison uses the challenges all 4
-attempted. 10 drop out, none for model-quality reasons — 2 fail to start
-for every model (`2019f-web-biometric`, a Debian package 404 at image build;
-`2023q-web-rainbow_notes`, a Docker/runc bug on Apple Silicon), and 8 lose a
-single model each to a 900s timeout (6) or a one-off compose failure (2).
-Treating timeouts as non-solves instead — which raises the sample to n=196 —
-leaves **all 6 pairwise p-values identical**, since those challenges went
-unsolved by every model and contribute no discordant pairs.
+**Verdict: DeepSeek V4.1 Flash is genuinely ahead, and the gap is not a
+reasoning artifact.** On the reasoning-off condition (n=196, the widest
+apples-to-apples set) it beats all 3 others at p ≤ 0.0005. Solar Pro 4 is
+last, significantly behind DeepSeek (p<0.0001) and — at a suggestive level
+— behind Qwen3.8 Flash (p=0.013), but **not** distinguishable from GPT-5.6
+Luna (p=0.180); Qwen3.8 Flash and GPT-5.6 Luna are tied (p=0.455). Full
+tables: [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
+
+**Why 185 and not 200**: a paired test needs the same challenge present in
+both arms of every model being compared, so this uses the challenges all 8
+arms (4 models × 2 conditions) completed. The 15 that drop out are
+infrastructure, not capability: one challenge whose admin-bot container hits
+a Docker/runc bug on Apple Silicon, a handful of per-model 900s timeouts
+that reproduced on a second idle-machine run, and 3 cells lost to a provider
+rate limit on Qwen3.8 Flash. A 2026-09-22 repair pass fixed the rest — see
+[`ctftiny/README.md`](ctftiny/README.md#appendix-b-operational-incident-log).
 
 ### Does reasoning help? (paired, same challenges, on vs. off)
 
-**Yes — for 3 of the 4 testable models, strongly.** Qwen3.8 Flash (n=187),
-DeepSeek V4.1 Flash (n=191) and GPT-5.6 Luna (n=196) all lose solve rate
-when reasoning is disabled, p<0.0001 each. Solar Pro 4 is the exception
-(n=192, p=0.146) — no measurable effect, and the forced-on condition was
-verified to actually engage reasoning. This is the opposite of [Part 1's
-CyberMetric result](#does-reasoning-help-accuracy), where reasoning moves
-nothing for any model: the type of task decides whether reasoning pays off,
-more than the model does.
+**Yes — for 3 of the 4 testable models, strongly.** Qwen3.8 Flash (n=188),
+DeepSeek V4.1 Flash (n=197) and GPT-5.6 Luna (n=199) all lose roughly half
+their solve rate when reasoning is disabled, p<0.0001 each. Solar Pro 4 is
+the exception (n=196, p=0.146) — no measurable effect, and the forced-on
+condition was verified to actually engage reasoning. This is the opposite of
+[Part 1's CyberMetric result](#does-reasoning-help-accuracy), where reasoning
+moves nothing for any model: the type of task decides whether reasoning pays
+off, more than the model does.
 
 GLM 5.3 Flash cannot be tested here at all (mandatory reasoning). The
-earlier **uncontrolled** full-200 run — every model at its own provider
-default, so not apples-to-apples — plus per-model cost, attempted counts,
-and the n=166 all-5-attempted subset are in
+**uncontrolled** full-200 run — every model at its own provider default, so
+not apples-to-apples — plus per-model cost, attempted counts (179–199 of
+200), and the n=169 all-5-attempted subset are in
 [`ctftiny/README.md`](ctftiny/README.md#results-uncontrolled-full-200-run-2026-09-19).
 
 ## Limitations
@@ -406,6 +411,16 @@ response before assuming the script regressed.
   With this batch's added rows, the reasoning-controlled comparison's
   common sample grew from n=80 to n=190, which surfaced a previously
   undetected (suggestive) gap between Solar Pro 4 and Qwen3.8 Flash that
-  didn't reach significance at the smaller sample size. **Phase 2 total:
-  $20.38** ($11.84 full-200 + $0.45 n=10 pilot + $8.09
-  reasoning-controlled).
+  didn't reach significance at the smaller sample size.
+- **2026-09-22** — Second repair pass on the 10 challenges the first one
+  couldn't run. Fixed three more root causes, each of which had been
+  producing rows that look like model failures: a self-deadlock when a
+  multi-port challenge's stale metadata resolved to a duplicate port, a
+  disk-cleanup loop deleting the challenge images the next job needed
+  (including one that cannot be re-pulled), and a rotted image build
+  (Debian archive move, unarchived security suite, no arm64 wheel for a
+  pinned dependency). 7 of the 10 now produce real data; coverage went
+  83–175 → **179–199 of 200**. Also audited the benchmark's own container
+  security: 63 of the 200 challenges bind-mount the host Docker socket, now
+  stripped automatically. **Phase 2 total: $20.60** ($12.00 full-200 +
+  $0.45 n=10 pilot + $8.14 reasoning-controlled).
