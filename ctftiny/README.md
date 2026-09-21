@@ -41,9 +41,9 @@ from this project.
   at n=61 these 4 models looked statistically tied once Solar Pro 4 was
   excluded. See [Results](#results-uncontrolled-full-200-run-2026-09-19).
 - **4 of 5 models exceed 2024's tool-enhanced SOTA (EnIGMA, 13.5%) on the
-  full-200 run; Solar Pro 4 does not (6.7%).** Rates otherwise range
-  6.7%–36.1% of attempted, with the top end near a CTF-specialized
-  fine-tune (CTF-Dojo, 31.9%), despite a weaker harness and a harsher
+  full-200 run; Solar Pro 4 does not (6.7%).** Rates range 6.7%–36.1% of
+  attempted, with the top end near a CTF-specialized fine-tune (CTF-Dojo,
+  31.9%), despite a weaker harness and a harsher
   1-attempt/12-round protocol. Read the high end as a likely
   training-data-contamination signal (these are public 2017–2023
   challenges with public writeups) — but Solar Pro 4 scoring *below* 2024
@@ -113,7 +113,7 @@ Pairwise McNemar exact test within this fixed n=190:
 | Pair | b, c | p |
 |---|---|---|
 | DeepSeek V4.1 Flash vs Solar Pro 4 | 28, 0 | **<0.0001** |
-| DeepSeek V4.1 Flash vs GPT-5.6 Luna | 26, 4 | **0.0001** |
+| DeepSeek V4.1 Flash vs GPT-5.6 Luna | 26, 4 | **<0.0001** |
 | DeepSeek V4.1 Flash vs Qwen3.8 Flash | 22, 4 | **0.0005** |
 | Qwen3.8 Flash vs Solar Pro 4 | 12, 2 | **0.013** |
 | GPT-5.6 Luna vs Solar Pro 4 | 10, 4 | 0.180 |
@@ -128,8 +128,20 @@ than DeepSeek, and is now also worse than Qwen3.8 Flash at a **suggestive**
 level (p=0.013 — within this project's own 0.01–0.05 "suggestive, not
 conclusive" band, see [Limitations](#limitations)) that did not reach
 significance at n=80 (p=0.070). It remains statistically indistinguishable
-from GPT-5.6 Luna (p=0.180, consistent with n=80's p=0.109). This partially
-revises the uncontrolled full-run finding below, where Solar Pro 4 appeared
+from GPT-5.6 Luna (p=0.180, consistent with n=80's p=0.109).
+
+Since the [Limitations](#limitations) section notes the retry-added rows
+are systematically harder, the Qwen3.8-vs-Solar reversal specifically is
+worth checking for composition bias rather than genuine added power: the
+original n=80 is a strict subset of n=190 (retries only append rows), so
+splitting the discordant pairs confirms which explanation holds. Original
+80: b=7, c=1 (p=0.070, matches the original finding). The 110 added rows
+alone: b=5, c=1 (p=0.219, not significant alone). **Same direction in both
+halves**, neither significant alone, pooled significant (p=0.013) — this
+is added statistical power on a consistent effect, not a new effect
+introduced by biased composition.
+
+This partially revises the uncontrolled full-run finding below, where Solar Pro 4 appeared
 significantly worse than all 4 other models: the difference vs. GPT-5.6
 Luna still does not survive reasoning control; the difference vs. Qwen3.8
 Flash now partially survives (suggestive, weaker than the uncontrolled
@@ -174,12 +186,14 @@ actually took effect. For Solar Pro 4's default (reasoning-off) condition
 parameter — this check is now **exhaustive, not sampled**: every one of
 its 195 full-run trajectories was scanned, and 0 of 2,409 assistant turns
 used reasoning, across the entire run including the challenges the later
-retry batch recovered. Solar Pro 4's forced-on run reasoned on 171/171
-(100%) sampled turns; the three forced-off re-runs reasoned on 0/175,
-1/184, and 0/186 sampled turns (Qwen/DeepSeek/Luna) — these three checks
-predate the retry batch and were not re-run exhaustively, since their
-"off" setting is enforced via an explicit `extra_body` API parameter
-rather than inferred from default behavior. So Solar Pro 4's null result
+retry batch recovered. Solar Pro 4's forced-**on** run reasoned on 171/171
+(100%) sampled turns, and the three forced-**off** re-runs reasoned on
+0/175, 1/184, and 0/186 sampled turns (Qwen/DeepSeek/Luna) — these four
+checks (Solar's forced-on plus the three forced-off re-runs) all predate
+the retry batch and were not re-run exhaustively, since in every one of
+these four cases the setting is enforced via an explicit `extra_body` API
+parameter rather than inferred from default behavior the way Solar's
+reasoning-off arm is. So Solar Pro 4's null result
 is a genuine finding, not a broken flag. This contrasts with [Part 1's
 CyberMetric result](../README.md#does-reasoning-help-accuracy), where
 reasoning has no measurable effect for *any* model — reasoning helps on
@@ -271,9 +285,10 @@ control.
 
 **Read this as a caveat about the numbers in this project, not a
 capability claim.** **4 of 5 models** here score at or above the 2024
-SOTA-with-better-tooling (EnIGMA, 13.5%), and 3 (DeepSeek V4.1 Flash, GLM
-5.3 Flash, Qwen3.8 Flash) score near or above CTF-Dojo's number — a model
-*specifically fine-tuned* on CTF-solving trajectories — despite using the
+SOTA-with-better-tooling (EnIGMA, 13.5%), and 2 (DeepSeek V4.1 Flash, GLM
+5.3 Flash) exceed CTF-Dojo's number — a model *specifically fine-tuned* on
+CTF-solving trajectories — with Qwen3.8 Flash approaching it (25.5% vs.
+31.9%), despite using the
 *weaker* plain baseline harness (no tool-use enhancements) and a *harsher*
 protocol (1 attempt / 12 rounds vs. the original paper's 5 attempts / 48
 hours). That combination is hard to explain by "these models got better at
