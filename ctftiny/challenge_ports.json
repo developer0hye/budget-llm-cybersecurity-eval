@@ -207,14 +207,14 @@
       "8000"
     ],
     "2021f-cry-interoperable": [
-      "5000"
+      "15000"
     ],
     "2021f-cry-ibad": [
       "8000"
     ],
     "2021f-cry-collision_course": [],
     "2021f-for-no_time_to_register": [
-      "5000"
+      "15000"
     ],
     "2021f-for-constela": [],
     "2021f-msc-terminal_velocity": [
@@ -229,20 +229,20 @@
     "2021q-rev-ncore": [],
     "2021q-rev-checker": [],
     "2021q-cry-bits": [
-      "5000"
+      "15000"
     ],
     "2021q-cry-gotta_decrypt_them_all": [
-      "5000"
+      "15000"
     ],
     "2021q-cry-crack_me": [],
     "2021q-cry-rsa_pop_quiz": [
-      "5000"
+      "15000"
     ],
     "2021q-cry-ecc_pop_quiz": [
-      "5000"
+      "15000"
     ],
     "2021q-cry-forgery": [
-      "5000"
+      "15000"
     ],
     "2021q-for-lazy_leaks": [],
     "2021q-msc-weak_password": [],
@@ -260,27 +260,27 @@
       "23750"
     ],
     "2021q-pwn-alien_math": [
-      "5000"
+      "15000"
     ],
     "2021q-pwn-password_checker": [
-      "5000"
+      "15000"
     ],
     "2021q-pwn-haystack": [
-      "5000"
+      "15000"
     ],
     "2020f-rev-rap": [],
     "2020f-rev-brrr": [],
     "2020f-rev-yeet": [],
     "2020f-rev-sourcery": [],
     "2020f-cry-eccentric": [
-      "5000"
+      "15000"
     ],
     "2020f-cry-hybrid2": [],
     "2020f-cry-the_matrix": [
-      "5000"
+      "15000"
     ],
     "2020f-cry-jackpot": [
-      "5000"
+      "15000"
     ],
     "2020f-web-snailrace1": [],
     "2020f-web-picgram": [
@@ -288,13 +288,13 @@
     ],
     "2020f-web-sharkfacts": [],
     "2020f-pwn-darkunion1": [
-      "5000"
+      "15000"
     ],
     "2020q-rev-not_malware": [],
     "2020q-rev-ezbreezy": [],
     "2020q-rev-baby_mult": [],
     "2020q-cry-authy": [
-      "5000"
+      "15000"
     ],
     "2020q-cry-difib": [
       "8000"
@@ -304,7 +304,7 @@
       "8000"
     ],
     "2020q-cry-smallsurp": [
-      "5000"
+      "15000"
     ],
     "2020q-cry-modus_operandi": [
       "8000"
@@ -350,16 +350,16 @@
     "2022q-rev-anyagacha": [],
     "2022q-rev-the_big_bang": [],
     "2022q-cry-beyond_quantum": [
-      "5000"
+      "15000"
     ],
     "2022q-cry-too_much_in_common": [
-      "5000"
+      "15000"
     ],
     "2022q-cry-gift_shop": [
       "6000"
     ],
     "2022q-cry-gotta_crack_them_all": [
-      "5000"
+      "15000"
     ],
     "2022q-cry-not_too_taxing": [],
     "2022q-msc-quantum_leap": [],
@@ -387,7 +387,7 @@
     "2023f-for-hypokrinesthai": [],
     "2023f-for-floating_points": [],
     "2023f-for-ancient_forensics": [
-      "5000"
+      "15000"
     ],
     "2023f-for-emoji": [],
     "2023f-msc-pyjail": [],
@@ -417,11 +417,11 @@
     "2023q-rev-baby_s_third": [],
     "2023q-rev-rebug_1": [],
     "2023q-cry-mental_poker": [
-      "5000"
+      "15000"
     ],
     "2023q-cry-circles": [],
     "2023q-cry-lottery": [
-      "5000"
+      "15000"
     ],
     "2023q-for-br3akth3vau1t": [],
     "2023q-for-1black0white": [],
@@ -456,7 +456,7 @@
     ],
     "2019f-msc-alive": [],
     "2019f-web-biometric": [
-      "5000",
+      "15000",
       "5001"
     ],
     "2019f-pwn-arevenge": [
@@ -561,7 +561,7 @@
       "32333"
     ],
     "2018f-cry-distastrous_security_apparatus": [
-      "5000"
+      "15000"
     ],
     "2018f-msc-showdown": [],
     "2018f-msc-leaked_flag": [],

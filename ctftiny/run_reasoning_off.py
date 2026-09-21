@@ -31,6 +31,8 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
+from dynamic_ports import ensure_dynamic_ports
+
 ROOT = Path(__file__).parent.resolve()
 NYUCTF_DIR = ROOT / "nyuctf_agents"
 
@@ -103,11 +105,43 @@ def load_done_pairs():
     return done
 
 
+def ensure_port_free(ports, timeout_s=15):
+    """Killing the `run_baseline.py` subprocess on a timeout does not tear
+    down the docker-compose stack it started -- a lock released right after
+    SIGKILL can hand the port to the next job while the previous challenge's
+    container is still bound to it (found by codex review, 2026-09-20).
+    Verify+force-free every port this job held before its lock is released.
+    """
+    # Every call below carries its own timeout -- without one, a hung
+    # `docker ps`/`docker kill` blocks this thread forever (past `deadline`
+    # entirely, since that's only checked between calls), permanently
+    # deadlocking every other job waiting on this port (found live during
+    # the 2026-09-20 retry batch).
+    deadline = time.time() + timeout_s
+    for port in ports:
+        while time.time() < deadline:
+            try:
+                r = subprocess.run(
+                    ["docker", "ps", "-q", "--filter", f"publish={port}"],
+                    capture_output=True, text=True, timeout=5,
+                )
+            except subprocess.TimeoutExpired:
+                break
+            container_ids = r.stdout.split()
+            if not container_ids:
+                break
+            try:
+                subprocess.run(["docker", "kill"] + container_ids, capture_output=True, timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+            time.sleep(1)
+
+
 def run_one(model_key: str, challenge: str, ports: list) -> dict:
     wait_for_disk_space()
+    ports = ensure_dynamic_ports(challenge, ports)
     config_name = MODELS[model_key]
     name_key = NAME_KEYS[model_key]
-    started = time.time()
     cmd = [
         sys.executable, "run_baseline.py",
         "--challenge", challenge,
@@ -122,6 +156,9 @@ def run_one(model_key: str, challenge: str, ports: list) -> dict:
     locks = [_port_locks[p] for p in sorted(ports)]
     for lock in locks:
         lock.acquire()
+    # Started only after the lock is held, so wall_time_s doesn't include
+    # time blocked on a contended port (found by codex review, 2026-09-20).
+    started = time.time()
     try:
         try:
             proc = subprocess.run(
@@ -135,6 +172,7 @@ def run_one(model_key: str, challenge: str, ports: list) -> dict:
             result["error"] = f"timed out after {TIMEOUT_S}s"
             result["returncode"] = None
     finally:
+        ensure_port_free(ports)
         for lock in reversed(locks):
             lock.release()
 

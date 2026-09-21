@@ -26,23 +26,28 @@ score gaps — see [Statistical methodology](#statistical-methodology) and
   "thinking" doesn't move outcomes on closed-book knowledge recall.
 - **On agentic CTF-solving, reasoning matters — and unevenly across
   models.** Disabling reasoning significantly *reduces* solve rate for 3 of
-  4 testable models (Qwen3.8 Flash, DeepSeek V4.1 Flash, GPT-5.6 Luna;
-  p ≤ 0.0003) but has no measurable effect on Solar Pro 4 (p = 0.125),
-  despite verifying the forced-on condition actually engaged reasoning.
+  4 testable models (Qwen3.8 Flash, DeepSeek V4.1 Flash, GPT-5.6 Luna; all
+  p<0.0001) but has no measurable effect on Solar Pro 4 (p = 0.146),
+  despite verifying — via an exhaustive scan of every trajectory, not a
+  sample — that the forced-on condition actually engaged reasoning.
 - **The uncontrolled full-run CTF comparison was confounded by reasoning
   settings the harness never set explicitly** — each model's provider
   default ranged from 0% to 100% reasoning usage across the 5 models
   (measured empirically from trajectory logs). Once reasoning is held
-  constant across models, DeepSeek V4.1 Flash is the only model with a
-  significant, reasoning-independent solve-rate edge; Solar Pro 4 is no
-  longer distinguishable from 2 of the other 3 models it was originally
-  reported as significantly behind. Full analysis:
-  [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n80).
-- **Absolute CTF solve rates (10–39%) exceed 2024's tool-enhanced SOTA and
-  approach a CTF-specialized fine-tuned model**, despite a weaker harness
-  and a harsher single-attempt protocol — read as a likely training-data
-  contamination signal (2017–2023 challenges with public writeups), not a
-  capability claim. Full discussion:
+  constant across models, DeepSeek V4.1 Flash remains the model with the
+  strongest, reasoning-independent solve-rate edge; Solar Pro 4 is no
+  longer significantly distinguishable from GPT-5.6 Luna (one of the 3
+  models it was originally reported as significantly behind), though a
+  significant-at-a-suggestive-level gap against Qwen3.8 Flash re-emerges
+  once the common sample nearly triples (n=80→190). Full analysis:
+  [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n190).
+- **4 of 5 models exceed 2024's tool-enhanced CTF-solving SOTA; Solar Pro
+  4 does not.** Absolute solve rates otherwise range 6.7%–36.1%, with the
+  top end approaching a CTF-specialized fine-tuned model, despite a weaker
+  harness and a harsher single-attempt protocol — read the high end as a
+  likely training-data contamination signal (2017–2023 challenges with
+  public writeups), not a capability claim; Solar Pro 4 falling below SOTA
+  suggests that signal isn't uniform across models. Full discussion:
   [`ctftiny/README.md`](ctftiny/README.md#comparison-to-published-literature).
 
 ## Models under test
@@ -182,16 +187,19 @@ end-to-end). Full methodology, architecture, data, and results:
 [ctfjudge]: https://github.com/NYU-LLM-CTF/CTFJudge
 
 **Headline result** (see `ctftiny/README.md` for the full statistical
-workup): a full 200-challenge run per model (1000 jobs, $8.27) initially
-found Solar Pro 4 solving significantly fewer challenges than every other
-model. That comparison never controlled for reasoning — a follow-up
-audit found the harness had never set an explicit reasoning parameter, so
-each model defaulted to its provider's own behavior (0% to 100% reasoning
-usage, measured). A reasoning-controlled re-run (800 more jobs, $6.13)
-found the effect is partly a confound: with reasoning held uniformly off
-across the 4 testable models, DeepSeek V4.1 Flash remains significantly
-better than all 3 others, but **Solar Pro 4 is no longer significantly
-different from Qwen3.8 Flash or GPT-5.6 Luna** — only from DeepSeek.
+workup): a full 200-challenge run per model (1000 jobs, $11.84 after a
+later retry batch closed most infra-caused gaps) initially found Solar Pro
+4 solving significantly fewer challenges than every other model. That
+comparison never controlled for reasoning — a follow-up audit found the
+harness had never set an explicit reasoning parameter, so each model
+defaulted to its provider's own behavior (0% to 100% reasoning usage,
+measured). A reasoning-controlled re-run (800 more jobs, $8.09) found the
+effect is partly a confound: with reasoning held uniformly off across the
+4 testable models on a fixed common sample of 190, DeepSeek V4.1 Flash
+remains significantly better than all 3 others, and **Solar Pro 4 is no
+longer significantly different from GPT-5.6 Luna** — it is still
+significantly worse than DeepSeek, and (at a suggestive, not fully
+conclusive level) worse than Qwen3.8 Flash again once the sample grew.
 
 ## Limitations
 
@@ -352,4 +360,20 @@ response before assuming the script regressed.
   unsound significance-threshold heuristic with McNemar's paired test
   throughout; discovered and corrected an uncontrolled-reasoning confound
   in phase 2; ran a reasoning-controlled re-run of phase 2 (800 jobs,
-  $6.13). **Phase 2 total: $14.85** ($8.27 + $0.45 + $6.13).
+  originally $6.13, revised to $8.09 after the 2026-09-21 retry batch
+  below added more rows).
+- **2026-09-20/21** — Retry batch closing phase 2's "attempted" gap
+  (83–175→174–196 of 200): replaced a one-off, hand-edited host-port fix
+  for 24 challenges with a general automatic port-conflict resolver
+  (`ctftiny/dynamic_ports.py`); fixed two deadlock bugs found by a Codex
+  review of the retry pipeline and one more severe concurrency-collapse
+  bug (stale port-lock metadata) found live; confirmed one previously-seen
+  challenge failure is non-transient (Docker/runc bug on Apple Silicon)
+  rather than retrying indefinitely. Full incident log:
+  [`ctftiny/README.md`](ctftiny/README.md#appendix-b-operational-incident-log).
+  With this batch's added rows, the reasoning-controlled comparison's
+  common sample grew from n=80 to n=190, which surfaced a previously
+  undetected (suggestive) gap between Solar Pro 4 and Qwen3.8 Flash that
+  didn't reach significance at the smaller sample size. **Phase 2 total:
+  $20.38** ($11.84 full-200 + $0.45 n=10 pilot + $8.09
+  reasoning-controlled).

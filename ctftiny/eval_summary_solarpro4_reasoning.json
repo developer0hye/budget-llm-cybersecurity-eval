@@ -1,9 +1,9 @@
 {
   "n": 200,
-  "attempted": 147,
-  "no_log": 53,
+  "attempted": 195,
+  "no_log": 5,
   "solved": 19,
-  "solve_rate_of_attempted": 0.1292517006802721,
-  "total_cost_usd": 1.7425,
-  "avg_wall_time_s_attempted": 160.4
+  "solve_rate_of_attempted": 0.09743589743589744,
+  "total_cost_usd": 2.5193,
+  "avg_wall_time_s_attempted": 172.5
 }

@@ -37,6 +37,8 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
+from dynamic_ports import ensure_dynamic_ports
+
 ROOT = Path(__file__).parent.resolve()
 NYUCTF_DIR = ROOT / "nyuctf_agents"
 
@@ -50,7 +52,16 @@ MODELS = {
 
 LOGDIR = "logs_baseline/eval_full"
 TIMEOUT_S = 900
-CONCURRENCY = 6
+CONCURRENCY = 6  # restored 2026-09-21 -- see dynamic_ports.py's module docstring.
+# Worker concurrency repeatedly collapsed to 1/6 during the 2026-09-20/21
+# gap-fill retry batch; root cause confirmed live: ensure_dynamic_ports()'s
+# stale-metadata fallback path could return a challenge's OLD (already
+# remapped-away) port unchanged, causing concurrent jobs to lock on a port
+# number nothing was using while the port genuinely in use had no lock
+# protecting it at all. Temporarily reduced to 3 while diagnosing; restored
+# to 6 once the fallback was fixed to recover the challenge's actual
+# current port and re-verified (concurrency sustained 2-4 active jobs for
+# the remainder of the retry batch).
 RESULTS_PATH = ROOT / "eval_results_full.jsonl"
 SUMMARY_PATH = ROOT / "eval_summary_full.json"
 PORTS_PATH = ROOT / "challenge_ports.json"
@@ -117,10 +128,50 @@ def wait_for_disk_space():
         print(f"[disk] {ok} free, resuming", flush=True)
 
 
+def ensure_port_free(ports, timeout_s=15):
+    """Killing the `run_baseline.py` subprocess on a timeout does not tear
+    down the docker-compose stack it started -- Docker containers are
+    managed by the daemon, not the Python process, so a lock released right
+    after SIGKILL can hand the port to the next job while the previous
+    challenge's container is still bound to it (found by codex review,
+    2026-09-20). Verify+force-free every port this job held before its lock
+    is released, so the next job waiting on it doesn't lose a bind race
+    against a stack that should already be gone.
+    """
+    # Every subprocess.run below carries its own timeout -- without one, a
+    # single hung `docker ps`/`docker kill` call (the daemon can genuinely
+    # stall under concurrent load) blocks this thread forever, past the
+    # `deadline` bound entirely, since that bound is only checked *between*
+    # calls, not inside one. A thread stuck here never reaches the lock
+    # release below it, permanently deadlocking every other job waiting on
+    # the same port -- found live during the 2026-09-20 retry batch, where
+    # only 1 of 6 workers stayed active for 15+ minutes with 100+ jobs still
+    # queued and the driver process pinned at 0% CPU (indefinitely blocked
+    # threads, not busy ones).
+    deadline = time.time() + timeout_s
+    for port in ports:
+        while time.time() < deadline:
+            try:
+                r = subprocess.run(
+                    ["docker", "ps", "-q", "--filter", f"publish={port}"],
+                    capture_output=True, text=True, timeout=5,
+                )
+            except subprocess.TimeoutExpired:
+                break
+            container_ids = r.stdout.split()
+            if not container_ids:
+                break
+            try:
+                subprocess.run(["docker", "kill"] + container_ids, capture_output=True, timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+            time.sleep(1)
+
+
 def run_one(model_key: str, challenge: str, ports: list) -> dict:
     wait_for_disk_space()
+    ports = ensure_dynamic_ports(challenge, ports)
     model_id, config_name, name_key = MODELS[model_key]
-    started = time.time()
     cmd = [
         sys.executable, "run_baseline.py",
         "--challenge", challenge,
@@ -135,6 +186,12 @@ def run_one(model_key: str, challenge: str, ports: list) -> dict:
     locks = [_port_locks[p] for p in sorted(ports)]
     for lock in locks:
         lock.acquire()
+    # Started only after the lock is held, not before -- otherwise
+    # wall_time_s includes time spent blocked on a contended port, which
+    # would distort the cross-model "avg wall time" comparison with
+    # contention noise rather than real per-challenge solving speed (found
+    # by codex review, 2026-09-20).
+    started = time.time()
     try:
         try:
             proc = subprocess.run(
@@ -148,6 +205,7 @@ def run_one(model_key: str, challenge: str, ports: list) -> dict:
             result["error"] = f"timed out after {TIMEOUT_S}s"
             result["returncode"] = None
     finally:
+        ensure_port_free(ports)
         for lock in reversed(locks):
             lock.release()
 
