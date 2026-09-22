@@ -41,13 +41,15 @@ score gaps — see [Statistical methodology](#statistical-methodology) and
   significant-at-a-suggestive-level gap against Qwen3.8 Flash re-emerges
   once the common sample more than doubles (n=80→196). Full analysis:
   [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
-- **4 of 5 models exceed 2024's tool-enhanced CTF-solving SOTA; Solar Pro
-  4 does not.** Absolute solve rates otherwise range 6.6%–35.5%, with the
-  top end approaching a CTF-specialized fine-tuned model, despite a weaker
-  harness and a harsher single-attempt protocol — read the high end as a
-  likely training-data contamination signal (2017–2023 challenges with
-  public writeups), not a capability claim; Solar Pro 4 falling below SOTA
-  suggests that signal isn't uniform across models. Full discussion:
+- **4 of 5 models outscore every published NYU CTF Bench number we could
+  verify — including frontier models under a stronger scaffold.** Solve
+  rates here run 6.6%–35.5% against EnIGMA's 13.5% (2024 SOTA),
+  Claude-3.7-Sonnet's 18.2% and 10.4% for a 32B model fine-tuned on CTF
+  trajectories. Budget-tier models doubling frontier models on the same
+  benchmark is not a capability claim; read it as training-data
+  contamination (2017–2023 challenges with public writeups). Solar Pro 4
+  falling below that field suggests the effect isn't uniform. Full
+  discussion:
   [`ctftiny/README.md`](ctftiny/README.md#comparison-to-published-literature).
 
 ## Models under test

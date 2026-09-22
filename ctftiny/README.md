@@ -40,15 +40,17 @@ from this project.
   is significantly ahead of GPT-5.6 Luna and (suggestively) Qwen3.8 Flash —
   at n=61 these 4 models looked statistically tied once Solar Pro 4 was
   excluded. See [Results](#results-uncontrolled-full-200-run-2026-09-19).
-- **4 of 5 models exceed 2024's tool-enhanced SOTA (EnIGMA, 13.5%) on the
-  full-200 run; Solar Pro 4 does not (6.6%).** Rates range 6.6%–35.5% of
-  attempted, with the top end near a CTF-specialized fine-tune (CTF-Dojo,
-  31.9%), despite a weaker harness and a harsher
-  1-attempt/12-round protocol. Read the high end as a likely
-  training-data-contamination signal (these are public 2017–2023
-  challenges with public writeups) — but Solar Pro 4 scoring *below* 2024
-  SOTA is evidence that effect isn't uniform across models, not proof it's
-  absent — see [Comparison to published literature](#comparison-to-published-literature).
+- **4 of 5 models outscore every published NYU CTF Bench result we could
+  find; Solar Pro 4 does not (6.6%).** Rates range 6.6%–35.5% of attempted,
+  against 13.5% for 2024's SOTA agent (EnIGMA), 18.2% for Claude-3.7-Sonnet
+  and 10.4% for a 32B model fine-tuned on CTF trajectories — the latter two
+  measured under a *stronger* scaffold than the plain baseline harness used
+  here, and all of them on a harsher-for-us 1-attempt/12-round protocol.
+  Budget-tier models beating frontier models 2x on the same benchmark is
+  not a capability result; read it as training-data contamination (public
+  2017–2023 challenges with public writeups). Solar Pro 4 scoring *below*
+  that field is evidence the effect isn't uniform across models — see
+  [Comparison to published literature](#comparison-to-published-literature).
 - **Two repair passes brought "attempted" coverage from 83–175 of 200 up
   to 179–199 of 200** by fixing root causes rather than writing the gaps
   off: an automatic port-conflict resolver, three separate deadlock or
@@ -306,41 +308,52 @@ control.
 
 ## Comparison to published literature
 
-| Source | Model | Method | Solve rate on NYU CTF Bench (200) |
+| Source | Model | Scaffold / protocol | Solve rate on NYU CTF Bench (200) |
 |---|---|---|---|
-| [Original paper](https://arxiv.org/html/2406.05590v2) (2024) | GPT-4 | Same baseline harness, 5 attempts/challenge, 48h budget | ~3.7% (best of the paper's models) |
-| [EnIGMA](https://arxiv.org/html/2409.16165) (2024) | Claude 3.5 Sonnet | Enhanced tool-use agent, pass@1, $3 budget | 13.5% (SOTA at publication) |
-| [CTF-Dojo](https://arxiv.org/pdf/2508.18370) (2025) | 32B, fine-tuned on 486 execution-verified CTF trajectories | pass@1 | 31.9% |
-| This project | 5 budget-tier models | Same baseline harness as the original paper, 1 attempt, 12 rounds | 6.6%–35.5% |
+| [NYU CTF Bench paper](https://arxiv.org/html/2406.05590v2) (2024) | GPT-4 (best of 5 models tested) | Its own baseline harness, 5 attempts/challenge, 48h budget | per category 0–9.8%; **the paper reports no overall figure** |
+| [EnIGMA](https://arxiv.org/html/2409.16165v2) (2024) | Claude 3.5 Sonnet | Enhanced tool-use agent, pass@1 | **13.5%** (27/200), SOTA at publication |
+| EnIGMA's re-run of the NYU baseline (Table 2) | Claude 3.5 Sonnet | The same baseline harness this project uses | **4.0%** |
+| [CTF-Dojo](https://arxiv.org/html/2508.18370v1) (2025) | CTF-Dojo-32B, fine-tuned on 486 execution-verified CTF trajectories | EnIGMA+ scaffold, pass@1 | **10.4%** |
+| CTF-Dojo's frontier-model reference points | Claude-3.7-Sonnet / Claude-3.5-Sonnet / Gemini-2.5-Flash | EnIGMA+ scaffold, pass@1 | **18.2% / 16.7% / 14.1%** |
+| This project | 5 budget-tier models | NYU baseline harness, 1 attempt, 12 rounds | **6.6%–35.5%** |
+
+**Two numbers that are easy to misquote, and are not misquoted here.**
+CTF-Dojo's widely-cited 31.9% is its *average across three benchmarks*
+(InterCode-CTF 83.5, NYU CTF 10.4, Cybench 17.5) — its NYU CTF Bench figure
+is 10.4%. And the original NYU CTF Bench paper never states an overall
+solve rate; it reports per-category rates only (GPT-4: crypto 0%,
+forensics 5.26%, pwn 5.08%, rev 9.80%, web 1.92%, misc 0%), so the closest
+citable figure for that harness is EnIGMA's 4.0% re-run.
 
 **Denominator note**: rates in this project are *of attempted* (179–199 of
 200 per model), while the published figures are of all 200. Recomputed on a
 fixed 200 denominator this project's models score 35.0 / 31.0 / 24.0 / 21.5
 / 6.5%, so every comparison below holds either way.
 
-**Read this as a caveat about the numbers in this project, not a
-capability claim.** **4 of 5 models** here score at or above the 2024
-SOTA-with-better-tooling (EnIGMA, 13.5%), and 2 (DeepSeek V4.1 Flash, GLM
-5.3 Flash) exceed CTF-Dojo's number — a model *specifically fine-tuned* on
-CTF-solving trajectories — with Qwen3.8 Flash approaching it (25.5% vs.
-31.9%), despite using the
-*weaker* plain baseline harness (no tool-use enhancements) and a *harsher*
-protocol (1 attempt / 12 rounds vs. the original paper's 5 attempts / 48
-hours). That combination is hard to explain by "these models got better at
-reasoning" alone, for those 4. The more likely explanation is
-**training-data contamination**: these are real 2017–2023 CTF competition
-challenges with public writeups, and a 2026-era model has had far more
-opportunity to see them during training than GPT-4/Claude 3 (2023–2024
-training cutoffs). **Solar Pro 4 is the exception**: at 6.6%, it scores
-*below* 2024 SOTA despite presumably having the same training-era exposure
-to these public writeups as the other 4 — evidence that any contamination
-effect here isn't uniform across models, or that Solar Pro 4's baseline
-CTF-solving capability is genuinely weaker independent of contamination
-(the two aren't mutually exclusive). Treat the absolute solve-rate numbers
-for the 4 higher-scoring models as upper bounds on genuine problem-solving
-capability, not clean measurements of it; Solar Pro 4's number is more
-likely closer to a genuine measurement precisely because it isn't
-inflated.
+**Read this as a caveat about the numbers in this project, not a capability
+claim.** Against the verified numbers above the gap is not subtle: 4 of 5
+budget-tier models here outscore **every published NYU CTF Bench result we
+could find** — including Claude-3.7-Sonnet at 18.2% and a 32B model
+fine-tuned specifically on CTF trajectories at 10.4%, both measured under
+the *stronger* EnIGMA+ scaffold, while this project runs the plain baseline
+harness with 1 attempt and 12 rounds. A $0.03–0.10/M-token model beating
+frontier models by 2x on the same benchmark is not a plausible capability
+result.
+
+The likely explanation is **training-data contamination**: these are real
+2017–2023 CTF competition challenges whose writeups have been public for
+years, and a 2026-era model has had far more opportunity to absorb them
+than the 2023–2024-cutoff models in the rows above. **Solar Pro 4 is the
+exception** — at 6.6% it lands below EnIGMA and near the weaker open-weight
+models in CTF-Dojo's table, despite presumably the same exposure. So the
+effect is not uniform across models, which also means it cannot be
+subtracted out as a constant.
+
+Treat every absolute number in this project as an upper bound on genuine
+CTF-solving capability rather than a measurement of it. The *relative*
+comparisons survive better — they are paired, run through one harness on
+one machine — but they inherit the same caveat wherever two models differ
+in how much of the benchmark they had already seen.
 
 ## Limitations
 
