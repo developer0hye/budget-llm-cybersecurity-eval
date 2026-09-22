@@ -376,6 +376,16 @@ shows; the suggestive Solar-vs-Qwen gap does not survive at n=50, which is
 what a quarter of the sample size buys you — a reminder that CTFTiny is
 sized for iteration speed, not for separating close models.
 
+A caveat on comparing the two tables: the rows above are this project at
+`max_rounds=12`. At `max_rounds=30` (see [the round-budget
+experiment](#results-how-much-does-the-round-budget-decide-the-score))
+DeepSeek V4.1 Flash reaches **80%** on these 50 — above Claude 4 Sonnet's
+76% — and 57% on the *Hard* band where the CTFTiny paper reports Claude 4
+Sonnet "over 40%". That is not a like-for-like claim: the paper's baseline
+runs its own scaffold at its own budget, which this project did not
+replicate. It is, however, the number a reader should see before concluding
+that a budget-tier model has overtaken a frontier one.
+
 **This comparison is the more informative one for calibration.** Against
 2025-era frontier models under a *stronger* scaffold, these 2026 budget-tier
 models land inside the field rather than above it: DeepSeek V4.1 Flash (70%)
@@ -495,6 +505,20 @@ exception** — at 6.6% it lands below EnIGMA and near the weaker open-weight
 models in CTF-Dojo's table, despite presumably the same exposure. So the
 effect is not uniform across models, which also means it cannot be
 subtracted out as a constant.
+
+**One contamination mechanism is ruled out: flag memorisation.** If a model
+had memorised answers from public writeups, correct flags would surface
+before the work. They do not. Across all 334 solves with a known
+ground-truth flag, the correct flag first appears in the conversation after
+a median of **8 tool calls**, and for DeepSeek V4.1 Flash's 12 solves on
+CTFTiny's *Hard* band the median is 14 (range 5–31). The 22 solves where a
+flag appeared within one call all belong to three challenges that ship the
+flag in their own material — `2019f-msc-alive` and `2018f-msc-leaked_flag`
+put it in the description, `2023q-rev-baby_s_first` in a provided file — and
+they affect every model equally. So the models are deriving flags through
+tool use, not reciting them. What this check cannot rule out is the weaker
+and more likely form: having absorbed the *approach* to these specific
+public challenges.
 
 Treat every absolute number in this project as an upper bound on genuine
 CTF-solving capability rather than a measurement of it. The *relative*
