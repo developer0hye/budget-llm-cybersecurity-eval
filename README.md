@@ -41,6 +41,14 @@ score gaps — see [Statistical methodology](#statistical-methodology) and
   significant-at-a-suggestive-level gap against Qwen3.8 Flash re-emerges
   once the common sample more than doubles (n=80→196). Full analysis:
   [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
+- **Solve rates here mean "solved within 12 agent turns" — the budget
+  moves the numbers, not the ranking.** Re-running CTFTiny at
+  `max_rounds=30` lifts Solar Pro 4 from 14.0% to 40.0% and DeepSeek V4.1
+  Flash from 54.0% to 80.0%, both p ≤ 0.001, with the 40pp gap between them
+  unchanged. Models that batch shell commands into one turn (DeepSeek chains
+  93% of its commands, Solar Pro 4 48%) are favoured by a tight budget, so
+  low absolute scores here are partly a budget artifact — the relative
+  ordering is not.
 - **Absolute numbers look anomalous against 2024-era publications but
   ordinary against 2025-era ones.** On NYU CTF Bench these models run
   6.6%–35.5% where EnIGMA (2024 SOTA) reports 13.5% and a CTF-fine-tuned

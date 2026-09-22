@@ -1,0 +1,16 @@
+{
+  "solar-pro4": {
+    "attempted": 50,
+    "solved": 20,
+    "solve_rate_of_attempted": 0.4,
+    "avg_rounds": 21.8,
+    "total_cost_usd": 1.1772
+  },
+  "deepseek-v4.1-flash": {
+    "attempted": 50,
+    "solved": 40,
+    "solve_rate_of_attempted": 0.8,
+    "avg_rounds": 15.2,
+    "total_cost_usd": 0.4315
+  }
+}

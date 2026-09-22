@@ -61,6 +61,15 @@ project.
   2017–2023 challenges with public writeups). Solar Pro 4 scoring *below*
   that field is evidence the effect isn't uniform across models — see
   [Comparison to published literature](#comparison-to-published-literature).
+- **The round budget moves the absolute numbers a lot and the ranking not
+  at all.** Re-running CTFTiny at `max_rounds=30` instead of 12 lifts both
+  Solar Pro 4 (14.0%→40.0%) and DeepSeek V4.1 Flash (54.0%→80.0%) by exactly
+  26 percentage points, leaving the gap between them unchanged at 40.0pp
+  with an identical pairwise test. Solar Pro 4 chains shell commands in 48%
+  of its calls against DeepSeek's 93%, so it needs more turns for the same
+  work — but giving it those turns does not close the gap. Read every rate
+  in this report as "within 12 agent turns". See [round-budget
+  experiment](#results-how-much-does-the-round-budget-decide-the-score).
 - **Two repair passes brought "attempted" coverage from 83–175 of 200 up
   to 179–199 of 200** by fixing root causes rather than writing the gaps
   off: an automatic port-conflict resolver, three separate deadlock or
@@ -378,6 +387,64 @@ the NYU CTF Bench comparison below, where the same models appear to double
 between 2024 and 2026, which the contamination reading should not absorb
 wholesale.
 
+## Results: how much does the round budget decide the score?
+
+Trajectory analysis of the runs above turned up a behavioural difference
+with an obvious confound attached. Models differ sharply in how much shell
+work they pack into one agent turn — measured as the share of `run_command`
+calls that chain steps with `&&`, `;` or newlines:
+
+| Model | Commands chained per call | Runs ending on `max_rounds` |
+|---|---|---|
+| DeepSeek V4.1 Flash | 93.4% | 62% |
+| Qwen3.8 Flash | 90.3% | 71% |
+| GLM 5.3 Flash | 88.2% | 65% |
+| GPT-5.6 Luna | 83.8% | 74% |
+| Solar Pro 4 | **48.1%** | **90%** |
+
+On `2023q-pwn-puffin`, DeepSeek V4.1 Flash opens with
+`ls -la && cat readme.txt && file puffin`, disassembles, builds a payload in
+Python and solves in 8 rounds. Solar Pro 4 spends one round each on `ls`,
+`cat`, `file`, `checksec`, `which r2` — and runs out of budget in
+reconnaissance. With `max_rounds=12` fixed for everyone, that style costs
+Solar Pro 4 roughly half the shell work per run, which means the headline
+numbers may be measuring turn efficiency as much as CTF skill.
+
+So the whole CTFTiny set was re-run at **`max_rounds=30`**, everything else
+identical (same challenges, same reasoning condition, same harness), for the
+two models at the extremes of that table:
+
+| CTFTiny 50, reasoning off | max_rounds=12 | max_rounds=30 | Change | Paired p |
+|---|---|---|---|---|
+| Solar Pro 4 | 14.0% | **40.0%** | +26.0pp | **0.0010** |
+| DeepSeek V4.1 Flash | 54.0% | **80.0%** | +26.0pp | **0.0002** |
+| *Gap between them* | *40.0pp* | *40.0pp* | *unchanged* | |
+
+**Two findings, and they point in opposite directions.**
+
+*The absolute numbers are heavily budget-dependent.* Both models gain 26
+percentage points from 18 extra rounds, and the McNemar tests say that is
+real (p ≤ 0.001, and the improvement is near-monotone: 14 challenges flip to
+solved for Solar Pro 4 against 1 the other way; 13 against 0 for DeepSeek).
+Any solve rate in this report should be read as "solved within 12 agent
+turns", not "can solve". Solar Pro 4 at 6.6% on the full 200 is a statement
+about a 12-turn budget, and at 30 turns on CTFTiny the same model reaches
+40%.
+
+*The ranking is not budget-dependent.* The gap between the two models is
+40.0pp at both budgets, and the pairwise McNemar is identical (b=20, c=0,
+p<0.0001) — at both budgets DeepSeek V4.1 Flash solves a strict superset of
+what Solar Pro 4 solves. Raising the budget lifts both models by the same
+amount rather than closing the distance, so the command-batching difference
+does not explain the gap; it just suppresses everyone's absolute score.
+
+Solar Pro 4 uses 21.8 of its 30 rounds on average against DeepSeek V4.1
+Flash's 15.2, which is the batching difference showing up again — it needs
+more turns for the same work, and it now has them.
+
+Raw data: [`eval_results_rounds30.jsonl`](eval_results_rounds30.jsonl),
+driver: [`run_rounds30_ctftiny.py`](run_rounds30_ctftiny.py). Cost: $1.61.
+
 ## Comparison to published literature
 
 | Source | Model | Scaffold / protocol | Solve rate on NYU CTF Bench (200) |
@@ -480,6 +547,15 @@ in how much of the benchmark they had already seen.
   suggestive band (p=0.0225, was 0.0129) and still not separable from
   GPT-5.6 Luna (p=0.267, was 0.180), and Qwen3.8 Flash vs GPT-5.6 Luna stays
   null (p=0.455).
+- **Every solve rate here means "solved within 12 agent turns", not
+  "can solve".** Re-running CTFTiny at `max_rounds=30` lifts Solar Pro 4
+  from 14.0% to 40.0% and DeepSeek V4.1 Flash from 54.0% to 80.0% (both
+  p ≤ 0.001) — see [the round-budget
+  experiment](#results-how-much-does-the-round-budget-decide-the-score).
+  The *ranking* survives (the gap is 40.0pp at both budgets, identical
+  McNemar), but the absolute numbers do not, and models that batch shell
+  commands less aggressively are penalised more by a tight budget. Do not
+  quote a number from this report without the budget attached.
 - **`avg_wall_time_s_attempted` mixes two measurement definitions.** Rows
   collected before the 2026-09-20/21 retry batch measure wall time from
   subprocess launch; rows collected during and after it (once a Codex
