@@ -154,15 +154,15 @@ to match the other 4.
 
 **Why n=196 rather than 200**: a paired test requires both models in a pair
 to have attempted the same challenge, so this restricts to the challenges
-all 4 attempted. The 4 that drop out are infrastructure, not model
-behavior: `2023q-web-rainbow_notes` fails for every model (its admin-bot
-container hits a Docker/runc bug under Apple Silicon emulation — see
-[Appendix B](#appendix-b-operational-incident-log)); `2021f-cry-interoperable`
-times out at the 900s ceiling for two models on two separate runs; and
-`2019f-web-biometric` plus `2021q-cry-ecc_pop_quiz` each lose one model to
-a provider-side rate limit on Qwen3.8 Flash that four attempts over 45
-minutes could not clear. Per-model attempted counts in this condition are
-197–199 of 200.
+all 4 attempted. Exactly 4 drop out, all for infrastructure reasons:
+`2023q-web-rainbow_notes` (fails for all 4 — its admin-bot container hits a
+Docker/runc bug under Apple Silicon emulation, see
+[Appendix B](#appendix-b-operational-incident-log));
+`2021f-cry-interoperable` (DeepSeek V4.1 Flash hit the 900s ceiling on both
+its original run and an idle-machine retry); `2023q-cry-mental_poker` (same,
+Solar Pro 4); and `2019f-web-biometric` (Qwen3.8 Flash lost to a
+provider-side rate limit that four attempts over 45 minutes could not
+clear). Per-model attempted counts in this condition are 198–199 of 200.
 
 **Sensitivity check**: the six p-values above are identical at n=190
 (before the 2026-09-22 repair pass) and at n=196 (after), and identical
@@ -244,6 +244,14 @@ for reasoning.
 | GPT-5.6 Luna | 199 | 43 | 21.6% | 165s | $3.79 |
 | Solar Pro 4 | 198 | 13 | 6.6% | 143s | $1.80 |
 
+Note on provenance: 50 of these 1000 rows come from the earlier
+12-challenge pilot (`run_all_models.py`) rather than `run_full_eval.py`,
+which skipped pairs the pilot had already covered. Both use an identical
+protocol (`max_rounds=12`, `max_cost=$1.5`, 900s timeout, same configs and
+harness) and differ only in concurrency (3 vs 6) and run date, but they are
+not the same execution window — a caveat for anyone reading these as one
+homogeneous run.
+
 Total cost across all 5 models, 1000 jobs: **$12.00**. Full per-run data:
 [`eval_results_full.jsonl`](eval_results_full.jsonl) (1000 rows),
 aggregated in [`eval_summary_full.json`](eval_summary_full.json).
@@ -305,6 +313,11 @@ control.
 | [CTF-Dojo](https://arxiv.org/pdf/2508.18370) (2025) | 32B, fine-tuned on 486 execution-verified CTF trajectories | pass@1 | 31.9% |
 | This project | 5 budget-tier models | Same baseline harness as the original paper, 1 attempt, 12 rounds | 6.6%–35.5% |
 
+**Denominator note**: rates in this project are *of attempted* (179–199 of
+200 per model), while the published figures are of all 200. Recomputed on a
+fixed 200 denominator this project's models score 35.0 / 31.0 / 24.0 / 21.5
+/ 6.5%, so every comparison below holds either way.
+
 **Read this as a caveat about the numbers in this project, not a
 capability claim.** **4 of 5 models** here score at or above the 2024
 SOTA-with-better-tooling (EnIGMA, 13.5%), and 2 (DeepSeek V4.1 Flash, GLM
@@ -357,6 +370,23 @@ inflated.
   200 than the original run's, not a strictly *comparable* one — the
   original per-model solve rates above were probably mildly optimistic for
   this specific reason, not just from random noise.
+- **API-level failures are counted as non-solves, and they are not evenly
+  distributed.** 54 attempted rows finished with `finish_reason: unknown` —
+  the harness's label for a run that ended on an API error rather than on
+  the agent's own decision — and they land unevenly: Solar Pro 4 26, GPT-5.6
+  Luna 15, Qwen3.8 Flash 8, DeepSeek V4.1 Flash 5. Counting them as
+  "didn't solve" therefore penalises Solar Pro 4 most, which is also the
+  model this project reports as weakest. This is treated differently from
+  the 3 runs cut short by a provider *rate limit*, which are excluded as not
+  attempted — the asymmetry is deliberate (a rate-limited run never got a
+  fair shot at all, while an `unknown` run typically failed partway through
+  a real attempt) but it is a judgement call, so the headline comparison was
+  re-run with every `unknown` row dropped as a sensitivity check: n falls
+  196→179, and **every conclusion survives** — DeepSeek V4.1 Flash still
+  beats all 3 (p ≤ 0.0003), Solar Pro 4 is still behind Qwen3.8 Flash in the
+  suggestive band (p=0.0225, was 0.0129) and still not separable from
+  GPT-5.6 Luna (p=0.267, was 0.180), and Qwen3.8 Flash vs GPT-5.6 Luna stays
+  null (p=0.455).
 - **`avg_wall_time_s_attempted` mixes two measurement definitions.** Rows
   collected before the 2026-09-20/21 retry batch measure wall time from
   subprocess launch; rows collected during and after it (once a Codex
