@@ -384,6 +384,14 @@ under [openrouter.ai/settings/integrations](https://openrouter.ai/settings/integ
 for a dedicated quota. Check `error.metadata.limit_source` in the failing
 response before assuming the script regressed.
 
+## License
+
+Apache-2.0 (see [`LICENSE`](LICENSE)) for this project's own code, data and
+write-ups. Third-party components keep their own terms and are listed in
+[`NOTICE`](NOTICE) — most importantly `ctftiny/nyuctf_agents/` is vendored
+under upstream's MIT license, while CTFJudge is *not* redistributed here
+(upstream publishes no license) and is shipped as a patch instead.
+
 ## Changelog
 
 - **2026-09-17** — Baseline CyberMetric run (reasoning off, GLM

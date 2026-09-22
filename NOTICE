@@ -1,0 +1,24 @@
+Budget-Tier Model Comparison: Cybersecurity Knowledge and Agentic CTF-Solving
+Copyright 2026 Yonghye Kwon
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes third-party components under their own licenses:
+
+- ctftiny/nyuctf_agents/ -- NYU-LLM-CTF/nyuctf_agents, upstream commit
+  612190f, MIT License, Copyright (c) 2024 NYU Tandon School of Engineering
+  and NYU Abu Dhabi. Vendored with modifications (OpenRouter routing,
+  explicit reasoning control, real cost accounting, upstream bug fixes);
+  the upstream license is retained at ctftiny/nyuctf_agents/LICENSE.
+
+- NYU-LLM-CTF/CTFJudge is NOT included. Upstream publishes no license, so
+  its code is not redistributed here; ctftiny/ctfjudge-openrouter.patch
+  carries only this project's own modifications, to be applied to a
+  separately obtained checkout of upstream commit 1eef031.
+
+- The CyberMetric dataset (github.com/cybermetric/CyberMetric) is not
+  vendored; download_data.sh fetches it at setup time. Upstream publishes
+  no license file.
+
+- The NYU CTF Bench challenge set is not vendored; the nyuctf package
+  downloads it to ~/.nyuctf at setup time.
