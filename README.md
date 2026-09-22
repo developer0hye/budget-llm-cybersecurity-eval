@@ -41,15 +41,17 @@ score gaps — see [Statistical methodology](#statistical-methodology) and
   significant-at-a-suggestive-level gap against Qwen3.8 Flash re-emerges
   once the common sample more than doubles (n=80→196). Full analysis:
   [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
-- **4 of 5 models outscore every published NYU CTF Bench number we could
-  verify — including frontier models under a stronger scaffold.** Solve
-  rates here run 6.6%–35.5% against EnIGMA's 13.5% (2024 SOTA),
-  Claude-3.7-Sonnet's 18.2% and 10.4% for a 32B model fine-tuned on CTF
-  trajectories. Budget-tier models doubling frontier models on the same
-  benchmark is not a capability claim; read it as training-data
-  contamination (2017–2023 challenges with public writeups). Solar Pro 4
-  falling below that field suggests the effect isn't uniform. Full
-  discussion:
+- **Absolute numbers look anomalous against 2024-era publications but
+  ordinary against 2025-era ones.** On NYU CTF Bench these models run
+  6.6%–35.5% where EnIGMA (2024 SOTA) reports 13.5% and a CTF-fine-tuned
+  32B reports 10.4% — a 2x gap over published frontier results. On
+  [CTFTiny](ctftiny/README.md#results-ctftiny-50-challenge-lite-benchmark),
+  whose published baselines are 2025 frontier models under a *stronger*
+  scaffold, the same models land inside the field instead (DeepSeek V4.1
+  Flash 70% vs Claude 4 Sonnet 76%, Solar Pro 4 14% vs LLaMA 4 Maverick
+  8%). Part of the first gap is two years of model progress; part is
+  plausibly training-data contamination (2017–2023 challenges with public
+  writeups). This project cannot separate the two. Full discussion:
   [`ctftiny/README.md`](ctftiny/README.md#comparison-to-published-literature).
 
 ## Models under test

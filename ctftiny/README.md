@@ -7,11 +7,21 @@ budget-tier models, using an autonomous tool-using agent against real CTF
 challenges in a Docker sandbox — built on two existing open-source projects
 from NYU's LLM-CTF group rather than a harness written from scratch.
 
-All 5 models were run on the full 200-challenge NYU CTF Bench test split, and
-4 of them (all but GLM 5.3 Flash, whose reasoning is mandatory) were re-run
-with reasoning explicitly controlled after an audit found the original run
-never set it. Read [Limitations](#limitations) before citing any ranking
-from this project.
+All 5 models were run on the **full 200-challenge NYU CTF Bench test
+split** — verified against the benchmark paper's own category counts
+(crypto 52/53, forensics 15, pwn 39/38, rev 51, misc 24, web 19) — and 4 of
+them (all but GLM 5.3 Flash, whose reasoning is mandatory) were re-run with
+reasoning explicitly controlled after an audit found the original run never
+set it. Results are also reported on
+[CTFTiny](#results-ctftiny-50-challenge-lite-benchmark), the 50-challenge
+lite benchmark, whose challenges are a subset of those 200.
+
+*(Directory-name note: this folder predates the CTFTiny benchmark's release
+and is not named after it. The primary evaluation here is the full 200, not
+the 50.)*
+
+Read [Limitations](#limitations) before citing any ranking from this
+project.
 
 ## Key findings
 
@@ -306,6 +316,68 @@ control at all, so its significant pairings here (vs. Luna, vs. Qwen)
 neither replicate nor are contradicted — they're simply untested under
 control.
 
+## Results: CTFTiny (50-challenge lite benchmark)
+
+[CTFTiny](https://github.com/NYU-LLM-CTF/CTFTiny) ([arXiv:2508.05674](https://arxiv.org/abs/2508.05674),
+AAAI'26) is a separate, curated 50-challenge benchmark drawn from the same
+CSAW challenge pool, built so an agent evaluation finishes in hours instead
+of days. **All 50 of its challenges fall inside the 200-challenge test split
+run above**, so the rows below are sliced out of the same runs — nothing was
+re-executed for this table, and coverage is 50/50 for every model except GLM
+5.3 Flash (49/50).
+
+| Rank | Model | Solved (of 50) | Solve rate |
+|---|---|---|---|
+| 1 | DeepSeek V4.1 Flash | 35 | **70.0%** |
+| 2 | GLM 5.3 Flash | 31 (of 49) | **63.3%** |
+| 3 | Qwen3.8 Flash | 30 | **60.0%** |
+| 4 | GPT-5.6 Luna | 25 | **50.0%** |
+| 5 | Solar Pro 4 | 7 | **14.0%** |
+
+For comparison, the CTFTiny paper's own baseline — seven models under the
+**D-CIPHER** planner/executor scaffold (stronger than the single-agent
+harness used here), pass@1, temperature 1.0, `max_tokens` 4096:
+
+| Model (CTFTiny paper, D-CIPHER) | Solved (of 50) | Solve rate |
+|---|---|---|
+| Claude 4 Sonnet | 38 | 76% |
+| Gemini 2.5 Flash | 32 | 64% |
+| Gemini 2.5 Pro | 24 | 48% |
+| GPT-4.1 | 20 | 40% |
+| Qwen 3 | 14 | 28% |
+| DeepSeek V3 | 11 | 22% |
+| LLaMA 4 Maverick 17B | 4 | 8% |
+
+Reasoning-controlled comparison on the same 50 (all 4 non-GLM models
+attempted every one, so n=50 with no exclusions):
+
+| Model | Reasoning off | Reasoning on | Paired p |
+|---|---|---|---|
+| DeepSeek V4.1 Flash | 54.0% | 70.0% | 0.096 |
+| Qwen3.8 Flash | 26.0% | 60.0% | **0.0001** |
+| GPT-5.6 Luna | 20.0% | 50.0% | **0.0003** |
+| Solar Pro 4 | 14.0% | 22.0% | 0.289 |
+
+Pairwise McNemar on the reasoning-off condition (n=50): DeepSeek V4.1 Flash
+beats all 3 others (vs Solar Pro 4 p<0.0001, vs Qwen3.8 Flash p=0.0005, vs
+GPT-5.6 Luna p=0.0002); no other pair separates (Solar Pro 4 vs Qwen3.8
+Flash p=0.109, Solar Pro 4 vs GPT-5.6 Luna p=0.549, Qwen3.8 Flash vs GPT-5.6
+Luna p=0.607). The DeepSeek result reproduces what the 200-challenge sample
+shows; the suggestive Solar-vs-Qwen gap does not survive at n=50, which is
+what a quarter of the sample size buys you — a reminder that CTFTiny is
+sized for iteration speed, not for separating close models.
+
+**This comparison is the more informative one for calibration.** Against
+2025-era frontier models under a *stronger* scaffold, these 2026 budget-tier
+models land inside the field rather than above it: DeepSeek V4.1 Flash (70%)
+sits between Gemini 2.5 Flash (64%) and Claude 4 Sonnet (76%), and Solar Pro
+4 (14%) lands near LLaMA 4 Maverick (8%) and DeepSeek V3 (22%). That is a
+plausible two-years-of-progress picture — and it is worth holding next to
+the NYU CTF Bench comparison below, where the same models appear to double
+2024-era published results. Some of that gap is simply model progress
+between 2024 and 2026, which the contamination reading should not absorb
+wholesale.
+
 ## Comparison to published literature
 
 | Source | Model | Scaffold / protocol | Solve rate on NYU CTF Bench (200) |
@@ -340,10 +412,18 @@ harness with 1 attempt and 12 rounds. A $0.03–0.10/M-token model beating
 frontier models by 2x on the same benchmark is not a plausible capability
 result.
 
-The likely explanation is **training-data contamination**: these are real
-2017–2023 CTF competition challenges whose writeups have been public for
-years, and a 2026-era model has had far more opportunity to absorb them
-than the 2023–2024-cutoff models in the rows above. **Solar Pro 4 is the
+Two explanations compete, and the CTFTiny comparison above helps separate
+them. The first is **model progress**: every row in this table is a 2024–2025
+result, and on CTFTiny — where the published baselines *are* 2025 frontier
+models — these budget-tier models land inside the field rather than above
+it (DeepSeek V4.1 Flash 70% vs Claude 4 Sonnet 76%). Part of the gap here is
+simply two years. The second is **training-data contamination**: these are
+real 2017–2023 CTF challenges whose writeups have been public for years, and
+a 2026-era model has had far more opportunity to absorb them than a
+2023–2024-cutoff model. Neither explanation alone covers a 2x gap over
+frontier models under a stronger scaffold, and this project cannot
+decompose them — it has no uncontaminated held-out CTF set to measure
+against. **Solar Pro 4 is the
 exception** — at 6.6% it lands below EnIGMA and near the weaker open-weight
 models in CTF-Dojo's table, despite presumably the same exposure. So the
 effect is not uniform across models, which also means it cannot be
