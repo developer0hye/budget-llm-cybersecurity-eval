@@ -426,17 +426,35 @@ inflated.
   container (radare2, sqlmap, nikto, apktool, jadx, Ghidra, etc.) and logs
   the full tool-call trajectory. Chosen as the official baseline/D-CIPHER
   harness for NYU CTF Bench — actively maintained, 163★.
-- [`CTFJudge/`](CTFJudge/) — vendored, modified copy of
-  [NYU-LLM-CTF/CTFJudge](https://github.com/NYU-LLM-CTF/CTFJudge) (upstream
-  commit `1eef031`), an LLM-as-judge scorer purpose-built for grading CTF
-  *trajectories* (not just final-flag correctness) against a reference
+- [`ctfjudge-openrouter.patch`](ctfjudge-openrouter.patch) — **not** a copy of
+  [NYU-LLM-CTF/CTFJudge](https://github.com/NYU-LLM-CTF/CTFJudge), a patch
+  against it. CTFJudge is an LLM-as-judge scorer purpose-built for grading
+  CTF *trajectories* (not just final-flag correctness) against a reference
   writeup, producing a CCI ("competency/completeness index") score — a
-  process-quality metric that a pure solve-rate number misses. Upstream
-  has no `LICENSE` file as of this fork; treated as source-available for
-  evaluation purposes only, not redistributed under a stated license. Both
-  vendored projects' own `.git` history was dropped on import (no local
-  commits existed in either, verified before deletion); this repo tracks
-  modifications as plain diffs against the upstream commits noted above.
+  process-quality metric a solve-rate number misses. Upstream publishes no
+  `LICENSE`, so its code is not redistributable and is not included here;
+  apply the patch to your own checkout instead:
+
+  ```bash
+  git clone https://github.com/NYU-LLM-CTF/CTFJudge && cd CTFJudge
+  git checkout 1eef031
+  git apply ../ctfjudge-openrouter.patch
+  ```
+
+  The patch is 58 changed lines across 5 files, and every line exists for
+  one reason: **CTFJudge calls Anthropic's API directly, and this project
+  routes every model call through OpenRouter** so that all 5 models under
+  test — and the judge — go through one provider, one key, and one cost
+  ledger. Concretely it swaps `import anthropic` for the OpenAI SDK,
+  re-points the client at `https://openrouter.ai/api/v1`, reads
+  `OPENROUTER_API_KEY` instead of `ANTHROPIC_API_KEY`, and sets the judge
+  model to `anthropic/claude-sonnet-5` (OpenRouter's ID for the same
+  Claude-Sonnet-class judge the CTFJudge paper used, rather than the
+  now-dated `claude-3-7-sonnet-20250219` pin). No grading logic, prompt,
+  rubric, or schema is touched — the judge behaves as upstream intends.
+  [`ctfjudge_adapted_example/`](ctfjudge_adapted_example/) holds one
+  trajectory this repo's own adapter produced, kept as evidence the format
+  conversion below round-trips through CTFJudge's parser.
 - [`adapt_baseline_trajectory.py`](adapt_baseline_trajectory.py) — format
   adapter between the two projects' incompatible trajectory shapes (see
   below).
@@ -545,7 +563,7 @@ executor-agent section.
 ```bash
 python3 adapt_baseline_trajectory.py \
   nyuctf_agents/logs_baseline/<user>/<experiment>/<challenge>.json \
-  CTFJudge/trajs/<challenge>.json
+  <your-CTFJudge-checkout>/trajs/<challenge>.json
 ```
 
 ## Setup
@@ -571,7 +589,11 @@ python3 run_baseline.py --config configs/baseline/qwen38flash_config.yaml --chal
 ```
 
 ```bash
-cd ../CTFJudge
+# CTFJudge is not vendored here (upstream has no LICENSE) -- clone and patch it
+git clone https://github.com/NYU-LLM-CTF/CTFJudge && cd CTFJudge
+git checkout 1eef031
+git apply ../ctfjudge-openrouter.patch
+
 uv venv && source .venv/bin/activate
 uv pip install openai python-dotenv
 export OPENROUTER_API_KEY=sk-or-v1-...
@@ -611,7 +633,7 @@ Not yet done:
   produced across all runs — needs a challenge with both a trajectory and
   an existing reference writeup (`2023q-web-smug_dino` qualifies and is the
   natural next challenge to score); blocked on writeups not existing for
-  most challenges in `CTFJudge/writeups/`.
+  most challenges in CTFJudge's `writeups/`.
 - **Token/cost calibration for the agent harness itself** — the
   CyberMetric project's `calibrate_tokens.py` has no agentic-harness
   equivalent yet.

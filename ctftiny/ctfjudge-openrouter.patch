@@ -1,0 +1,181 @@
+--- a/config.json
++++ b/config.json
+@@ -1,5 +1,5 @@
+ {
+-  "model": "claude-3-7-sonnet-20250219",
++  "model": "anthropic/claude-sonnet-5",
+   "max_tokens": 4000,
+   "temperature": 0.1,
+   "formula_weights": {
+--- a/run_evaluation.py
++++ b/run_evaluation.py
+@@ -28,10 +28,10 @@
+         self.errors_dir = errors_dir
+         
+         # Check for required API key environment variable
+-        self.api_key = os.getenv('ANTHROPIC_API_KEY')
++        self.api_key = os.getenv('OPENROUTER_API_KEY')
+         if not self.api_key:
+-            print("[X] Error: ANTHROPIC_API_KEY environment variable not set")
+-            print("Please set your API key: export ANTHROPIC_API_KEY='your-key'")
++            print("[X] Error: OPENROUTER_API_KEY environment variable not set")
++            print("Please set your API key: export OPENROUTER_API_KEY='your-key'")
+             sys.exit(1)
+         
+         self.error_handler = ErrorHandler(errors_dir)
+--- a/trajectory_summary_agent.py
++++ b/trajectory_summary_agent.py
+@@ -10,7 +10,7 @@
+ from typing import List, Dict, Any
+ from dataclasses import dataclass
+ from dotenv import load_dotenv
+-import anthropic
++from openai import OpenAI
+ from llm_utils import LLMResponseUtils
+ 
+ load_dotenv()                            
+@@ -28,14 +28,14 @@
+ class TrajectoryDecomposer:
+ 
+     def __init__(self, api_key: str = None, config_path: str = "config.json"):
+-        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
++        self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
+         if not self.api_key:
+-            raise ValueError("Anthropic API missing. Set ANTHROPIC_API_KEY environment variable or in .env file.")
+-        
++            raise ValueError("OpenRouter API key missing. Set OPENROUTER_API_KEY environment variable or in .env file.")
++
+         # Load configuration
+         self.config = LLMResponseUtils.load_config(config_path)
+-        
+-        self.client = anthropic.Anthropic(api_key=self.api_key)
++
++        self.client = OpenAI(api_key=self.api_key, base_url="https://openrouter.ai/api/v1")
+         self.model = self.config.get("model", "claude-3-5-haiku-20241022")
+         self.max_tokens = self.config.get("max_tokens", 4000)
+         self.temperature = self.config.get("temperature", 0.1)
+@@ -229,7 +229,7 @@
+ """
+ 
+         try:
+-            response = self.client.messages.create(
++            response = self.client.chat.completions.create(
+                 model=self.model,
+                 max_tokens=self.max_tokens,
+                 temperature=self.temperature,
+@@ -237,9 +237,9 @@
+                     {"role": "user", "content": prompt}
+                 ]
+             )
++
++            response_text = response.choices[0].message.content.strip()
+             
+-            response_text = response.content[0].text.strip()
+-            
+             response_text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response_text, flags=re.MULTILINE).strip()
+             
+             parsed_response = json.loads(response_text)
+--- a/writeup_summary_agent.py
++++ b/writeup_summary_agent.py
+@@ -10,7 +10,7 @@
+ from typing import List, Dict
+ from dataclasses import dataclass
+ from dotenv import load_dotenv
+-import anthropic
++from openai import OpenAI
+ from llm_utils import LLMResponseUtils
+ 
+ load_dotenv()                            # Load environment variables
+@@ -28,14 +28,14 @@
+ class WriteupDecomposer:
+     
+     def __init__(self, api_key: str = None, config_path: str = "config.json"):
+-        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
++        self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
+         if not self.api_key:
+-            raise ValueError("Anthropic API missing. Set ANTHROPIC_API_KEY environment variable or in .env file.")
+-        
++            raise ValueError("OpenRouter API key missing. Set OPENROUTER_API_KEY environment variable or in .env file.")
++
+         # Load configuration
+         self.config = LLMResponseUtils.load_config(config_path)
+-        
+-        self.client = anthropic.Anthropic(api_key=self.api_key)
++
++        self.client = OpenAI(api_key=self.api_key, base_url="https://openrouter.ai/api/v1")
+         self.model = self.config.get("model", "claude-3-5-haiku-20241022")
+         self.max_tokens = self.config.get("max_tokens", 4000)
+         self.temperature = self.config.get("temperature", 0.1)
+@@ -80,7 +80,7 @@
+ """
+ 
+         try:
+-            response = self.client.messages.create(
++            response = self.client.chat.completions.create(
+                 model=self.model,
+                 max_tokens=self.max_tokens,
+                 temperature=self.temperature,
+@@ -88,9 +88,9 @@
+                     {"role": "user", "content": prompt}
+                 ]
+             )
++
++            response_text = response.choices[0].message.content.strip()
+             
+-            response_text = response.content[0].text.strip()
+-            
+             response_text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response_text, flags=re.MULTILINE).strip()
+             
+             return json.loads(response_text)
+--- a/qualitative_evaluation_agent.py
++++ b/qualitative_evaluation_agent.py
+@@ -15,7 +15,7 @@
+ from typing import List, Dict, Tuple, Any, Union
+ from dataclasses import dataclass, fields
+ from dotenv import load_dotenv
+-import anthropic
++from openai import OpenAI
+ from llm_utils import LLMResponseUtils
+ 
+ load_dotenv()                         
+@@ -183,9 +183,9 @@
+    
+    
+     def __init__(self, api_key: str = None, config_path: str = "config.json", outputs_dir: str = "outputs"):
+-        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
++        self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
+         if not self.api_key:
+-            raise ValueError("Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable or pass it directly.")
++            raise ValueError("OpenRouter API key is required. Set OPENROUTER_API_KEY environment variable or pass it directly.")
+         
+         # Load config.json
+         self.config = LLMResponseUtils.load_config(config_path)
+@@ -203,7 +203,7 @@
+         print("[DEBUG] ANALYSIS_SCHEMA saved to sanity_check/actual_analysis_schema.json")
+         print("==================================================")
+         
+-        self.client = anthropic.Anthropic(api_key=self.api_key)
++        self.client = OpenAI(api_key=self.api_key, base_url="https://openrouter.ai/api/v1")
+         self.model = self.config.get("model", "claude-3-5-haiku-20241022")
+         self.max_tokens = self.config.get("max_tokens", 4000)
+         self.temperature = self.config.get("temperature", 0.1)
+@@ -384,7 +384,7 @@
+ """
+ 
+         try:
+-            response = self.client.messages.create(
++            response = self.client.chat.completions.create(
+                 model=self.model,
+                 max_tokens=self.max_tokens,
+                 temperature=self.temperature,
+@@ -392,8 +392,8 @@
+                     {"role": "user", "content": prompt}
+                 ]
+             )
+-            
+-            response_text = response.content[0].text.strip()
++
++            response_text = response.choices[0].message.content.strip()
+             
+             parsed_response = LLMResponseUtils.parse_json_response(response_text)
+             
