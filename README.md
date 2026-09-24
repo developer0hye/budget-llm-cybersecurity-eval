@@ -13,12 +13,13 @@ the same as getting a shell on a box. This project's earlier run (now in
 [`legacy/`](legacy/README.md)) found them diverging. All 10 model pairs
 were non-significant on an MCQ benchmark (CyberMetric-2000, p ≥ 0.13 with
 reasoning on). On the same models' CTF runs, DeepSeek V4.1 Flash solved
-21.6% and Solar Pro 4 7.0% (reasoning off, 185 matched challenges). A model that looks the same on one axis can differ on the other,
-so each axis gets its own benchmark, protocol and statistics.
+21.6% and Solar Pro 4 7.0% (reasoning off, 185 matched challenges). A
+model that looks the same on one axis can differ on the other, so each
+axis gets its own benchmark, protocol and statistics.
 
 | Axis | Benchmarks | Status |
 |---|---|---|
-| Knowledge | WMDP-cyber (knowledge subset), CTIBench CTI-MCQ, CTIBench CTI-RCM | **running** (2026-09-24) |
+| Knowledge | WMDP-cyber (knowledge subset), CTIBench CTI-MCQ, CTIBench CTI-RCM | **done** (2026-09-24/25), [results](#results) |
 | Agentic | Cybench via `inspect_evals`, CTFTiny as anchor | planned |
 
 ## Models under test
@@ -206,15 +207,170 @@ three tasks measure different things, so they are never pooled.
 
 ### Results
 
-*Pending: the full runs started 2026-09-24.*
-[`knowledge/analyze.py`](knowledge/analyze.py) recomputes every number in
-this section from the committed per-item logs:
+Full runs, 2026-09-24/25: 4 models × 4,496 items × 2 conditions = 35,968
+scored rows, **0 API errors left unretried**, $18.44 total (off $4.35, on
+$14.09). Every number below is recomputed by
+[`knowledge/analyze.py`](knowledge/analyze.py) from the per-item logs in
+`knowledge/results_reasoning_{off,on}/`. The analysis dumps are in
+`knowledge/analysis_reasoning_{off,on}.json`.
 
 ```bash
-python3 knowledge/analyze.py knowledge/results_reasoning_off \
-    --compare-on knowledge/results_reasoning_on --json knowledge/analysis.json
 python3 knowledge/analyze.py knowledge/results_reasoning_on
+python3 knowledge/analyze.py knowledge/results_reasoning_off --compare-on knowledge/results_reasoning_on
 ```
+
+#### Headline findings
+
+1. **Solar Pro 4 is significantly behind the other three on WMDP-cyber and
+   CTI-MCQ.** This holds under reasoning on, the only condition where all 4
+   models run the same protocol: all 6 of those tests give p < 0.0001.
+   DeepSeek V4.1 Flash, GPT-5.6 Luna and GLM 5.3 Flash are **not
+   distinguishable** from each other on either task: WMDP p ≥ 0.19,
+   CTI-MCQ p ≥ 0.059.
+2. **On CTI-RCM (CVE → CWE) the spread is narrow.**
+   - DeepSeek beats GLM (p = 0.0063) and Solar (p = 0.0001).
+   - DeepSeek vs Luna is nominal only: p = 0.013, which does not survive
+     α = 0.0083.
+   - All other RCM pairs are non-significant.
+3. **Reasoning helps closed-book recall where there is headroom.** On
+   WMDP-cyber, all 3 toggleable models gain, each p ≤ 0.0008:
+   - Luna +9.9 pp
+   - DeepSeek +4.8 pp
+   - Solar +4.1 pp
+
+   On CTI-MCQ only Luna gains significantly (+4.7 pp, p < 0.0001). On
+   CTI-RCM no model gains (all p ≥ 0.045, none significant after
+   correction). This **reverses the legacy finding** that reasoning does
+   not change MCQ accuracy. That null came from CyberMetric's 94–95%
+   ceiling, not from reasoning.
+4. **Rankings under reasoning off mostly measure answering without
+   thinking.** With reasoning off, Luna is indistinguishable from Solar on
+   WMDP (p = 0.34). With reasoning on, it is 7.1 pp ahead (p < 0.0001).
+   GLM's "off" row has reasoning on (mandatory), so off-condition
+   comparisons against GLM are not like-for-like.
+5. **Run-to-run noise is about 1 pp.** GLM's two runs are both
+   reasoning-on on the same pinned provider, which makes them a
+   test-retest pair:
+   - Accuracy moved by 0.9–1.1 pp (p ≥ 0.13 on all 3 tasks).
+   - The same answer was extracted on 83.8–90.1% of items.
+
+   Differences of about 1 pp between any two cells here are within noise.
+
+#### Accuracy, reasoning on (primary between-model comparison)
+
+Denominator: all items. Truncation and unparsed rows count as not correct.
+
+| Model | WMDP-cyber (n=996) | CTI-MCQ (n=2,500) | CTI-RCM (n=1,000) |
+|---|---|---|---|
+| DeepSeek V4.1 Flash (StreamLake fp8) | **84.8%** | 79.6% | **76.3%** |
+| GPT-5.6 Luna | 83.8% | **80.2%** | 74.0% |
+| GLM 5.3 Flash | 83.3% | 78.7% | 73.9% |
+| Solar Pro 4 | 76.7% | 74.5% | 72.0% |
+| majority-label baseline | 26.8% (A) | 37.1% (C) | 22.9% (CWE-79) |
+
+#### Accuracy, reasoning off
+
+| Model | WMDP-cyber | CTI-MCQ | CTI-RCM |
+|---|---|---|---|
+| GLM 5.3 Flash\* | **82.4%** | 77.6% | 74.8% |
+| DeepSeek V4.1 Flash | 80.0% | **79.3%** | **76.5%** |
+| GPT-5.6 Luna | 73.9% | 75.5% | 74.1% |
+| Solar Pro 4 | 72.6% | 72.9% | 70.1% |
+
+\* Reasoning is mandatory for GLM, so this row is a second reasoning-on
+run.
+
+#### Pairwise McNemar, reasoning on
+
+`**` means the test survives Bonferroni α = 0.0083 (6 pairs per task);
+`*` means p < 0.05 without surviving it. b is the number of items only
+the first model got right, and c the number only the second model got
+right.
+
+| Pair | WMDP-cyber b/c, p | CTI-MCQ b/c, p | CTI-RCM b/c, p |
+|---|---|---|---|
+| DeepSeek vs GLM | 64/49, 0.19 | 178/157, 0.27 | 48/24, **0.0063\*\*** |
+| DeepSeek vs Luna | 57/47, 0.38 | 157/173, 0.41 | 51/28, 0.013\* |
+| DeepSeek vs Solar | 116/35, **<0.0001\*\*** | 283/156, **<0.0001\*\*** | 77/34, **0.0001\*\*** |
+| GLM vs Luna | 49/54, 0.69 | 163/200, 0.059 | 21/22, 1.00 |
+| GLM vs Solar | 106/40, **<0.0001\*\*** | 284/178, **<0.0001\*\*** | 54/35, 0.056 |
+| Luna vs Solar | 103/32, **<0.0001\*\*** | 279/136, **<0.0001\*\*** | 55/35, 0.045\* |
+
+**Sensitivity check** (only items both models answered): one Bonferroni
+call flips. DeepSeek vs Luna on CTI-RCM goes from p = 0.013 to
+**p = 0.0038** (n = 991), because DeepSeek's 9 RCM truncations stop
+counting against it. All other calls are unchanged.
+
+The off-condition pairwise tables and their sensitivity checks are in the
+`analyze.py` output. One call flips there too: GLM vs Luna on CTI-MCQ is
+p = 0.012 in the primary analysis and p < 0.0001 on both-answered items.
+The difference is GLM's 115 truncations.
+
+In both flips the truncated side loses significance in the primary
+analysis. That is the pre-registered reading: a model that does not answer
+within the budget does not get credit.
+
+#### Reasoning off vs on, within model
+
+Bonferroni α = 0.0056 (3 models × 3 tasks). b is the number of items
+right only with reasoning off, and c the number right only with it on.
+
+| Model | WMDP-cyber | CTI-MCQ | CTI-RCM |
+|---|---|---|---|
+| Solar Pro 4 | 72.6 → 76.7%, 51/92, **p = 0.0008** | 72.9 → 74.5%, 183/223, p = 0.053 | 70.1 → 72.0%, 31/50, p = 0.045 |
+| GPT-5.6 Luna | 73.9 → 83.8%, 33/132, **p < 0.0001** | 75.5 → 80.2%, 92/210, **p < 0.0001** | 74.1 → 74.0%, 24/23, p = 1.00 |
+| DeepSeek V4.1 Flash | 80.0 → 84.8%, 43/91, **p < 0.0001** | 79.3 → 79.6%, 166/173, p = 0.74 | 76.5 → 76.3%, 37/35, p = 0.91 |
+
+DeepSeek's null result on CTI-MCQ comes partly from non-termination. With
+reasoning on, 79 of its 2,500 items hit the 16,000-token cap. Its
+accuracy over answered items rises to 82.2%, against 79.3% off. The
+primary analysis counts those 79 as not correct, as pre-registered.
+
+#### Non-answers, per model and condition
+
+| Model | Condition | Truncated (hit 16,000) | Unparsed (finished, no answer) |
+|---|---|---|---|
+| GLM 5.3 Flash | off (reasoning mandatory) | 24 / 115 / 4 | 4 / 3 / 0 |
+| GLM 5.3 Flash | on | 17 / 103 / 6 | 5 / 3 / 0 |
+| DeepSeek V4.1 Flash | off | 4 / 2 / 1 | 3 / 0 / 0 |
+| DeepSeek V4.1 Flash | on | 14 / 79 / 9 | 0 / 0 / 0 |
+| Solar Pro 4 | off | 0 / 0 / 0 | 1 / 1 / 0 |
+| Solar Pro 4 | on | 3 / 33 / 9 | **8 / 50 / 3** |
+| GPT-5.6 Luna | off | 0 / 0 / 0 | 7 / 0 / 0 |
+| GPT-5.6 Luna | on | 0 / 0 / 0 | 4 / 0 / 0 |
+
+Each cell is WMDP-cyber / CTI-MCQ / CTI-RCM.
+
+- **CTI-MCQ provokes the most non-termination.** Its questions are about
+  ATT&CK ID-level detail. The pilot trace of a model enumerating
+  non-existent IDs came from this task.
+- **Solar's 61 reasoning-on unparsed rows are a third failure mode.** They
+  are `finish_reason: "stop"` with **empty content** and
+  `completion_tokens == reasoning_tokens`: the model ends after reasoning
+  without writing an answer. They are spread across the whole run (log
+  positions 147–4,484), so they are not a provider incident.
+
+#### What "reasoning on" meant per model
+
+`reasoning: {enabled: true}` is OpenRouter's medium effort. It **allows**
+reasoning; it does not force it.
+
+- GPT-5.6 Luna used 0 reasoning tokens on 19/996 WMDP rows and 138/2,500
+  CTI-MCQ rows (adaptive reasoning).
+- Solar, DeepSeek and GLM reasoned on every row.
+- With reasoning off, Solar, Luna and DeepSeek used 0 reasoning tokens on
+  every row.
+
+#### Caveats that bound these conclusions
+
+- **Contamination.** All items were public before these models were
+  released (see [Benchmarks](#benchmarks-and-why-these)).
+- **Provider for DeepSeek.** DeepSeek is StreamLake fp8, not DeepSeek's
+  own endpoint.
+- **Not comparable to published WMDP-cyber.** WMDP-cyber here is the
+  996-item knowledge subset, scored generatively, not by top logit.
+- **Single sample.** There is one sample per item. The GLM test-retest
+  above is the only direct noise estimate.
 
 ### Pilot (design data, not a result)
 

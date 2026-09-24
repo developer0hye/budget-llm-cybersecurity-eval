@@ -1,0 +1,454 @@
+{
+  "per_model": {
+    "deepseek-v4.1-flash": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 84.84,
+        "accuracy_of_answered": 86.05,
+        "correct": 845,
+        "wrong": 137,
+        "no_answer_truncated": 14,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 996,
+        "cost_usd": 0.8428,
+        "providers": {
+          "StreamLake": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 79.56,
+        "accuracy_of_answered": 82.16,
+        "correct": 1989,
+        "wrong": 432,
+        "no_answer_truncated": 79,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 3.2112,
+        "providers": {
+          "StreamLake": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 76.3,
+        "accuracy_of_answered": 76.99,
+        "correct": 763,
+        "wrong": 228,
+        "no_answer_truncated": 9,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.8117,
+        "providers": {
+          "StreamLake": 1000
+        }
+      }
+    },
+    "gpt-5.6-luna": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 83.84,
+        "accuracy_of_answered": 84.17,
+        "correct": 835,
+        "wrong": 157,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 4,
+        "reasoning_rows": 977,
+        "cost_usd": 0.2627,
+        "providers": {
+          "OpenAI": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 80.2,
+        "accuracy_of_answered": 80.2,
+        "correct": 2005,
+        "wrong": 495,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2362,
+        "cost_usd": 0.6314,
+        "providers": {
+          "OpenAI": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 74.0,
+        "accuracy_of_answered": 74.0,
+        "correct": 740,
+        "wrong": 260,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.184,
+        "providers": {
+          "OpenAI": 1000
+        }
+      }
+    },
+    "glm-5.3-flash": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 83.33,
+        "accuracy_of_answered": 85.22,
+        "correct": 830,
+        "wrong": 144,
+        "no_answer_truncated": 17,
+        "no_answer_unparsed": 5,
+        "reasoning_rows": 996,
+        "cost_usd": 0.6667,
+        "providers": {
+          "Z.AI": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 78.72,
+        "accuracy_of_answered": 82.21,
+        "correct": 1968,
+        "wrong": 426,
+        "no_answer_truncated": 103,
+        "no_answer_unparsed": 3,
+        "reasoning_rows": 2500,
+        "cost_usd": 2.1625,
+        "providers": {
+          "Z.AI": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 73.9,
+        "accuracy_of_answered": 74.35,
+        "correct": 739,
+        "wrong": 255,
+        "no_answer_truncated": 6,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.5897,
+        "providers": {
+          "Z.AI": 1000
+        }
+      }
+    },
+    "solar-pro4": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 76.71,
+        "accuracy_of_answered": 77.56,
+        "correct": 764,
+        "wrong": 221,
+        "no_answer_truncated": 3,
+        "no_answer_unparsed": 8,
+        "reasoning_rows": 996,
+        "cost_usd": 0.8821,
+        "providers": {
+          "Upstage": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 74.48,
+        "accuracy_of_answered": 77.04,
+        "correct": 1862,
+        "wrong": 555,
+        "no_answer_truncated": 33,
+        "no_answer_unparsed": 50,
+        "reasoning_rows": 2500,
+        "cost_usd": 2.9069,
+        "providers": {
+          "Upstage": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 72.0,
+        "accuracy_of_answered": 72.87,
+        "correct": 720,
+        "wrong": 268,
+        "no_answer_truncated": 9,
+        "no_answer_unparsed": 3,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.9411,
+        "providers": {
+          "Upstage": 1000
+        }
+      }
+    }
+  },
+  "pairwise": {
+    "WMDP-cyber": {
+      "deepseek-v4.1-flash vs glm-5.3-flash": {
+        "primary": {
+          "n": 996,
+          "b": 64,
+          "c": 49,
+          "p": 0.18759872474577588
+        },
+        "both_answered": {
+          "n": 965,
+          "b": 53,
+          "c": 42,
+          "p": 0.3048851907022759
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 57,
+          "c": 47,
+          "p": 0.37758392329809853
+        },
+        "both_answered": {
+          "n": 978,
+          "b": 54,
+          "c": 37,
+          "p": 0.09294694311794123
+        }
+      },
+      "deepseek-v4.1-flash vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 116,
+          "c": 35,
+          "p": 2.4442591000241438e-11
+        },
+        "both_answered": {
+          "n": 975,
+          "b": 109,
+          "c": 30,
+          "p": 9.851828103021368e-12
+        }
+      },
+      "glm-5.3-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 49,
+          "c": 54,
+          "p": 0.6936859650244837
+        },
+        "both_answered": {
+          "n": 973,
+          "b": 49,
+          "c": 37,
+          "p": 0.23537986221105522
+        }
+      },
+      "glm-5.3-flash vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 106,
+          "c": 40,
+          "p": 4.448054793188397e-08
+        },
+        "both_answered": {
+          "n": 965,
+          "b": 97,
+          "c": 27,
+          "p": 1.8545612885631625e-10
+        }
+      },
+      "gpt-5.6-luna vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 103,
+          "c": 32,
+          "p": 6.796791472915328e-10
+        },
+        "both_answered": {
+          "n": 981,
+          "b": 92,
+          "c": 31,
+          "p": 3.317352917439988e-08
+        }
+      }
+    },
+    "CTI-MCQ": {
+      "deepseek-v4.1-flash vs glm-5.3-flash": {
+        "primary": {
+          "n": 2500,
+          "b": 178,
+          "c": 157,
+          "p": 0.27449545523725155
+        },
+        "both_answered": {
+          "n": 2332,
+          "b": 137,
+          "c": 122,
+          "p": 0.38438343317417134
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 157,
+          "c": 173,
+          "p": 0.40899949606305985
+        },
+        "both_answered": {
+          "n": 2421,
+          "b": 157,
+          "c": 134,
+          "p": 0.19708304233908194
+        }
+      },
+      "deepseek-v4.1-flash vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 283,
+          "c": 156,
+          "p": 1.4038339806133313e-09
+        },
+        "both_answered": {
+          "n": 2344,
+          "b": 223,
+          "c": 115,
+          "p": 4.384264850886706e-09
+        }
+      },
+      "glm-5.3-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 163,
+          "c": 200,
+          "p": 0.0586740680313085
+        },
+        "both_answered": {
+          "n": 2394,
+          "b": 163,
+          "c": 140,
+          "p": 0.20620361140890014
+        }
+      },
+      "glm-5.3-flash vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 284,
+          "c": 178,
+          "p": 9.315437325224511e-07
+        },
+        "both_answered": {
+          "n": 2315,
+          "b": 224,
+          "c": 128,
+          "p": 3.5084486229321215e-07
+        }
+      },
+      "gpt-5.6-luna vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 279,
+          "c": 136,
+          "p": 1.92091991538257e-12
+        },
+        "both_answered": {
+          "n": 2417,
+          "b": 214,
+          "c": 136,
+          "p": 3.600534995482082e-05
+        }
+      }
+    },
+    "CTI-RCM": {
+      "deepseek-v4.1-flash vs glm-5.3-flash": {
+        "primary": {
+          "n": 1000,
+          "b": 48,
+          "c": 24,
+          "p": 0.006309827313666047
+        },
+        "both_answered": {
+          "n": 985,
+          "b": 45,
+          "c": 22,
+          "p": 0.006741447363103126
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 51,
+          "c": 28,
+          "p": 0.012812402175831366
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 51,
+          "c": 25,
+          "p": 0.0038362357516146246
+        }
+      },
+      "deepseek-v4.1-flash vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 77,
+          "c": 34,
+          "p": 5.4948162502714474e-05
+        },
+        "both_answered": {
+          "n": 980,
+          "b": 73,
+          "c": 31,
+          "p": 4.6569869697466e-05
+        }
+      },
+      "glm-5.3-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 21,
+          "c": 22,
+          "p": 1.0
+        },
+        "both_answered": {
+          "n": 994,
+          "b": 21,
+          "c": 21,
+          "p": 1.0
+        }
+      },
+      "glm-5.3-flash vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 54,
+          "c": 35,
+          "p": 0.05577832765373429
+        },
+        "both_answered": {
+          "n": 982,
+          "b": 53,
+          "c": 34,
+          "p": 0.05300311301096222
+        }
+      },
+      "gpt-5.6-luna vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 55,
+          "c": 35,
+          "p": 0.04459752462791594
+        },
+        "both_answered": {
+          "n": 988,
+          "b": 53,
+          "c": 35,
+          "p": 0.06934604368506442
+        }
+      }
+    }
+  },
+  "baselines": {
+    "WMDP-cyber": {
+      "majority_label": "A",
+      "majority_accuracy": 26.81
+    },
+    "CTI-MCQ": {
+      "majority_label": "C",
+      "majority_accuracy": 37.12
+    },
+    "CTI-RCM": {
+      "majority_label": "CWE-79",
+      "majority_accuracy": 22.9
+    }
+  }
+}
