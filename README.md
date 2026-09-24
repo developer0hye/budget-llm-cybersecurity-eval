@@ -1,446 +1,504 @@
-# Budget-Tier Model Comparison: Cybersecurity Knowledge and Agentic CTF-Solving (KR / US / CN)
+# Budget-Tier LLMs on Cybersecurity: Knowledge and Agentic Task-Solving (KR / US / CN)
 
-Two linked evaluations of 5 similarly-priced OpenRouter models spanning Korea,
-the US, and China: **Part 1** measures cybersecurity *knowledge* via
-multiple-choice QA ([CyberMetric][cybermetric]); **Part 2** measures
-practical CTF-*solving* skill via an autonomous tool-using agent
-([`ctftiny/`](ctftiny/), full report in
-[`ctftiny/README.md`](ctftiny/README.md)). All comparisons use paired
-significance testing (McNemar's exact test) on matched data rather than raw
-score gaps — see [Statistical methodology](#statistical-methodology) and
-[Limitations](#limitations) before citing any single number from this repo.
+**Goal.** Measure two separate capabilities of the same 4 similarly-priced
+models, and keep them separate:
 
-[cybermetric]: https://github.com/cybermetric/CyberMetric
+1. **Knowledge**: what the model knows about security, asked closed-book
+   with no tools. Multiple-choice and ID-mapping questions.
+2. **Agentic task-solving**: whether the model can *do* a security task in
+   a sandbox through a tool-using agent loop. CTF challenges.
 
-## Key findings
+The two are not interchangeable. Knowing the right ATT&CK mitigation is not
+the same as getting a shell on a box. This project's earlier run (now in
+[`legacy/`](legacy/README.md)) found them diverging. All 10 model pairs
+were non-significant on an MCQ benchmark (CyberMetric-2000, p ≥ 0.13 with
+reasoning on). On the same models' CTF runs, DeepSeek V4.1 Flash solved
+21.6% and Solar Pro 4 7.0% (reasoning off, 185 matched challenges). A
+model that looks the same on one axis can differ on the other, so each
+axis gets its own benchmark, protocol and statistics.
 
-- **On knowledge (CyberMetric-2000), the 5 models are statistically
-  indistinguishable when reasoning is enabled for all of them** (10/10
-  pairwise McNemar tests, p ≥ 0.15). With reasoning left at each model's
-  own default (effectively off, except GLM 5.3 Flash which cannot disable
-  it), 3 of 10 pairs are nominally significant — but none survive a
-  Bonferroni correction for multiple comparisons, and GLM's forced-on
-  reasoning drives 2 of the 3.
-- **Reasoning does not measurably change MCQ accuracy for any model**
-  (paired McNemar, off vs. on, p ≥ 0.21 across all 5) — extra inference-time
-  "thinking" doesn't move outcomes on closed-book knowledge recall.
-- **On agentic CTF-solving, reasoning matters — and unevenly across
-  models.** Disabling reasoning significantly *reduces* solve rate for 3 of
-  4 testable models (Qwen3.8 Flash, DeepSeek V4.1 Flash, GPT-5.6 Luna; all
-  p<0.0001) but has no measurable effect on Solar Pro 4 (p = 0.146),
-  despite verifying — via an exhaustive scan of every trajectory, not a
-  sample — that the forced-on condition actually engaged reasoning.
-- **The uncontrolled full-run CTF comparison was confounded by reasoning
-  settings the harness never set explicitly** — each model's provider
-  default ranged from 0% to 100% reasoning usage across the 5 models
-  (measured empirically from trajectory logs). Once reasoning is held
-  constant across models, DeepSeek V4.1 Flash remains the model with the
-  strongest, reasoning-independent solve-rate edge; Solar Pro 4 is no
-  longer significantly distinguishable from GPT-5.6 Luna (one of the 3
-  models it was originally reported as significantly behind), though a
-  significant-at-a-suggestive-level gap against Qwen3.8 Flash re-emerges
-  once the common sample more than doubles (n=80→196). Full analysis:
-  [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
-- **Solve rates here mean "solved within 12 agent turns" — the budget
-  moves the numbers, not the ranking.** Re-running CTFTiny at
-  `max_rounds=30` lifts Solar Pro 4 from 14.0% to 40.0% and DeepSeek V4.1
-  Flash from 54.0% to 80.0%, both p ≤ 0.001, with the 40pp gap between them
-  unchanged. Models that batch shell commands into one turn (DeepSeek chains
-  93% of its commands, Solar Pro 4 48%) are favoured by a tight budget, so
-  low absolute scores here are partly a budget artifact — the relative
-  ordering is not.
-- **Absolute numbers look anomalous against 2024-era publications but
-  ordinary against 2025-era ones.** On NYU CTF Bench these models run
-  6.6%–35.5% where EnIGMA (2024 SOTA) reports 13.5% and a CTF-fine-tuned
-  32B reports 10.4% — a 2x gap over published frontier results. On
-  [CTFTiny](ctftiny/README.md#results-ctftiny-50-challenge-lite-benchmark),
-  whose published baselines are 2025 frontier models under a *stronger*
-  scaffold, the same models land inside the field instead (DeepSeek V4.1
-  Flash 70% vs Claude 4 Sonnet 76%, Solar Pro 4 14% vs LLaMA 4 Maverick
-  8%). Part of the first gap is two years of model progress; part is
-  plausibly training-data contamination (2017–2023 challenges with public
-  writeups). This project cannot separate the two. Full discussion:
-  [`ctftiny/README.md`](ctftiny/README.md#comparison-to-published-literature).
+| Axis | Benchmarks | Status |
+|---|---|---|
+| Knowledge | WMDP-cyber (knowledge subset), CTIBench CTI-MCQ, CTIBench CTI-RCM | **done** (2026-09-24/25), [results](#results) |
+| Agentic | Cybench via `inspect_evals`, CTFTiny as anchor | planned |
 
 ## Models under test
 
-| Country | Model | OpenRouter ID | Released (per OpenRouter) |
-|---|---|---|---|
-| KR | Solar Pro 4 | `upstage/solar-pro4` | 2026-08-10 |
-| US | GPT-5.6 Luna | `openai/gpt-5.6-luna` | 2026-07 |
-| CN | DeepSeek V4.1 Flash | `deepseek/deepseek-v4.1-flash` | 2026-09 |
-| CN | GLM 5.3 Flash | `z-ai/glm-5.3-flash` | 2026-08-28 |
-| CN | Qwen3.8 Flash | `qwen/qwen3.8-flash` | 2026-08-26 |
+| Country | Model | OpenRouter ID | Pinned provider | Reasoning off possible? |
+|---|---|---|---|---|
+| KR | Solar Pro 4 | `upstage/solar-pro4` | Upstage (first-party) | yes |
+| US | GPT-5.6 Luna | `openai/gpt-5.6-luna` | OpenAI (first-party) | yes |
+| CN | DeepSeek V4.1 Flash | `deepseek/deepseek-v4.1-flash` | **StreamLake, fp8** (third-party, see below) | yes |
+| CN | GLM 5.3 Flash | `z-ai/glm-5.3-flash` | Z.AI, fp8 (first-party) | **no**, reasoning is mandatory |
 
-Selection criterion: all 5 sit in roughly the same OpenRouter weighted-average
-price band as Solar Pro 4 (~$0.03–0.10 input / ~$0.4–1.3 output per 1M
-tokens at the time of the run — see git history for the exact figures
-checked on 2026-09-17). Model pricing and "current budget-tier model per
-provider" drift on the order of days to weeks; re-verify before trusting an
-older run's model selection.
+**Selection criterion.** All 4 are in the same OpenRouter price band as
+Solar Pro 4: $0.09–0.20 in and $0.36–1.20 out per 1M tokens, checked on
+2026-09-24. IDs, providers and quirks live in
+[`models.py`](models.py), which every harness imports.
 
-## Part 1 — CyberMetric: cybersecurity knowledge (MCQ)
+**Dropped or rejected before any full-run result was analysed:**
 
-[CyberMetric](https://github.com/cybermetric/CyberMetric) (Tihanyi et al.,
-arXiv:2402.07688, 2024) is a multiple-choice QA benchmark generated via RAG
-from NIST standards, RFCs, and cybersecurity textbooks, covering 9 domains
-(pentest, cryptography, network/IoT security, governance, compliance, cloud
-security, etc.), human-validated. We use the **2000-question tier**:
-narrower margin of error than the 80/500-question tiers (±1.6pp vs. ±3.1pp
-at 500) while finishing in ~10–15 minutes, and unlike the 10000-question
-tier it isn't flagged by the authors as having an estimated 2–3%
-label-error rate. The dataset is not vendored (upstream has no LICENSE
-file); `download_data.sh` fetches it fresh at setup time.
+- **Qwen3.8 Flash** (`qwen/qwen3.8-flash`, CN) was in the original five
+  and in the pilot, and was dropped on 2026-09-24. The problem was latency,
+  not rate limiting: a probe got 0 HTTP 429s at 6, 20 and 40 requests in
+  flight. But its median call took ~7 s even with reasoning off, which put
+  the reasoning-on run at ~8 h against 2–4 h for the others. Its partial
+  full-run rows were discarded unanalysed. Its pilot rows remain in
+  `knowledge/pilot/`.
+- **Mistral Small 4** (`mistralai/mistral-small-2603`, EU, $0.15/$0.60) was
+  the only Mistral model in the band. It was dropped because every request
+  returned HTTP 429 with `limit_source: "upstream_provider_shared_pool"`
+  (20/20 sequential calls at 1/s). OpenRouter's shared Mistral quota was
+  exhausted; this harness's concurrency was not the cause.
+- **Anthropic and xAI** have no model in the band. The cheapest current
+  models are Claude Haiku 4.5 ($1/$5) and Grok 4.3 ($1.25/$2.50). Claude 3
+  Haiku ($0.25/$1.25) is in the band but dates from 2024-03, so it is not a
+  2026 budget-tier peer.
 
-Each model answered the **same 2000 questions**, once with reasoning left
-at its provider default (effectively off; GLM 5.3 Flash cannot disable
-reasoning) and once with reasoning explicitly forced on for all 5.
+**Provider pinning.** Each model is pinned to one provider with
+`allow_fallbacks: false`. Unpinned, OpenRouter load-balances every call.
+In the pilot, GLM was served by 25 providers and DeepSeek by 18, with
+different hardware, quantization and serving stacks. DeepSeek's own
+endpoint is excluded by this account's OpenRouter privacy setting (it may
+train on prompts: "Paid model training violation"). So DeepSeek runs on
+StreamLake fp8, the provider that served most of its pilot traffic
+(171/600). **The DeepSeek row is therefore a third-party fp8 deployment,
+not DeepSeek's own.**
+
+---
+
+## Axis 1 — Knowledge
+
+### Benchmarks and why these
+
+| Benchmark | Items used | Built by | Question authorship | Answer key | License |
+|---|---|---|---|---|---|
+| [WMDP-cyber](https://huggingface.co/datasets/cais/wmdp) ([arXiv:2403.03218](https://arxiv.org/abs/2403.03218)) | **996** of 1,987 (knowledge subset) | Center for AI Safety + UC Berkeley, MIT, Stanford, Harvard, Scale AI, et al. | expert-written, "checked by at least two experts from different organizations" | benchmark key | MIT |
+| [CTIBench](https://huggingface.co/datasets/AI4Sec/cti-bench) CTI-MCQ ([arXiv:2406.07599](https://arxiv.org/abs/2406.07599)) | 2,500 | Rochester Institute of Technology; NeurIPS 2024 Datasets & Benchmarks | GPT-4o-generated from ATT&CK/CAPEC/etc., ~3,000 manually validated down to 2,500 | benchmark key | CC BY-NC-SA 4.0 |
+| CTIBench CTI-RCM | 1,000 | same | none: real NVD CVE descriptions (mostly 2023–2024) | NVD's CWE assignment | CC BY-NC-SA 4.0 |
+
+Neither dataset is committed. [`knowledge/download_data.sh`](knowledge/download_data.sh)
+fetches both at pinned HuggingFace revisions (`cais/wmdp@7125571`,
+`AI4Sec/cti-bench@9237e16`) and checks SHA-256.
+
+**Benchmarks considered and rejected:**
+
+- **CyberMetric-2000** (used in `legacy/`). Saturated: all 5 models scored
+  94.1–95.1%, and all 10 pairwise McNemar tests were non-significant. An
+  independent 2026 audit ([arXiv:2609.08765](https://arxiv.org/abs/2609.08765))
+  finds the same at the frontier (CyberMetric-500: 92–96%). With no
+  headroom, a null result says nothing about the models.
+- **AthenaBench** ([arXiv:2511.01144](https://arxiv.org/abs/2511.01144), 2025).
+  It has 2025 items and headroom, but three problems ruled it out:
+  - CKT questions and ATE scenarios were written by GPT-5, a confound for
+    GPT-5.6 Luna.
+  - Human review covered only items GPT-5 or Gemini got wrong.
+  - It is a workshop paper, co-authored with the vendor that sells its
+    commercial license.
+
+  Harness code for it was written and then removed; its extractor matched
+  upstream on 62,499 released responses.
+
+**What none of these fix: contamination.** All three item sets were public
+before these models were released (WMDP 2024-03, CTIBench 2024-06). The
+knowledge-axis numbers are "closed-book on public 2024 items", not
+held-out.
+
+### Why WMDP-cyber is cut to 996 items
+
+WMDP-cyber contains four templated families: "Which arguments will cause
+the following function to return 0x…", "What number is returned when…",
+"What is the output of the following…", and "I captured a network
+packet…". Together they are 991 of 1,987 items. They require emulating
+64-bit arithmetic or decoding packet bytes by hand.
+
+Evidence from the pilot, at `max_tokens=8000` with reasoning off:
+
+- **On the templated families**, every truncation of the non-reasoning
+  models landed here: Qwen 39/107, DeepSeek 17/107, Solar 12/107.
+- **On the other WMDP items**, the same models truncated 0/93.
+
+With tools, this task belongs to the agentic axis: a debugger or emulator
+answers it. The WMDP paper itself scores by top logit with no generation
+at all. The rule is a regex on the question stem
+(`WMDP_COMPUTATION_RE` in [`knowledge/run_knowledge.py`](knowledge/run_knowledge.py)).
+The remaining 996 keep their original row index. **WMDP-cyber numbers here
+are therefore not comparable to published full-set WMDP-cyber scores.**
+
+### Protocol (pre-registered before the full run)
+
+- **Prompts**
+  - CTI-MCQ and CTI-RCM: the dataset's own `Prompt` column plus CTIBench's
+    system prompt, as in upstream `evaluation/model-prediction.ipynb`
+    (`maveryn/cti-bench@4543e5b`).
+  - WMDP-cyber: upstream has no generative prompt. We use an MMLU-style
+    template adapted from lm-evaluation-harness's `wmdp_cyber` task: the
+    question, then `A.`–`D.` options. It differs from the harness in three
+    ways:
+    - the preamble says "about computer security", not "about
+      cybersecurity";
+    - the question is not `.strip()`ped;
+    - the trailing `Answer:` is replaced by CTIBench's "the last line …
+      only the single letter" instruction.
+- **Sampling**: temperature 0, `max_tokens=16000` for every model in both
+  conditions, one sample per item (pass@1).
+- **Two conditions**
+  - `reasoning: {enabled: false}`, and `reasoning: {enabled: true}`, which
+    OpenRouter defines as **medium effort**
+    ([docs](https://openrouter.ai/docs/use-cases/reasoning-tokens)).
+  - GLM cannot disable reasoning, so its "off" run has reasoning on.
+    Engagement is checked per row from
+    `usage.completion_tokens_details.reasoning_tokens`.
+- **Why `max_tokens=16000`**: at 8000, a legitimate Qwen reasoning trace
+  was cut off. That was WMDP item 1818, a struct-layout and stack-alignment
+  question, which finished in 6.4k–10.4k tokens on 4 re-runs at 16000.
+  Traces that never terminate exhaust any cap
+  ([below](#non-answers-are-not-wrong-answers)).
+- **Extraction**
+  - MCQ: last standalone A–D letter, scanning lines bottom-up.
+  - RCM: last `CWE-\d+` in the response, as upstream's `format_rcm` does.
+
+### Non-answers are not wrong answers
+
+Every item gets exactly one `outcome`:
+
+| Outcome | Meaning |
+|---|---|
+| `correct` | answered, matches the key |
+| `wrong` | answered, does not match |
+| `no_answer_truncated` | hit `max_tokens`. **Never counted as an answer**, even if a letter can be pulled out of the half-written text |
+| `no_answer_unparsed` | finished, but no extractable answer (refusal, format violation, empty content) |
+
+API and transport failures (HTTP 429/5xx, timeouts, and, added after the
+run, empty `content` with `finish_reason: "stop"`; see
+[below](#infrastructure-failure-found-after-the-run-empty-content)) are not
+outcomes. They
+are dropped and retried until they succeed, so infrastructure never shows
+up as a model failure. Only those are retried. Truncations are not, since
+retrying one model's truncations would give it pass@k.
+
+The truncation rule matters. In the pilot, DeepSeek's WMDP score fell from
+76.0% to 72.5% once half-written truncated responses stopped counting.
+
+**Reported metrics:**
+
+- **accuracy** = correct / all items. This is the primary metric.
+- **accuracy_of_answered** = correct / (correct + wrong).
+- The four outcome counts, per model and task.
+
+Why non-termination gets its own category: in the pilot, GLM hit the cap
+on 86/600 calls, 85 with empty content. The captured reasoning shows two
+distinct failure modes:
+
+- **Oscillation (GLM).** 65–111 `Wait`/`Actually`/`reconsider` per trace.
+  The model commits to an answer and reopens it, up to 11 times in one
+  trace.
+- **Degenerate enumeration (Qwen, CTI-MCQ item 1060).** The model lists
+  non-existent ATT&CK IDs, `M4671? M4672? … M4820`, until the 16,000-token
+  cap.
+
+Write-up: [developer0hye/tips#12 — reasoning non-termination](https://github.com/developer0hye/tips/pull/12).
+
+### Statistical plan
+
+All tests are McNemar's exact test on matched items, run per task. The
+three tasks measure different things, so they are never pooled.
+
+- **Between models.** 6 pairs per task and condition, Bonferroni
+  α = 0.05/6 = 0.0083 per task family.
+  - Primary: all items, with no-answer counted as not correct.
+  - Sensitivity check: only items both models answered.
+- **Reasoning off vs on, within a model.** 3 toggleable models × 3 tasks =
+  9 tests, Bonferroni α = 0.05/9 = 0.0056. GLM is excluded because it has
+  no off condition.
+- **Baselines.** The majority-label baseline is reported per task. The
+  CTI-MCQ key is skewed (C 37%, B 32%), so "always C" scores ~37%.
 
 ### Results
 
-Accuracy on the same 2000 questions, in both reasoning conditions. Ranked
-by the reasoning-on column — the apples-to-apples one, since GLM 5.3 Flash
-cannot disable reasoning and its "off" row is therefore not a true
-off-condition.
-
-| Rank | Country | Model | Reasoning off | Reasoning on |
-|---|---|---|---|---|
-| 1 | 🇰🇷 KR | Solar Pro 4 | 94.75% | **94.85%** |
-| 1 | 🇨🇳 CN | GLM 5.3 Flash\* | 95.10% | **94.85%** |
-| 3 | 🇨🇳 CN | Qwen3.8 Flash | 94.05% | **94.35%** |
-| 4 | 🇨🇳 CN | DeepSeek V4.1 Flash | 93.55% | **94.25%** |
-| 5 | 🇺🇸 US | GPT-5.6 Luna | 93.85% | **94.10%** |
-
-\* GLM's "off" run still had reasoning on (mandatory).
-
-**Verdict: the 5 models are statistically indistinguishable.** With
-reasoning on for all of them, all 10 pairwise McNemar tests are
-non-significant (p ≥ 0.13). With reasoning at each model's default, 3 of 10
-pairs are nominally significant but **none survive Bonferroni correction**,
-and GLM's mandatory reasoning plausibly explains 2 of those 3. A 1.3pp
-spread across 2000 questions is not a ranking — don't cite one of these
-models as beating another on this benchmark.
-
-### Statistical methodology
-
-All 5 models answer the identical 2000 questions in each run, which makes
-this **matched/paired data**. The correct pairwise comparison is
-**McNemar's exact test** on a per-question basis, not a threshold on the
-raw accuracy gap (a gap-threshold heuristic implicitly assumes independent
-samples, which understates power on matched data and can miss real
-effects). All significance claims below use McNemar's test; a
-multiple-comparisons caveat (10 pairwise tests per condition) applies
-throughout — see [Limitations](#limitations).
-
-### Cross-model significance
-
-<details>
-<summary>Full pairwise McNemar tests, reasoning off (n=2000 per pair)</summary>
-
-| Pair | b, c | p |
-|---|---|---|
-| DeepSeek V4.1 Flash vs GLM 5.3 Flash | 49, 80 | **0.0080** |
-| GPT-5.6 Luna vs GLM 5.3 Flash | 47, 72 | **0.0274** |
-| Solar Pro 4 vs DeepSeek V4.1 Flash | 72, 48 | **0.0353** |
-| GLM 5.3 Flash vs Qwen3.8 Flash | 65, 44 | 0.0549 |
-| Solar Pro 4 vs Qwen3.8 Flash | 63, 49 | 0.2191 |
-| Solar Pro 4 vs GPT-5.6 Luna | 73, 55 | 0.1326 |
-| DeepSeek V4.1 Flash vs Qwen3.8 Flash | 55, 65 | 0.4114 |
-| GPT-5.6 Luna vs DeepSeek V4.1 Flash | 70, 64 | 0.6660 |
-| Solar Pro 4 vs GLM 5.3 Flash | 53, 60 | 0.5727 |
-| GPT-5.6 Luna vs Qwen3.8 Flash | 50, 54 | 0.7688 |
-
-3 of 10 pairs are nominally significant (p<0.05); none survive Bonferroni
-correction (α = 0.05/10 = 0.005). Under reasoning-on, all 10 pairs are
-non-significant (p ≥ 0.13).
-
-</details>
-
-### Does reasoning help accuracy?
-
-**No — not for any of the 5 models.** Paired McNemar on the same 2000
-questions, off vs. on: Solar Pro 4 p=0.912, GPT-5.6 Luna p=0.645, DeepSeek
-V4.1 Flash p=0.211, GLM 5.3 Flash p=0.568, Qwen3.8 Flash p=0.617. Deltas
-run −0.25pp to +0.70pp, within the ~0.25pp test-retest noise at this sample
-size. This is a proper non-significant result on matched data, not just
-"the deltas look small."
-
-Contrast this with [Part 2](#part-2--ctf-solving-agent-evaluation-phase-2),
-where reasoning has a large, significant effect for most of the same
-models — the type of task matters more than the model for whether
-reasoning helps.
-
-## Part 2 — CTF-solving agent evaluation (phase 2)
-
-CyberMetric measures cybersecurity *knowledge*; a companion evaluation in
-[`ctftiny/`](ctftiny/) measures practical CTF-*solving* skill for the same
-5 models, using NYU's [nyuctf_agents][nyuctf-agents] baseline tool-using
-agent against real CTF challenges in a Docker sandbox, plus
-[CTFJudge][ctfjudge] for trajectory-quality grading (not yet run
-end-to-end). Full methodology, architecture, data, and results:
-[`ctftiny/README.md`](ctftiny/README.md).
-
-[nyuctf-agents]: https://github.com/NYU-LLM-CTF/nyuctf_agents
-[ctfjudge]: https://github.com/NYU-LLM-CTF/CTFJudge
-
-**Headline result** (see `ctftiny/README.md` for the full statistical
-workup): a full 200-challenge run per model (1000 jobs, $12.00) initially
-found Solar Pro 4 solving significantly fewer challenges than every other
-model. That comparison never controlled for reasoning — a follow-up audit
-found the harness had never set an explicit reasoning parameter, so each
-model defaulted to its provider's own behavior (0% to 100% reasoning usage,
-measured). A reasoning-controlled re-run (800 more jobs, $8.14) found the
-effect is partly a confound: with reasoning held uniformly off across the 4
-testable models, DeepSeek V4.1 Flash remains significantly better than all 3
-others, and **Solar Pro 4 is no longer significantly different from GPT-5.6
-Luna** — it is still significantly worse than DeepSeek, and (at a
-suggestive, not fully conclusive level) worse than Qwen3.8 Flash.
-
-### Results
-
-Solve rate on the 185 challenges all 4 testable models attempted in **both**
-reasoning conditions. GLM 5.3 Flash is excluded — its reasoning cannot be
-disabled, so it has no off-condition.
-
-| Rank | Country | Model | Reasoning off | Reasoning on |
-|---|---|---|---|---|
-| 1 | 🇨🇳 CN | DeepSeek V4.1 Flash | 21.6% | **36.8%** |
-| 2 | 🇨🇳 CN | Qwen3.8 Flash | 12.4% | **25.9%** |
-| 3 | 🇺🇸 US | GPT-5.6 Luna | 10.3% | **23.2%** |
-| 4 | 🇰🇷 KR | Solar Pro 4 | 7.0% | **10.3%** |
-
-"On" is forced for Solar Pro 4; for the other three it is each provider's
-default, measured at ~100% (Qwen3.8 Flash), ~97% (DeepSeek V4.1 Flash) and
-~36% (GPT-5.6 Luna) reasoning usage.
-
-**Verdict: DeepSeek V4.1 Flash is genuinely ahead, and the gap is not a
-reasoning artifact.** On the reasoning-off condition (n=196, the widest
-apples-to-apples set) it beats all 3 others at p ≤ 0.0005. Solar Pro 4 is
-last, significantly behind DeepSeek (p<0.0001) and — at a suggestive level
-— behind Qwen3.8 Flash (p=0.013), but **not** distinguishable from GPT-5.6
-Luna (p=0.180); Qwen3.8 Flash and GPT-5.6 Luna are tied (p=0.455). Full
-tables: [`ctftiny/README.md`](ctftiny/README.md#results-reasoning-controlled-comparison-n196).
-
-**Why 185 and not 200**: a paired test needs the same challenge present in
-both arms of every model being compared, so this uses the challenges all 8
-arms (4 models × 2 conditions) completed. The 15 that drop out are
-infrastructure, not capability: one challenge whose admin-bot container hits
-a Docker/runc bug on Apple Silicon, a handful of per-model 900s timeouts
-that reproduced on a second idle-machine run, and 3 cells lost to a provider
-rate limit on Qwen3.8 Flash. A 2026-09-22 repair pass fixed the rest — see
-[`ctftiny/README.md`](ctftiny/README.md#appendix-b-operational-incident-log).
-
-### Does reasoning help? (paired, same challenges, on vs. off)
-
-**Yes — for 3 of the 4 testable models, strongly.** Qwen3.8 Flash (n=188),
-DeepSeek V4.1 Flash (n=197) and GPT-5.6 Luna (n=199) all lose roughly half
-their solve rate when reasoning is disabled, p<0.0001 each. Solar Pro 4 is
-the exception (n=196, p=0.146) — no measurable effect, and the forced-on
-condition was verified to actually engage reasoning. This is the opposite of
-[Part 1's CyberMetric result](#does-reasoning-help-accuracy), where reasoning
-moves nothing for any model: the type of task decides whether reasoning pays
-off, more than the model does.
-
-GLM 5.3 Flash cannot be tested here at all (mandatory reasoning). The
-**uncontrolled** full-200 run — every model at its own provider default, so
-not apples-to-apples — plus per-model cost, attempted counts (179–199 of
-200), and the n=169 all-5-attempted subset are in
-[`ctftiny/README.md`](ctftiny/README.md#results-uncontrolled-full-200-run-2026-09-19).
-
-## Limitations
-
-- **Matched-data comparisons require paired tests.** Every result in this
-  repo compares models on the identical question/challenge set; a raw gap
-  between two accuracy or solve-rate numbers is not itself evidence of a
-  difference — use the McNemar results, not the ranking tables, to decide
-  whether two models actually differ.
-- **Multiple comparisons.** Each 5-model condition runs 10 pairwise tests;
-  at uncorrected α=0.05 roughly 0.5 false positives are expected by chance.
-  Results are reported with raw p-values throughout; treat any p in the
-  0.01–0.05 range as suggestive rather than conclusive unless it also
-  survives Bonferroni correction (noted explicitly where relevant).
-  Cross-model CTF-solving p-values may also be inflated toward significance
-  by the attempted-count imbalance discussed in `ctftiny/README.md`.
-- **GLM 5.3 Flash's mandatory reasoning breaks the reasoning-off condition
-  for that model specifically**, in both Part 1 and Part 2 — its "off" row
-  is not a true off-condition and its inclusion in off-condition rankings
-  should be discounted accordingly.
-- **CTF-solving absolute rates likely overstate genuine problem-solving
-  capability** due to training-data contamination risk (public,
-  multi-year-old challenges with public writeups) — see
-  [`ctftiny/README.md`](ctftiny/README.md#comparison-to-published-literature).
-- **Model pricing and routing drift.** OpenRouter model IDs can silently
-  route to updated weights, and "budget tier" pricing shifts over weeks —
-  results are timestamped and should not be assumed to hold for a re-run
-  months later.
-
-## Reproducing this work
+Full runs, 2026-09-24/25: 4 models × 4,496 items × 2 conditions = 35,968
+scored rows, $18.44 total (off $4.36, on $14.08). Every number below is
+recomputed by [`knowledge/analyze.py`](knowledge/analyze.py) from the
+per-item logs in `knowledge/results_reasoning_{off,on}/`. The analysis
+dumps are in `knowledge/analysis_reasoning_{off,on}.json`.
 
 ```bash
-git clone <this-repo>
-cd cybersecurity_eval
-uv venv .venv
-uv pip install --python .venv/bin/python -r requirements.txt
-./download_data.sh
-cp .env.example .env   # then fill in your own OPENROUTER_API_KEY
+python3 knowledge/analyze.py knowledge/results_reasoning_on
+python3 knowledge/analyze.py knowledge/results_reasoning_off --compare-on knowledge/results_reasoning_on
 ```
 
-The script runs all questions for all models on a single asyncio event
-loop, bounded by `--concurrency` in-flight requests at a time (default 30).
-Results are written incrementally as each call completes — `tail -f
-results/<model>.jsonl` or `watch -n2 cat results/summary.json` to watch a
-run live.
+#### Headline findings
 
-```bash
-source .venv/bin/activate
-export OPENROUTER_API_KEY=sk-or-...
+1. **Solar Pro 4 is significantly behind the other three on WMDP-cyber and
+   CTI-MCQ.** This holds under reasoning on, the only condition where all 4
+   models run the same protocol: all 6 of those tests give p ≤ 0.0011.
+   DeepSeek V4.1 Flash, GPT-5.6 Luna and GLM 5.3 Flash are **not
+   distinguishable** from each other on either task: WMDP p ≥ 0.19,
+   CTI-MCQ p ≥ 0.059.
+2. **On CTI-RCM (CVE → CWE) the spread is narrow.**
+   - DeepSeek beats GLM (p = 0.0063) and Solar (p = 0.0001).
+   - DeepSeek vs Luna is nominal only: p = 0.013, which does not survive
+     α = 0.0083.
+   - All other RCM pairs are non-significant (p ≥ 0.059).
+3. **Reasoning helps closed-book recall where there is headroom.** On
+   WMDP-cyber, all 3 toggleable models gain, each p ≤ 0.0002:
+   - Luna +9.9 pp
+   - DeepSeek +4.8 pp
+   - Solar +4.5 pp
 
-# Smoke test: 20 questions across all 5 models (~100 calls)
-python3 run_eval.py --limit 20
+   On CTI-MCQ, Luna (+4.7 pp) and Solar (+3.1 pp) gain, each p ≤ 0.0001.
+   DeepSeek does not (p = 0.74, see below). On CTI-RCM no model gains (all
+   p ≥ 0.033, none significant after correction).
 
-# Full run, reasoning off (except GLM, which can't disable it)
-python3 run_eval.py
+   This is **not consistent with the legacy null** on CyberMetric, where
+   reasoning moved no model (p ≥ 0.21). The likely explanation is
+   CyberMetric's 94–95% ceiling: there was no headroom for reasoning to
+   show up. This run does not test that directly, because the item sets
+   differ.
+4. **The reasoning condition changes the ranking.** With reasoning off,
+   Luna is indistinguishable from Solar on WMDP (p = 0.34). With reasoning
+   on, it is 6.7 pp ahead (p < 0.0001). A single-condition leaderboard for
+   these models would depend on a setting the provider picks by default.
+   GLM's "off" row has reasoning on (mandatory), so off-condition
+   comparisons against GLM are not like-for-like.
+5. **Run-to-run noise is about 1 pp.** GLM's two runs are both
+   reasoning-on on the same pinned provider, which makes them a
+   test-retest pair:
+   - Accuracy moved by 0.8–1.0 pp (p ≥ 0.16 on all 3 tasks).
+   - The same answer was extracted on 83.7–90.1% of items.
 
-# Full run, reasoning explicitly on for all 5 models
-python3 run_eval.py --reasoning on --out results_reasoning_on --concurrency 20
+   Differences of about 1 pp between any two cells here are within noise.
 
-# Only specific models
-python3 run_eval.py --models solar-pro4 glm-5.3-flash
+#### Accuracy, reasoning on (primary between-model comparison)
 
-# Push concurrency higher if you're not hitting 429s
-python3 run_eval.py --concurrency 50
-```
+Denominator: all items. Truncation and unparsed rows count as not correct.
 
-**Reproducing the documented runs exactly**: `python3 run_eval.py --dataset
-data/CyberMetric-2000-v1.json` with the `MODELS` dict as it stands in this
-commit, no `--reasoning` flag for the off run (2026-09-17), `--reasoning on`
-for the on run (2026-09-18), `--concurrency 30`. Re-running later will hit
-whatever weights OpenRouter currently routes those model IDs to.
-
-### Token budget calibration
-
-`calibrate_tokens.py` finds the smallest `max_tokens` that avoids truncated
-answers (reasoning eating the whole budget, leaving `content: null`) for
-each model with reasoning on, by testing a random probe sample at
-increasing budgets (250 → 500 → 1000 → 2000 → 4000 → 8000):
-
-```bash
-python3 calibrate_tokens.py --probe-size 30 --budgets 250 500 1000 2000 4000 8000
-```
-
-Writes `calibration/report.md` / `calibration/report.json` plus an
-append-only `calibration/calibration.log`. Low concurrency by default
-(5) so it doesn't compete for rate limit with a concurrent `run_eval.py`.
-
-<details>
-<summary><b>Calibrated budgets (probe_size=30, seed=42, run 2026-09-18)</b></summary>
-
-| Model | Recommended `max_tokens` | Max reasoning tokens seen | p50 tokens used |
+| Model | WMDP-cyber (n=996) | CTI-MCQ (n=2,500) | CTI-RCM (n=1,000) |
 |---|---|---|---|
-| Solar Pro 4 | **8000** | 4816 | 683 |
-| GPT-5.6 Luna | **500** | 221 | 5 |
-| DeepSeek V4.1 Flash | **2000** | 1921 | 54 |
-| GLM 5.3 Flash (mandatory reasoning) | **1000** | 250 | 111 |
-| Qwen3.8 Flash | **8000** | 706 | 108 |
+| DeepSeek V4.1 Flash (StreamLake fp8) | **84.8%** | 79.6% | **76.3%** |
+| GPT-5.6 Luna | 83.8% | **80.2%** | 74.0% |
+| GLM 5.3 Flash | 83.3% | 78.7% | 73.9% |
+| Solar Pro 4 | 77.1% | 76.0% | 72.1% |
+| majority-label baseline | 26.8% (A) | 37.1% (C) | 22.9% (CWE-79) |
 
-Two clusters: GPT-5.6 Luna barely reasons at all on these questions (p50 of
-5 tokens); Solar Pro 4 and Qwen3.8 Flash have a long tail (median well
-under 1000 tokens, but occasional spikes past 4800/4000) — this is why the
-reasoning-on run above logged 4 truncation errors at `max_tokens=4000`. If
-re-running with reasoning on, use `max_tokens=8000` for Solar Pro 4 and
-Qwen3.8 Flash specifically rather than one shared budget for all 5.
+#### Accuracy, reasoning off
 
-</details>
+| Model | WMDP-cyber | CTI-MCQ | CTI-RCM |
+|---|---|---|---|
+| GLM 5.3 Flash\* | **82.5%** | 77.7% | 74.8% |
+| DeepSeek V4.1 Flash | 80.0% | **79.3%** | **76.5%** |
+| GPT-5.6 Luna | 73.9% | 75.5% | 74.1% |
+| Solar Pro 4 | 72.6% | 72.9% | 70.1% |
 
-### Output files
+\* Reasoning is mandatory for GLM, so this row is a second reasoning-on
+run.
 
-- `results/<model>.jsonl` — per-question log (question, correct answer,
-  model's answer, raw response, correctness, error, token usage)
-- `results/summary.json` — per-model accuracy + token usage + `cost_usd`,
-  plus `_total_cost_usd`; updated every 50 completions during a run
-- `results_reasoning_on/summary.json` — same, for the `--reasoning on` run
-- `calibration/report.md` / `report.json` — token-budget calibration
+#### Pairwise McNemar, reasoning on
 
-### Cost
+`**` means the test survives Bonferroni α = 0.0083 (6 pairs per task);
+`*` means p < 0.05 without surviving it. b is the number of items only
+the first model got right, and c the number only the second model got
+right.
 
-`run_eval.py` records real per-call cost from OpenRouter's `usage.cost`
-field into each `results*/summary.json`. **Total spend on this project's
-API key as of 2026-09-18: $2.62** (lifetime key usage, not just the two
-documented full runs — includes every smoke test and calibration probe
-during development). Rough scale: a full run is 2000 questions × 5 models =
-10,000 calls, ~200 input tokens/question, output capped at 16 tokens for
-reasoning-off (1000–8000 for reasoning-on) — well under $1 at reasoning
-off, a few dollars at reasoning on.
+| Pair | WMDP-cyber b/c, p | CTI-MCQ b/c, p | CTI-RCM b/c, p |
+|---|---|---|---|
+| DeepSeek vs GLM | 64/49, 0.19 | 178/157, 0.27 | 48/24, **0.0063\*\*** |
+| DeepSeek vs Luna | 57/47, 0.38 | 157/173, 0.41 | 51/28, 0.013\* |
+| DeepSeek vs Solar | 112/35, **<0.0001\*\*** | 250/160, **<0.0001\*\*** | 77/35, **0.0001\*\*** |
+| GLM vs Luna | 49/54, 0.69 | 163/200, 0.059 | 21/22, 1.00 |
+| GLM vs Solar | 102/40, **<0.0001\*\*** | 253/184, **0.0011\*\*** | 54/36, 0.073 |
+| Luna vs Solar | 99/32, **<0.0001\*\*** | 243/137, **<0.0001\*\*** | 55/36, 0.059 |
 
-### Known failure modes
+**Sensitivity check** (only items both models answered): one Bonferroni
+call flips. DeepSeek vs Luna on CTI-RCM goes from p = 0.013 to
+**p = 0.0038** (n = 991), because DeepSeek's 9 RCM truncations stop
+counting against it. All other calls are unchanged.
 
-Two distinct causes produce the same symptom (`429 Too Many Requests`) and
-need different fixes — check the response body, not just the status code.
+The off-condition pairwise tables and their sensitivity checks are in the
+`analyze.py` output. One call flips there too: GLM vs Luna on CTI-MCQ is
+p = 0.0091 in the primary analysis and p < 0.0001 on both-answered items.
+The difference is GLM's 116 truncations.
 
-**1. Own concurrency overwhelming a provider's per-key rate limit.**
-Symptom: consistent 429s for one model when run alongside others at high
-shared `--concurrency`. Fix: `MODEL_CONCURRENCY_CAP` in `run_eval.py` caps
-specific models below the global `--concurrency` regardless of the CLI
-value (currently `qwen/qwen3.8-flash: 6`, found by comparing a mixed
-5-model run at concurrency=30, which errored on 18/20 Qwen calls, against a
-solo Qwen run at concurrency=6, which had 0/2000 errors).
+In both flips the truncated side loses significance in the primary
+analysis. That is the pre-registered reading: a model that does not answer
+within the budget does not get credit.
 
-**2. OpenRouter's upstream shared pool for a model being saturated —
-external, transient, outside this script's control.** Symptom: 429s on
-*every* call to one model, even fully sequential with no concurrency. The
-error body's `error.metadata.limit_source` reads
-`"upstream_provider_shared_pool"`. No retry/backoff tuning fixes this — it
-means OpenRouter's shared routing capacity for that model is exhausted
-account-wide. Wait and retry later, or add your own upstream provider key
-under [openrouter.ai/settings/integrations](https://openrouter.ai/settings/integrations)
-for a dedicated quota. Check `error.metadata.limit_source` in the failing
-response before assuming the script regressed.
+#### Reasoning off vs on, within model
+
+Bonferroni α = 0.0056 (3 models × 3 tasks). b is the number of items
+right only with reasoning off, and c the number right only with it on.
+
+| Model | WMDP-cyber | CTI-MCQ | CTI-RCM |
+|---|---|---|---|
+| Solar Pro 4 | 72.6 → 77.1%, 48/93, **p = 0.0002** | 72.9 → 76.0%, 152/229, **p = 0.0001** | 70.1 → 72.1%, 30/50, p = 0.033 |
+| GPT-5.6 Luna | 73.9 → 83.8%, 33/132, **p < 0.0001** | 75.5 → 80.2%, 92/210, **p < 0.0001** | 74.1 → 74.0%, 24/23, p = 1.00 |
+| DeepSeek V4.1 Flash | 80.0 → 84.8%, 43/91, **p < 0.0001** | 79.3 → 79.6%, 166/173, p = 0.74 | 76.5 → 76.3%, 37/35, p = 0.91 |
+
+DeepSeek's null result on CTI-MCQ comes partly from non-termination. With
+reasoning on, 79 of its 2,500 items hit the 16,000-token cap. Its
+accuracy over answered items rises to 82.2%, against 79.3% off. The
+primary analysis counts those 79 as not correct, as pre-registered.
+
+#### Non-answers, per model and condition
+
+| Model | Condition | Truncated (hit 16,000) | Unparsed (finished, no answer) |
+|---|---|---|---|
+| GLM 5.3 Flash | off (reasoning mandatory) | 24 / 116 / 4 | 3 / 0 / 0 |
+| GLM 5.3 Flash | on | 17 / 105 / 6 | 5 / 0 / 0 |
+| DeepSeek V4.1 Flash | off | 4 / 2 / 1 | 3 / 0 / 0 |
+| DeepSeek V4.1 Flash | on | 14 / 79 / 9 | 0 / 0 / 0 |
+| Solar Pro 4 | off | 0 / 0 / 0 | 1 / 1 / 0 |
+| Solar Pro 4 | on | 5 / 33 / 9 | 2 / 0 / 0 |
+| GPT-5.6 Luna | off | 0 / 0 / 0 | 7 / 0 / 0 |
+| GPT-5.6 Luna | on | 0 / 0 / 0 | 4 / 0 / 0 |
+
+Each cell is WMDP-cyber / CTI-MCQ / CTI-RCM.
+
+- **CTI-MCQ provokes the most non-termination.** Its questions are about
+  ATT&CK ID-level detail. The pilot trace of a model enumerating
+  non-existent IDs came from this task.
+- **Unparsed rows are mostly refusals.** They are almost all on WMDP-cyber,
+  whose items are about offensive techniques. Examples: DeepSeek's "I'm
+  sorry, but I can't help with that request."; GLM's "I will not provide
+  a letter answer for this question."; Luna answering with a safer
+  alternative instead of a letter. A few are invalid letters, such as
+  Luna answering `F`.
+
+#### Infrastructure failure found after the run: empty content
+
+68 rows came back HTTP 200 with `finish_reason: "stop"`, **empty
+`content`**, and `completion_tokens == reasoning_tokens`:
+
+- 61 from Solar Pro 4 with reasoning on;
+- 7 from GLM across both runs.
+
+The first analysis scored them `no_answer_unparsed`, as a model failure.
+
+**Diagnosis.** 10 of Solar's rows were re-run with the identical payload
+on the pinned Upstage provider. All 10 came back with content, and their
+reasoning had already reached a decision ("Final Answer: A", "Decision:
+C"). The failure is spread across the whole run (log positions
+147–4,484), not a time window. It is stochastic and serving-side: the
+answer is never emitted into `content`. It is not the model failing to
+answer.
+
+**Fix.** The harness now treats an empty-content `stop` as a retryable
+failure, like a 5xx. All 68 rows were re-run:
+
+- 66 returned content on retry.
+- 2 Solar WMDP items (1327 and 1716) came back empty on 24/24 attempts.
+  Being persistent, they are counted as Solar's no-answer and noted in
+  their log rows.
+
+The original 68 rows are kept in
+[`knowledge/empty_content_retries.jsonl`](knowledge/empty_content_retries.jsonl).
+
+**What it would have looked like unfixed:**
+
+- Solar reasoning-on accuracy would have read 76.7 / 74.5 / 72.0%
+  instead of 77.1 / 76.0 / 72.1%.
+- **Solar's CTI-MCQ reasoning gain would have been reported as
+  non-significant (p = 0.053) instead of p = 0.0001.**
+- GLM's numbers move by ≤ 0.1 pp.
+- No between-model Bonferroni call changes.
+
+This retry rule is a deviation from the pre-registered protocol, which
+counted any finished-but-unparsed response as a no-answer. It is disclosed
+here, and both versions of the numbers are given above.
+
+#### What "reasoning on" meant per model
+
+`reasoning: {enabled: true}` is OpenRouter's medium effort. It **allows**
+reasoning; it does not force it.
+
+- GPT-5.6 Luna used 0 reasoning tokens on 19/996 WMDP rows and 138/2,500
+  CTI-MCQ rows (adaptive reasoning).
+- Solar, DeepSeek and GLM reasoned on every row that returned usage.
+- With reasoning off, Solar, Luna and DeepSeek used 0 reasoning tokens on
+  every row.
+
+#### Caveats that bound these conclusions
+
+- **Contamination.** All items were public before these models were
+  released (see [Benchmarks](#benchmarks-and-why-these)).
+- **Provider for DeepSeek.** DeepSeek is StreamLake fp8, not DeepSeek's
+  own endpoint.
+- **Not comparable to published WMDP-cyber.** WMDP-cyber here is the
+  996-item knowledge subset, scored generatively, not by top logit.
+- **Single sample.** There is one sample per item. The GLM test-retest
+  above is the only direct noise estimate.
+
+### Pilot (design data, not a result)
+
+[`knowledge/pilot/`](knowledge/pilot/) holds 3,000 calls: 200 seeded-random
+items per original task, run **before** the design above was fixed. It
+differs from the full run in four ways:
+
+- it includes Qwen3.8 Flash, since dropped;
+- providers were unpinned;
+- `max_tokens` was 8000;
+- WMDP computation items were included.
+
+It is kept because it is the evidence for three decisions: the WMDP cut,
+the 16000 cap, and provider pinning. Do not cite its accuracies.
+
+---
+
+## Axis 2 — Agentic task-solving (planned)
+
+Not run yet under this design. Plan:
+
+- **[Cybench](https://github.com/andyzorigin/cybench)** via
+  `inspect_evals/cybench`: 39 tasks, Apache-2.0, OpenRouter-native. The
+  tasks come from 2022–2024 professional CTFs, so this does not fix
+  contamination either. It is chosen because published numbers exist for
+  this model tier under a documented protocol. For example,
+  [arXiv:2607.15263](https://arxiv.org/abs/2607.15263) reports GPT-5.6 Luna
+  at 79.5% and DeepSeek v4 Flash at 86.4%, on 39 tasks × 3 epochs. This
+  project's numbers can be anchored to theirs.
+- **CTFTiny** (50 challenges from NYU CTF Bench) as a continuity anchor
+  with the legacy run.
+
+The legacy CTF results (NYU CTF Bench 200 + CTFTiny, 3,000+ agent jobs,
+round-budget and reasoning-confound analyses) remain in
+[`legacy/ctftiny/README.md`](legacy/ctftiny/README.md). They are not part
+of this design.
+
+---
+
+## Reproducing
+
+```bash
+git clone https://github.com/developer0hye/budget-llm-cybersecurity-eval.git
+cd budget-llm-cybersecurity-eval
+uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt
+./knowledge/download_data.sh
+cp .env.example .env            # add OPENROUTER_API_KEY
+set -a; source .env; set +a
+
+.venv/bin/python knowledge/run_knowledge.py --reasoning off --concurrency 50 \
+    --out knowledge/results_reasoning_off
+.venv/bin/python knowledge/run_knowledge.py --reasoning on --concurrency 50 \
+    --out knowledge/results_reasoning_on
+```
+
+Runs resume. Rows are keyed by (task, item) and appended to
+`<out>/<model>.jsonl`, so re-running the same command skips logged items
+and retries only API failures. Re-running later will hit whatever weights
+and serving stack OpenRouter routes these IDs to at that time.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| `models.py` | model IDs, provider pins, reasoning/concurrency quirks |
+| `knowledge/` | knowledge-axis harness, analysis, per-item logs |
+| `legacy/` | the previous CyberMetric + NYU CTF Bench / CTFTiny study, archived as-is ([README](legacy/README.md)) |
 
 ## License
 
-Apache-2.0 (see [`LICENSE`](LICENSE)) for this project's own code, data and
-write-ups. Third-party components keep their own terms and are listed in
-[`NOTICE`](NOTICE) — most importantly `ctftiny/nyuctf_agents/` is vendored
-under upstream's MIT license, while CTFJudge is *not* redistributed here
-(upstream publishes no license) and is shipped as a patch instead.
-
-## Changelog
-
-- **2026-09-17** — Baseline CyberMetric run (reasoning off, GLM
-  mandatory-on).
-- **2026-09-18** — Reasoning-on run (all 5 models); token-budget
-  calibration; real per-call cost tracking added.
-- **2026-09-19** — Phase 2 (CTF-solving): full 200-challenge run (1000
-  jobs, $8.27) and a clean re-run of a 10-challenge pilot sample (60 jobs,
-  $0.45).
-- **2026-09-20** — Statistical audit of both benchmarks: replaced an
-  unsound significance-threshold heuristic with McNemar's paired test
-  throughout; discovered and corrected an uncontrolled-reasoning confound
-  in phase 2; ran a reasoning-controlled re-run of phase 2 (800 jobs,
-  originally $6.13, revised to $8.09 after the 2026-09-21 retry batch
-  below added more rows).
-- **2026-09-20/21** — Retry batch closing phase 2's "attempted" gap
-  (83–175→174–196 of 200): replaced a one-off, hand-edited host-port fix
-  for 24 challenges with a general automatic port-conflict resolver
-  (`ctftiny/dynamic_ports.py`); fixed two deadlock bugs found by a Codex
-  review of the retry pipeline and one more severe concurrency-collapse
-  bug (stale port-lock metadata) found live; confirmed one previously-seen
-  challenge failure is non-transient (Docker/runc bug on Apple Silicon)
-  rather than retrying indefinitely. Full incident log:
-  [`ctftiny/README.md`](ctftiny/README.md#appendix-b-operational-incident-log).
-  With this batch's added rows, the reasoning-controlled comparison's
-  common sample grew from n=80 to n=190, which surfaced a previously
-  undetected (suggestive) gap between Solar Pro 4 and Qwen3.8 Flash that
-  didn't reach significance at the smaller sample size.
-- **2026-09-22** — Second repair pass on the 10 challenges the first one
-  couldn't run. Fixed three more root causes, each of which had been
-  producing rows that look like model failures: a self-deadlock when a
-  multi-port challenge's stale metadata resolved to a duplicate port, a
-  disk-cleanup loop deleting the challenge images the next job needed
-  (including one that cannot be re-pulled), and a rotted image build
-  (Debian archive move, unarchived security suite, no arm64 wheel for a
-  pinned dependency). 7 of the 10 now produce real data; coverage went
-  83–175 → **179–199 of 200**. Also audited the benchmark's own container
-  security: 63 of the 200 challenges bind-mount the host Docker socket, now
-  stripped automatically. **Phase 2 total: $20.60** ($12.00 full-200 +
-  $0.45 n=10 pilot + $8.14 reasoning-controlled).
+Apache-2.0 for this project's code, logs and write-ups (see
+[`LICENSE`](LICENSE)). Third-party terms are in [`NOTICE`](NOTICE).
+WMDP-cyber (MIT) and CTIBench (CC BY-NC-SA 4.0) are fetched at run time,
+not redistributed. The per-item logs store model responses, answer keys
+and prompt hashes, but not question text.

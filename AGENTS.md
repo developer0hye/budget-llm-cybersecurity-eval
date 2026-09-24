@@ -1,8 +1,9 @@
 # Agent instructions
 
 This repo is a benchmark report: two evaluations of the same 5 budget-tier
-models, one on cybersecurity knowledge (CyberMetric MCQ), one on agentic
-CTF-solving (NYU CTF Bench via a tool-using agent). Everything here is read
+models, one on cybersecurity knowledge (WMDP-cyber and CTIBench, closed-book),
+one on agentic CTF-solving (via a tool-using agent). The first study
+(CyberMetric + NYU CTF Bench) is archived in `legacy/`. Everything here is read
 by practitioners in cybersecurity, AI evaluation, and agentic AI, and is
 meant to be citable. Write for that reader.
 
@@ -61,5 +62,5 @@ failure.
 Vendoring is a redistribution decision, not a convenience. Check the
 upstream LICENSE before copying code into this repo; if there is none, ship
 a patch plus clone instructions instead (see
-`ctftiny/ctfjudge-openrouter.patch`). Retain upstream license files for code
+`legacy/ctftiny/ctfjudge-openrouter.patch`). Retain upstream license files for code
 that is vendored, and pin the upstream commit in the README.
