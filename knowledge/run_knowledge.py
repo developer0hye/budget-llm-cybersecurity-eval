@@ -24,8 +24,8 @@ Every call: temperature 0, the same max_tokens for all models.
 
 Rows are keyed by (task, item) and appended to <out>/<model>.jsonl, so an
 interrupted run resumes where it stopped; rows with an `error` (API or
-transport failure, never a model answer) are dropped and retried on the next
-invocation. Question text is not logged (CTIBench's licence).
+transport failure, or an empty `content` with finish_reason "stop" -- never a
+model answer) are dropped and retried on the next invocation. Question text is not logged (CTIBench's licence).
 """
 
 import argparse
@@ -153,6 +153,14 @@ async def call_model(session, model_id, system, prompt, api_key, reasoning_on, m
                     await asyncio.sleep(min(3 * (2**attempt), 60))
                     continue
                 choice = data["choices"][0]
+                if choice.get("finish_reason") == "stop" and not (choice["message"].get("content") or "").strip():
+                    # Serving-side, not a model answer: Solar Pro 4 returned this
+                    # on 61 reasoning-on rows with the decision already written in
+                    # its reasoning ("Final Answer: A"), and 10/10 re-runs came back
+                    # with content. Retried like a 5xx.
+                    last_err = "empty content with finish_reason stop"
+                    await asyncio.sleep(min(3 * (2**attempt), 60))
+                    continue
                 return {
                     "response": choice["message"].get("content") or "",
                     "finish_reason": choice.get("finish_reason"),

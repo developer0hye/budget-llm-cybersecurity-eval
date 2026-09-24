@@ -111,25 +111,25 @@
     "model_id": "z-ai/glm-5.3-flash",
     "WMDP-cyber": {
       "rows": 996,
-      "correct": 821,
+      "correct": 822,
       "wrong": 147,
       "no_answer_truncated": 24,
-      "no_answer_unparsed": 4,
+      "no_answer_unparsed": 3,
       "reasoning_rows": 996,
-      "accuracy": 82.43,
-      "accuracy_of_answered": 84.81,
-      "cost_usd": 0.710007
+      "accuracy": 82.53,
+      "accuracy_of_answered": 84.83,
+      "cost_usd": 0.711295
     },
     "CTI-MCQ": {
       "rows": 2500,
-      "correct": 1941,
+      "correct": 1943,
       "wrong": 441,
-      "no_answer_truncated": 115,
-      "no_answer_unparsed": 3,
+      "no_answer_truncated": 116,
+      "no_answer_unparsed": 0,
       "reasoning_rows": 2500,
-      "accuracy": 77.64,
-      "accuracy_of_answered": 81.49,
-      "cost_usd": 2.196411
+      "accuracy": 77.72,
+      "accuracy_of_answered": 81.5,
+      "cost_usd": 2.197897
     },
     "CTI-RCM": {
       "rows": 1000,
@@ -143,5 +143,5 @@
       "cost_usd": 0.59159
     }
   },
-  "_total_cost_usd": 4.352592
+  "_total_cost_usd": 4.355365
 }
