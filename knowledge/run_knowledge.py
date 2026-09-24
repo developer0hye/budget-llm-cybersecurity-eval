@@ -280,7 +280,9 @@ async def main_async(args):
         for name in targets:
             path = out_dir / f"{name}.jsonl"
             path.write_text("".join(l for l in path.open() if not json.loads(l)["error"]))
-    summary = summarize(out_dir, targets)
+    # Summarise every model logged in out_dir, not just this invocation's
+    # --models: a partial re-run must not overwrite the others' summary.
+    summary = summarize(out_dir, [n for n in MODELS if (out_dir / f"{n}.jsonl").exists()])
     for name in targets:
         cells = "  ".join(f"{t} {summary[name][t]['accuracy']}%" for t in args.tasks)
         print(f"{name:22s} {cells}")
