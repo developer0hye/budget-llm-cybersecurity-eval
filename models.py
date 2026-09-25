@@ -8,6 +8,11 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODELS = {
     "solar-pro4": "upstage/solar-pro4",
     "gpt-5.6-luna": "openai/gpt-5.6-luna",
+    # Added 2026-09-25, after the first knowledge-axis results were analysed
+    # (OpenRouter listed it 2026-09-23; $0.10 in / $0.50 out per 1M). GPT-5.6
+    # Luna stays: it is the only model with a same-model Cybench anchor
+    # (arXiv:2607.15263).
+    "gpt-6-luna": "openai/gpt-6-luna",
     "deepseek-v4.1-flash": "deepseek/deepseek-v4.1-flash",
     "glm-5.3-flash": "z-ai/glm-5.3-flash",
 }
@@ -43,6 +48,7 @@ MODEL_CONCURRENCY_CAP: dict[str, int] = {}
 PROVIDER = {
     "upstage/solar-pro4": "upstage",
     "openai/gpt-5.6-luna": "openai",
+    "openai/gpt-6-luna": "openai",
     "deepseek/deepseek-v4.1-flash": "streamlake",
     "z-ai/glm-5.3-flash": "z-ai",
 }

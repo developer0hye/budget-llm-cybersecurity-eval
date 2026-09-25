@@ -1,6 +1,6 @@
 # Budget-Tier LLMs on Cybersecurity: Knowledge and Agentic Task-Solving (KR / US / CN)
 
-**Goal.** Measure two separate capabilities of the same 4 similarly-priced
+**Goal.** Measure two separate capabilities of the same 5 similarly-priced
 models, and keep them separate:
 
 1. **Knowledge**: what the model knows about security, asked closed-book
@@ -20,7 +20,7 @@ axis gets its own benchmark, protocol and statistics.
 | Axis | Benchmarks | Status |
 |---|---|---|
 | Knowledge | WMDP-cyber (knowledge subset), CTIBench CTI-MCQ, CTIBench CTI-RCM | **done** (2026-09-24/25), [results](#results) |
-| Agentic | Cybench via `inspect_evals`, CTFTiny as anchor | planned |
+| Agentic | Cybench via `inspect_evals` (39 challenges × 3 epochs) | **in progress** |
 
 ## Models under test
 
@@ -28,12 +28,16 @@ axis gets its own benchmark, protocol and statistics.
 |---|---|---|---|---|
 | KR | Solar Pro 4 | `upstage/solar-pro4` | Upstage (first-party) | yes |
 | US | GPT-5.6 Luna | `openai/gpt-5.6-luna` | OpenAI (first-party) | yes |
+| US | GPT-6 Luna (added 2026-09-25) | `openai/gpt-6-luna` | OpenAI (first-party) | yes |
 | CN | DeepSeek V4.1 Flash | `deepseek/deepseek-v4.1-flash` | **StreamLake, fp8** (third-party, see below) | yes |
 | CN | GLM 5.3 Flash | `z-ai/glm-5.3-flash` | Z.AI, fp8 (first-party) | **no**, reasoning is mandatory |
 
-**Selection criterion.** All 4 are in the same OpenRouter price band as
+**Selection criterion.** All 5 are in the same OpenRouter price band as
 Solar Pro 4: $0.09–0.20 in and $0.36–1.20 out per 1M tokens, checked on
-2026-09-24. IDs, providers and quirks live in
+2026-09-24/25. GPT-6 Luna ($0.10/$0.50) appeared on OpenRouter on
+2026-09-23 and was added after the first four models' knowledge results
+had been analysed. GPT-5.6 Luna stays, because it is the only model with
+a same-model Cybench anchor. IDs, providers and quirks live in
 [`models.py`](models.py), which every harness imports.
 
 **Dropped or rejected before any full-run result was analysed:**
@@ -204,20 +208,21 @@ Write-up: [developer0hye/tips#12 — reasoning non-termination](https://github.c
 All tests are McNemar's exact test on matched items, run per task. The
 three tasks measure different things, so they are never pooled.
 
-- **Between models.** 6 pairs per task and condition, Bonferroni
-  α = 0.05/6 = 0.0083 per task family.
+- **Between models.** 10 pairs per task and condition, Bonferroni
+  α = 0.05/10 = 0.005 per task family. This was 6 pairs and
+  α = 0.0083 before GPT-6 Luna was added.
   - Primary: all items, with no-answer counted as not correct.
   - Sensitivity check: only items both models answered.
-- **Reasoning off vs on, within a model.** 3 toggleable models × 3 tasks =
-  9 tests, Bonferroni α = 0.05/9 = 0.0056. GLM is excluded because it has
-  no off condition.
+- **Reasoning off vs on, within a model.** 4 toggleable models × 3 tasks =
+  12 tests, Bonferroni α = 0.05/12 = 0.0042. GLM is excluded because it
+  has no off condition.
 - **Baselines.** The majority-label baseline is reported per task. The
   CTI-MCQ key is skewed (C 37%, B 32%), so "always C" scores ~37%.
 
 ### Results
 
-Full runs, 2026-09-24/25: 4 models × 4,496 items × 2 conditions = 35,968
-scored rows, $18.44 total (off $4.36, on $14.08). Every number below is
+Full runs, 2026-09-24/25: 5 models × 4,496 items × 2 conditions = 44,960
+scored rows, $19.04 total (off $4.47, on $14.57). Every number below is
 recomputed by [`knowledge/analyze.py`](knowledge/analyze.py) from the
 per-item logs in `knowledge/results_reasoning_{off,on}/`. The analysis
 dumps are in `knowledge/analysis_reasoning_{off,on}.json`.
@@ -227,41 +232,60 @@ python3 knowledge/analyze.py knowledge/results_reasoning_on
 python3 knowledge/analyze.py knowledge/results_reasoning_off --compare-on knowledge/results_reasoning_on
 ```
 
+**GPT-6 Luna was added after the first four models' results had been
+analysed.** It was released on OpenRouter on 2026-09-23. The addition
+grows the between-model family from 6 to 10 pairs, so the Bonferroni
+threshold tightens from 0.0083 to 0.005. That changes one earlier call:
+DeepSeek vs GLM on CTI-RCM (p = 0.0063) was significant among four models
+and is not among five. Everything else was run and scored exactly as for
+the other four.
+
 #### Headline findings
 
-1. **Solar Pro 4 is significantly behind the other three on WMDP-cyber and
-   CTI-MCQ.** This holds under reasoning on, the only condition where all 4
-   models run the same protocol: all 6 of those tests give p ≤ 0.0011.
-   DeepSeek V4.1 Flash, GPT-5.6 Luna and GLM 5.3 Flash are **not
-   distinguishable** from each other on either task: WMDP p ≥ 0.19,
-   CTI-MCQ p ≥ 0.059.
-2. **On CTI-RCM (CVE → CWE) the spread is narrow.**
-   - DeepSeek beats GLM (p = 0.0063) and Solar (p = 0.0001).
-   - DeepSeek vs Luna is nominal only: p = 0.013, which does not survive
-     α = 0.0083.
-   - All other RCM pairs are non-significant (p ≥ 0.059).
-3. **Reasoning helps closed-book recall where there is headroom.** On
-   WMDP-cyber, all 3 toggleable models gain, each p ≤ 0.0002:
-   - Luna +9.9 pp
+1. **Solar Pro 4 is significantly behind all four other models on
+   WMDP-cyber and CTI-MCQ.** Under reasoning on (the like-for-like
+   condition), all 8 tests give p ≤ 0.0011.
+2. **Among the other four, no model beats another on the items both
+   answered.**
+   - With reasoning on, the primary analysis finds two significant
+     differences among them. Both come from non-answers:
+     - DeepSeek > GPT-6 Luna on WMDP (p = 0.0038). This comes from GPT-6
+       Luna's **34 refusals**. On both-answered items, p = 0.36.
+     - GPT-6 Luna > GLM on CTI-MCQ (p = 0.0019). This comes from GLM's
+       **105 truncations**. On both-answered items, p = 0.72.
+   - Every other pair among the four is non-significant, on every task.
+3. **On CTI-RCM (CVE → CWE) the spread is narrow.** DeepSeek and GPT-6
+   Luna beat Solar (p = 0.0001 and 0.0018); nothing else survives
+   α = 0.005.
+4. **Reasoning helps closed-book recall where there is headroom.** On
+   WMDP-cyber, all 4 toggleable models gain, each p ≤ 0.0002:
+   - GPT-5.6 Luna +9.9 pp
+   - GPT-6 Luna +7.6 pp
    - DeepSeek +4.8 pp
    - Solar +4.5 pp
 
-   On CTI-MCQ, Luna (+4.7 pp) and Solar (+3.1 pp) gain, each p ≤ 0.0001.
-   DeepSeek does not (p = 0.74, see below). On CTI-RCM no model gains (all
-   p ≥ 0.033, none significant after correction).
+   On CTI-MCQ, GPT-6 Luna (+6.2 pp), GPT-5.6 Luna (+4.7 pp) and Solar
+   (+3.1 pp) gain, each p ≤ 0.0001. DeepSeek does not (p = 0.74, see
+   below). On CTI-RCM no model gains (all p ≥ 0.033, none significant
+   after correction).
 
    This is **not consistent with the legacy null** on CyberMetric, where
    reasoning moved no model (p ≥ 0.21). The likely explanation is
    CyberMetric's 94–95% ceiling: there was no headroom for reasoning to
    show up. This run does not test that directly, because the item sets
    differ.
-4. **The reasoning condition changes the ranking.** With reasoning off,
-   Luna is indistinguishable from Solar on WMDP (p = 0.34). With reasoning
-   on, it is 6.7 pp ahead (p < 0.0001). A single-condition leaderboard for
-   these models would depend on a setting the provider picks by default.
-   GLM's "off" row has reasoning on (mandatory), so off-condition
-   comparisons against GLM are not like-for-like.
-5. **Run-to-run noise is about 1 pp.** GLM's two runs are both
+5. **The reasoning condition changes the ranking.** With reasoning off,
+   GPT-5.6 Luna is indistinguishable from Solar on WMDP (p = 0.34). With
+   reasoning on, it is 6.7 pp ahead (p < 0.0001). A single-condition
+   leaderboard for these models would depend on a setting the provider
+   picks by default. GLM's "off" row has reasoning on (mandatory), so
+   off-condition comparisons against GLM are not like-for-like.
+6. **GPT-6 Luna refuses more when it reasons.** On WMDP-cyber, 34 of its
+   38 reasoning-on non-answers are refusals ("I can't help optimize a
+   phishing campaign…"), against 9 of 19 with reasoning off. The next
+   highest is GPT-5.6 Luna, with 7 unparsed WMDP items off and 4 on,
+   mostly refusals; the other models have at most 5.
+7. **Run-to-run noise is about 1 pp.** GLM's two runs are both
    reasoning-on on the same pinned provider, which makes them a
    test-retest pair:
    - Accuracy moved by 0.8–1.0 pp (p ≥ 0.16 on all 3 tasks).
@@ -271,13 +295,15 @@ python3 knowledge/analyze.py knowledge/results_reasoning_off --compare-on knowle
 
 #### Accuracy, reasoning on (primary between-model comparison)
 
-Denominator: all items. Truncation and unparsed rows count as not correct.
+Denominator: all items. Truncation, refusal and unparsed rows count as
+not correct.
 
 | Model | WMDP-cyber (n=996) | CTI-MCQ (n=2,500) | CTI-RCM (n=1,000) |
 |---|---|---|---|
 | DeepSeek V4.1 Flash (StreamLake fp8) | **84.8%** | 79.6% | **76.3%** |
-| GPT-5.6 Luna | 83.8% | **80.2%** | 74.0% |
+| GPT-5.6 Luna | 83.8% | 80.2% | 74.0% |
 | GLM 5.3 Flash | 83.3% | 78.7% | 73.9% |
+| GPT-6 Luna | 81.6% (84.9% of answered) | **81.0%** | 75.1% |
 | Solar Pro 4 | 77.1% | 76.0% | 72.1% |
 | majority-label baseline | 26.8% (A) | 37.1% (C) | 22.9% (CWE-79) |
 
@@ -287,6 +313,7 @@ Denominator: all items. Truncation and unparsed rows count as not correct.
 |---|---|---|---|
 | GLM 5.3 Flash\* | **82.5%** | 77.7% | 74.8% |
 | DeepSeek V4.1 Flash | 80.0% | **79.3%** | **76.5%** |
+| GPT-6 Luna | 74.0% | 74.8% | 73.8% |
 | GPT-5.6 Luna | 73.9% | 75.5% | 74.1% |
 | Solar Pro 4 | 72.6% | 72.9% | 70.1% |
 
@@ -295,43 +322,48 @@ run.
 
 #### Pairwise McNemar, reasoning on
 
-`**` means the test survives Bonferroni α = 0.0083 (6 pairs per task);
+`**` means the test survives Bonferroni α = 0.005 (10 pairs per task);
 `*` means p < 0.05 without surviving it. b is the number of items only
 the first model got right, and c the number only the second model got
 right.
 
 | Pair | WMDP-cyber b/c, p | CTI-MCQ b/c, p | CTI-RCM b/c, p |
 |---|---|---|---|
-| DeepSeek vs GLM | 64/49, 0.19 | 178/157, 0.27 | 48/24, **0.0063\*\*** |
-| DeepSeek vs Luna | 57/47, 0.38 | 157/173, 0.41 | 51/28, 0.013\* |
+| DeepSeek vs GLM | 64/49, 0.19 | 178/157, 0.27 | 48/24, 0.0063\* |
+| DeepSeek vs GPT-5.6 Luna | 57/47, 0.38 | 157/173, 0.41 | 51/28, 0.013\* |
+| DeepSeek vs GPT-6 Luna | 74/42, **0.0038\*\*** | 135/171, 0.045\* | 41/29, 0.19 |
 | DeepSeek vs Solar | 112/35, **<0.0001\*\*** | 250/160, **<0.0001\*\*** | 77/35, **0.0001\*\*** |
-| GLM vs Luna | 49/54, 0.69 | 163/200, 0.059 | 21/22, 1.00 |
+| GLM vs GPT-5.6 Luna | 49/54, 0.69 | 163/200, 0.059 | 21/22, 1.00 |
+| GLM vs GPT-6 Luna | 75/58, 0.17 | 134/191, **0.0019\*\*** | 21/33, 0.13 |
 | GLM vs Solar | 102/40, **<0.0001\*\*** | 253/184, **0.0011\*\*** | 54/36, 0.073 |
-| Luna vs Solar | 99/32, **<0.0001\*\*** | 243/137, **<0.0001\*\*** | 55/36, 0.059 |
+| GPT-5.6 Luna vs GPT-6 Luna | 63/41, 0.039\* | 114/134, 0.23 | 16/27, 0.13 |
+| GPT-5.6 Luna vs Solar | 99/32, **<0.0001\*\*** | 243/137, **<0.0001\*\*** | 55/36, 0.059 |
+| GPT-6 Luna vs Solar | 107/62, **0.0007\*\*** | 248/122, **<0.0001\*\*** | 59/29, **0.0018\*\*** |
 
-**Sensitivity check** (only items both models answered): one Bonferroni
-call flips. DeepSeek vs Luna on CTI-RCM goes from p = 0.013 to
-**p = 0.0038** (n = 991), because DeepSeek's 9 RCM truncations stop
-counting against it. All other calls are unchanged.
+**Sensitivity check** (only items both models answered): three Bonferroni
+calls flip. All three flips come from one side's non-answers:
 
-The off-condition pairwise tables and their sensitivity checks are in the
-`analyze.py` output. One call flips there too: GLM vs Luna on CTI-MCQ is
-p = 0.0091 in the primary analysis and p < 0.0001 on both-answered items.
-The difference is GLM's 116 truncations.
+| Pair, task | Primary | Both answered | Cause |
+|---|---|---|---|
+| DeepSeek vs GPT-6 Luna, WMDP | p = 0.0038 | p = 0.36 | GPT-6 Luna's refusals |
+| GLM vs GPT-6 Luna, CTI-MCQ | p = 0.0019 | p = 0.72 | GLM's truncations |
+| DeepSeek vs GPT-5.6 Luna, CTI-RCM | p = 0.013 | p = 0.0038 | DeepSeek's 9 truncations |
 
-In both flips the truncated side loses significance in the primary
-analysis. That is the pre-registered reading: a model that does not answer
-within the budget does not get credit.
+The primary reading is the pre-registered one: a model that does not
+answer within the budget, or refuses, does not get credit. The
+off-condition pairwise tables and their sensitivity checks are in the
+`analyze.py` output.
 
 #### Reasoning off vs on, within model
 
-Bonferroni α = 0.0056 (3 models × 3 tasks). b is the number of items
+Bonferroni α = 0.0042 (4 models × 3 tasks). b is the number of items
 right only with reasoning off, and c the number right only with it on.
 
 | Model | WMDP-cyber | CTI-MCQ | CTI-RCM |
 |---|---|---|---|
 | Solar Pro 4 | 72.6 → 77.1%, 48/93, **p = 0.0002** | 72.9 → 76.0%, 152/229, **p = 0.0001** | 70.1 → 72.1%, 30/50, p = 0.033 |
 | GPT-5.6 Luna | 73.9 → 83.8%, 33/132, **p < 0.0001** | 75.5 → 80.2%, 92/210, **p < 0.0001** | 74.1 → 74.0%, 24/23, p = 1.00 |
+| GPT-6 Luna | 74.0 → 81.6%, 42/118, **p < 0.0001** | 74.8 → 81.0%, 96/250, **p < 0.0001** | 73.8 → 75.1%, 17/30, p = 0.079 |
 | DeepSeek V4.1 Flash | 80.0 → 84.8%, 43/91, **p < 0.0001** | 79.3 → 79.6%, 166/173, p = 0.74 | 76.5 → 76.3%, 37/35, p = 0.91 |
 
 DeepSeek's null result on CTI-MCQ comes partly from non-termination. With
@@ -351,18 +383,20 @@ primary analysis counts those 79 as not correct, as pre-registered.
 | Solar Pro 4 | on | 5 / 33 / 9 | 2 / 0 / 0 |
 | GPT-5.6 Luna | off | 0 / 0 / 0 | 7 / 0 / 0 |
 | GPT-5.6 Luna | on | 0 / 0 / 0 | 4 / 0 / 0 |
+| GPT-6 Luna | off | 0 / 0 / 0 | **19** / 0 / 0 |
+| GPT-6 Luna | on | 0 / 0 / 0 | **38** / 0 / 0 |
 
 Each cell is WMDP-cyber / CTI-MCQ / CTI-RCM.
 
 - **CTI-MCQ provokes the most non-termination.** Its questions are about
   ATT&CK ID-level detail. The pilot trace of a model enumerating
   non-existent IDs came from this task.
-- **Unparsed rows are mostly refusals.** They are almost all on WMDP-cyber,
-  whose items are about offensive techniques. Examples: DeepSeek's "I'm
-  sorry, but I can't help with that request."; GLM's "I will not provide
-  a letter answer for this question."; Luna answering with a safer
-  alternative instead of a letter. A few are invalid letters, such as
-  Luna answering `F`.
+- **Unparsed rows are mostly refusals**, on WMDP-cyber, whose items are
+  about offensive techniques. Examples: DeepSeek's "I'm sorry, but I
+  can't help with that request."; GLM's "I will not provide a letter
+  answer for this question."; GPT-6 Luna's "I can't help select a tool for
+  creating a payload…". A few are invalid letters (Luna answering `F`) or
+  unrelated text.
 
 #### Infrastructure failure found after the run: empty content
 
@@ -444,25 +478,92 @@ the 16000 cap, and provider pinning. Do not cite its accuracies.
 
 ---
 
-## Axis 2 — Agentic task-solving (planned)
+## Axis 2 — Agentic task-solving (in progress)
 
-Not run yet under this design. Plan:
+### Benchmark and why
 
-- **[Cybench](https://github.com/andyzorigin/cybench)** via
-  `inspect_evals/cybench`: 39 tasks, Apache-2.0, OpenRouter-native. The
-  tasks come from 2022–2024 professional CTFs, so this does not fix
-  contamination either. It is chosen because published numbers exist for
-  this model tier under a documented protocol. For example,
-  [arXiv:2607.15263](https://arxiv.org/abs/2607.15263) reports GPT-5.6 Luna
-  at 79.5% and DeepSeek v4 Flash at 86.4%, on 39 tasks × 3 epochs. This
-  project's numbers can be anchored to theirs.
-- **CTFTiny** (50 challenges from NYU CTF Bench) as a continuity anchor
-  with the legacy run.
+**[Cybench](https://github.com/andyzorigin/cybench)** ([arXiv:2408.08926](https://arxiv.org/abs/2408.08926)),
+run through `inspect_evals/cybench`:
 
-The legacy CTF results (NYU CTF Bench 200 + CTFTiny, 3,000+ agent jobs,
-round-budget and reasoning-confound analyses) remain in
-[`legacy/ctftiny/README.md`](legacy/ctftiny/README.md). They are not part
-of this design.
+- **Version:** 4-C, `hard` variant, 39 challenges.
+- **Sources:** HackTheBox, SekaiCTF, GlacierCTF, HKCert.
+- **Categories:** crypto, web, rev, forensics, pwn, misc.
+- **License:** Apache-2.0.
+- **Pinned harness** ([`agentic/requirements.txt`](agentic/requirements.txt)):
+  `inspect_evals@2329ee2`, `inspect_ai==0.3.268`, `openai==3.19.2`.
+
+It is chosen for **anchoring**, not freshness. The tasks date from 2022–24,
+so contamination is not addressed. What it offers is a published run
+under a documented protocol:
+[arXiv:2607.15263](https://arxiv.org/abs/2607.15263) (Kassianik, Nelson,
+Singer, 2026). On 39 tasks × 3 epochs with a $2.10 cost cap per sample,
+it reports:
+
+- GPT-5.6 Luna 79.5%, at high reasoning effort (Table 2). A later run of
+  the same model, made after the account passed OpenAI Trusted
+  Verification tier 1, scored 72.6% (Table 4).
+- DeepSeek v4 Flash 86.4%, and 76.1% at a $0.80 cap (Table 2).
+- GLM 4.7 Flash 25.6% (Table 4).
+
+**The anchor is loose.** Luna is the only same-model row, and it ran at a
+different reasoning effort. The paper's "DeepSeek v4 Flash" and "GLM 4.7
+Flash" are predecessors of the models here, and no Solar model appears.
+
+CTFTiny (legacy) remains a continuity reference; it is not re-run here.
+
+### Protocol (pre-registered before the full run)
+
+Matches 2607.15263 §3.1 except where noted:
+
+- **Agent:** `inspect_evals`' default ReAct agent. It has `bash` and
+  `python` tools with 180 s timeouts, and 3 flag submissions per sample.
+  The system prompt is the harness default.
+- **Epochs:** 3 per challenge. Score: mean over epochs per challenge, then
+  mean over the 39 challenges.
+- **Budget:** a per-sample `cost_limit` (value below). A sample that hits
+  it is a **no-answer**, not a wrong answer, as on the knowledge axis.
+- **Reasoning (deviation):** `reasoning: {enabled: true}`, OpenRouter's
+  medium effort, for every model, for consistency with the knowledge
+  axis. The paper ran GPT-5.6 at high effort, so Luna here is expected at
+  or below its 79.5%.
+- **Providers:** same single-provider pins as the knowledge axis, with
+  fallbacks off. Solar Pro 4 and DeepSeek V4.1 Flash are not in Inspect's
+  model database, so [`agentic/run_cybench.py`](agentic/run_cybench.py)
+  registers every model's pinned-provider price and context length.
+  Without that, `cost_limit` cannot fire.
+- **Sandbox:** Docker (`CYBENCH_ACKNOWLEDGE_RISKS=1`). No compose file
+  mounts the Docker socket or runs privileged. The agent container is
+  limited to 2 GB, with at most 8 concurrent sandboxes on a 12-core,
+  31 GB host.
+- **Infrastructure check before any model run.** The reference solutions
+  run with no model (`inspect_cyber/verify_solutions`, `solution`
+  variants). A challenge whose reference solution fails in this
+  environment is excluded and reported, never scored as a model failure.
+
+### Statistical plan
+
+- **Primary:** solve rate per model with a 95% Wilson CI over the 117
+  sample-epochs.
+- **Between models:** McNemar exact test on the 39 challenges, with a
+  challenge counted as solved if solved in ≥ 2 of 3 epochs. 6 pairs,
+  Bonferroni α = 0.0083. **n = 39 has low power:** only large gaps can
+  reach significance, so the CI table is the main deliverable.
+- **Noise:** per-challenge epoch agreement, i.e. how many challenges are
+  solved in 3/3, 2/3, 1/3 and 0/3 epochs.
+- **Refusals** count as failures (the paper does the same) and are
+  reported per model from the trajectory text.
+- **Writeup-fetching audit.** The Docker sandbox has unrestricted egress,
+  and agents have been observed pulling public writeups (CTFusion,
+  arXiv:2605.11504). Every trajectory is grepped for URLs containing
+  `ctftime`, `writeup`, `cybench`, or the challenge's name next to
+  `github`. Hits are reported per model and challenge as contamination
+  via tool use.
+- **Cost-cap hits** are reported per model, in the same way truncations
+  are reported on the knowledge axis.
+
+### Results
+
+*Pending.*
 
 ---
 
