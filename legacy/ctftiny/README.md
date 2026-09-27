@@ -28,8 +28,9 @@ project.
 - **The reasoning-controlled comparison (the correct one to cite) is
   n=196, all-4-models-attempted, reasoning uniformly off**: DeepSeek V4.1
   Flash solves significantly more challenges than the other 3 models
-  (p ≤ 0.0005 against each); Solar Pro 4 is significantly worse than
-  DeepSeek and, at a suggestive level, worse than Qwen3.8 Flash (p=0.013)
+  (p ≤ 0.0005 against each); Solar Pro 4 solves significantly fewer
+  challenges than DeepSeek and, at a suggestive level, fewer than Qwen3.8
+  Flash (p=0.013)
   — but not significantly different from GPT-5.6 Luna (p=0.180); Qwen3.8
   Flash and GPT-5.6 Luna are not significantly different (p=0.455). See
   [Results](#results-reasoning-controlled-comparison-n196).
@@ -307,8 +308,8 @@ Pairwise McNemar within this n=169 set:
 | Qwen3.8 Flash vs GPT-5.6 Luna | 16, 11 | 0.442 |
 
 At n=61 (the original common-attempted sample, before the repair passes),
-this looked like a single clean story: Solar Pro 4 significantly worse
-than every other model, the other 4 statistically indistinguishable from
+this looked like a single clean story: Solar Pro 4 solving significantly
+fewer challenges than every other model, the other 4 statistically indistinguishable from
 each other. **At n=169, that second half no longer holds** — DeepSeek V4.1
 Flash is now significantly ahead of GPT-5.6 Luna and Qwen3.8 Flash, and
 GLM 5.3 Flash is significantly ahead of GPT-5.6 Luna and (suggestively)
@@ -567,7 +568,7 @@ in how much of the benchmark they had already seen.
   a real attempt) but it is a judgement call, so the headline comparison was
   re-run with every `unknown` row dropped as a sensitivity check: n falls
   196→179, and **every conclusion survives** — DeepSeek V4.1 Flash still
-  beats all 3 (p ≤ 0.0003), Solar Pro 4 is still behind Qwen3.8 Flash in the
+  beats all 3 (p ≤ 0.0003), Solar Pro 4 is still lower than Qwen3.8 Flash in the
   suggestive band (p=0.0225, was 0.0129) and still not separable from
   GPT-5.6 Luna (p=0.267, was 0.180), and Qwen3.8 Flash vs GPT-5.6 Luna stays
   null (p=0.455).
@@ -890,7 +891,7 @@ reading to use the results above.
    (silently reused a prior run's logs, caught by a `wall_time_s` /
    `runtime_total` mismatch) before being disabled for good.
 4. **2026-09-20/21 retry batch.** A post-incident spot-check (re-running
-   one of Solar Pro 4's failed challenges by hand, cache warm, no
+   one Solar Pro 4 job that had produced no log, by hand, cache warm, no
    concurrent load) had succeeded, suggesting much of the remaining
    `no_log` count was recoverable transient failure rather than a
    permanently broken environment — this motivated a dedicated effort to

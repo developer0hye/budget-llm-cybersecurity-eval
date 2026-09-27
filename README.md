@@ -242,7 +242,7 @@ the other four.
 
 #### Headline findings
 
-1. **Solar Pro 4 is significantly behind all four other models on
+1. **Solar Pro 4 scores significantly lower than all four other models on
    WMDP-cyber and CTI-MCQ.** Under reasoning on (the like-for-like
    condition), all 8 tests give p ≤ 0.0011.
 2. **Among the other four, no model beats another on the items both
@@ -662,8 +662,13 @@ only the first model solved, and c the number only the second solved.
 | DeepSeek V4.1 Flash vs GLM 5.3 Flash | 3 / 2 | 1.00 |
 
 All 6 cross-group pairs survive the correction; none of the 4
-within-group pairs is significant. Solar Pro 4 solved at most one
-challenge that a top-group model missed.
+within-group pairs is significant. Neither bottom-group model solved more
+than one challenge that a top-group model missed.
+
+These are measurements of one configuration per model: the pinned provider
+in the table above, `reasoning: {enabled: true}` (medium effort), one
+epoch, on public 2022–24 CTF tasks. They are not a general ranking of the
+models outside that setting.
 
 ---
 
