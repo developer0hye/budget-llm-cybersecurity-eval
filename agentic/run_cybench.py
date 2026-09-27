@@ -4,15 +4,16 @@
 Usage (see agentic/requirements.txt for the pinned harness):
     export OPENROUTER_API_KEY=sk-or-... CYBENCH_ACKNOWLEDGE_RISKS=1
     python3 agentic/run_cybench.py --pilot                      # 3 challenges x 1 epoch, 1 model
-    python3 agentic/run_cybench.py --epochs 3 --cost-limit 2.10 # full run
+    python3 agentic/run_cybench.py                              # full run: 1 epoch, $2.10 cap
 
 Protocol follows arXiv:2607.15263 section 3.1, the published run this axis
 anchors to: inspect_evals `cybench` (version 4-C, "hard" variant, 39
 challenges), its default ReAct agent (bash + python tools with 180 s
-timeouts, 3 submission attempts), a per-sample cost cap, 3 epochs. The one
-deliberate difference: reasoning is `enabled: true` (OpenRouter medium
-effort) for every model, as on the knowledge axis; the paper ran GPT-5.6 at
-high effort.
+timeouts, 3 submission attempts) and a $2.10 per-sample cost cap.
+Differences, all disclosed in the README: 1 epoch instead of 3; reasoning
+`enabled: true` (OpenRouter medium effort) for every model, where the paper
+ran GPT-5.6 at high effort; the k8s sandbox's allowlist minus code hosts;
+and the per-call and per-sample safety stops below.
 
 Each model is pinned to the same single provider as the knowledge axis
 (models.PROVIDER, fallbacks off). Solar Pro 4 and DeepSeek V4.1 Flash are not
@@ -20,8 +21,10 @@ in Inspect's model database, so every model's context length and
 pinned-provider price are registered here -- `cost_limit` needs a price to
 fire.
 
-One Inspect log per model lands in <log-dir>/<model>/; re-running the same
-command resumes from it (eval_retry semantics are Inspect's own).
+Each invocation writes a new Inspect log per model under <log-dir>/<model>/.
+It does not resume: re-running starts a fresh eval. Re-runs of individual
+challenges go in a subfolder, and agentic/analyze_cybench.py merges them,
+taking the newest non-error result per challenge (never best-of-runs).
 """
 
 import argparse
@@ -95,7 +98,7 @@ def k8s_without_code_hosts(sandbox_type: str, sample) -> SandboxEnvironmentSpec:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--models", nargs="*", default=list(MODELS), choices=list(MODELS))
-    p.add_argument("--epochs", type=int, default=3)
+    p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--cost-limit", type=float, default=2.10, help="$ per sample (one challenge x one epoch)")
     p.add_argument("--stream-idle-timeout", type=int, default=120,
                    help="Abandon and retry a model call only after this many seconds with NO streamed "

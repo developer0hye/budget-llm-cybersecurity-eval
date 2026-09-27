@@ -277,14 +277,19 @@ the other four.
 1. **Solar Pro 4 scores significantly lower than all four other models on
    WMDP-cyber and CTI-MCQ.** Under reasoning on (the like-for-like
    condition), all 8 tests give p ≤ 0.0011.
-2. **Among the other four, no model beats another on the items both
-   answered.**
+2. **Among the other four, the significant differences come from
+   non-answers, in either direction.**
    - With reasoning on, the primary analysis finds two significant
-     differences among them. Both come from non-answers:
+     differences among them. Both disappear on both-answered items:
      - DeepSeek > GPT-6 Luna on WMDP (p = 0.0038). This comes from GPT-6
-       Luna's **34 refusals**. On both-answered items, p = 0.36.
+       Luna's **38 non-answers, all refusals**. On both-answered items,
+       p = 0.36.
      - GPT-6 Luna > GLM on CTI-MCQ (p = 0.0019). This comes from GLM's
        **105 truncations**. On both-answered items, p = 0.72.
+   - One pair goes the other way. DeepSeek vs GPT-5.6 Luna on CTI-RCM is
+     non-significant in the primary analysis (p = 0.013), because
+     DeepSeek's 9 truncations count against it. On both-answered items
+     it is significant (p = 0.0038).
    - Every other pair among the four is non-significant, on every task.
 3. **On CTI-RCM (CVE → CWE) the spread is narrow.** DeepSeek and GPT-6
    Luna beat Solar (p = 0.0001 and 0.0018); nothing else survives
@@ -312,9 +317,11 @@ the other four.
    leaderboard for these models would depend on a setting the provider
    picks by default. GLM's "off" row has reasoning on (mandatory), so
    off-condition comparisons against GLM are not like-for-like.
-6. **GPT-6 Luna refuses more when it reasons.** On WMDP-cyber, 34 of its
-   38 reasoning-on non-answers are refusals ("I can't help optimize a
-   phishing campaign…"), against 9 of 19 with reasoning off. The next
+6. **GPT-6 Luna refuses more when it reasons.** On WMDP-cyber, by the
+   regex below, 34 of its 38 reasoning-on non-answers are refusals ("I
+   can't help optimize a phishing campaign…"), against 9 of 19 with
+   reasoning off. A broader rule that also matches `cannot`, `unable to`,
+   `I'm sorry` and `decline` counts all 38, against 12 of 19. The next
    highest is GPT-5.6 Luna, with 7 unparsed WMDP items off and 4 on,
    mostly refusals; the other models have at most 5. A refusal here is a
    `no_answer_unparsed` row whose response matches the case-insensitive
@@ -455,7 +462,9 @@ answer.
 **Fix.** The harness now treats an empty-content `stop` as a retryable
 failure, like a 5xx. All 68 rows were re-run:
 
-- 66 returned content on retry.
+- 61 returned content on retry.
+- 5 came back with `finish_reason: "length"` (the 16,000-token cap) and
+  are counted as `no_answer_truncated`.
 - 2 Solar WMDP items (1327 and 1716) came back empty on 24/24 attempts.
   Being persistent, they are counted as Solar's no-answer and noted in
   their log rows.
@@ -547,7 +556,7 @@ Flash" are predecessors of the models here, and no Solar model appears.
 
 CTFTiny (legacy) remains a continuity reference; it is not re-run here.
 
-### Protocol (pre-registered before the full run)
+### Protocol (pre-registered before the full run; the safety stops were changed after the first pass, see below)
 
 Matches 2607.15263 §3.1 except where noted:
 
@@ -581,9 +590,11 @@ Matches 2607.15263 §3.1 except where noted:
   then mean over the 39 challenges. This deviates from the paper's 3
   epochs, to bound spend.
 - **Safety stops (not budgets):**
-  - Per model call: `stream_idle_timeout = 120 s` (abandon only after
-    120 s with no streamed output), with `attempt_timeout = 900 s` as a
-    backstop. The first full pass used a 300 s total-time `attempt_timeout`;
+  - Per model call: `stream_idle_timeout = 120 s`, with
+    `attempt_timeout = 900 s` as a backstop. The idle timeout only arms
+    after a call's first streamed chunk (inspect_ai 0.3.268), so it
+    abandons a call that stalls mid-stream. A call that never streams at
+    all is caught only by the 900 s `attempt_timeout`. The first full pass used a 300 s total-time `attempt_timeout`;
     samples that hit it at least once were re-run under the new setting
     (Solar Pro 4 19, GLM 5.3 Flash 13, GPT-6 Luna 4, DeepSeek V4.1 Flash 3).
   - Per sample: 3,600 s wall-clock `time_limit` and 3,600 s
