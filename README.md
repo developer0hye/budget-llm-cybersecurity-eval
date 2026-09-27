@@ -10,16 +10,24 @@ models, and keep them separate:
 
 ## Key findings
 
-| Model | WMDP-cyber | CTI-MCQ | CTI-RCM | Cybench |
-|---|---|---|---|---|
-| DeepSeek V4.1 Flash | **84.8%** | 79.6% | **76.3%** | **92.3%** (36/39) |
-| GPT-6 Luna | 81.6% | **81.0%** | 75.1% | 89.7% (35/39) |
-| GLM 5.3 Flash | 83.3% | 78.7% | 73.9% | 89.7% (35/39) |
-| GPT-5.6 Luna | 83.8% | 80.2% | 74.0% | 56.4% (22/39) |
-| Solar Pro 4 | 77.1% | 76.0% | 72.1% | 48.7% (19/39) |
+| Model | WMDP-cyber | CTI-MCQ | CTI-RCM | Cybench | Price, $/1M in / out | Knowledge cost | Cybench cost (per solved) |
+|---|---|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | **84.8%** | 79.6% | **76.3%** | **92.3%** (36/39) | 0.165 / 0.66 | $4.87 | $2.01 ($0.056) |
+| GPT-6 Luna | 81.6% | **81.0%** | 75.1% | 89.7% (35/39) | 0.10 / 0.50 | **$0.48** | **$1.50 ($0.043)** |
+| GLM 5.3 Flash | 83.3% | 78.7% | 73.9% | 89.7% (35/39) | 0.15 / 0.50 | $3.43 | $1.57 ($0.045) |
+| GPT-5.6 Luna | 83.8% | 80.2% | 74.0% | 56.4% (22/39) | 0.20 / 1.20 | $1.08 | $2.99 ($0.136) |
+| Solar Pro 4 | 77.1% | 76.0% | 72.1% | 48.7% (19/39) | **0.09 / 0.36** | $4.71 | $6.92 ($0.364) |
 
 Knowledge columns: accuracy over all items, reasoning on (n = 996 /
 2,500 / 1,000). Cybench: solve rate over 39 challenges, 1 epoch.
+Price: the pinned provider's list price (DeepSeek on StreamLake).
+Knowledge cost: all 4,496 items with reasoning on, from OpenRouter's
+per-call `usage.cost` (`knowledge/results_reasoning_on/summary.json`).
+Cybench cost: all 39 challenges, computed by Inspect from the pinned
+prices (`agentic/analyze_cybench.py`); calls abandoned by a timeout are
+billed by OpenRouter but not counted, so actual spend is slightly higher.
+Token price does not predict run cost: the model with the lowest price
+had the highest Cybench cost and the second-highest knowledge cost.
 
 1. **Knowledge does not predict agentic performance.** GPT-5.6 Luna is
    not separable from DeepSeek V4.1 Flash, GPT-6 Luna or GLM 5.3 Flash on
