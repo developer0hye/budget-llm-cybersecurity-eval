@@ -3,3 +3,4 @@
 inspect-evals[cybench] @ git+https://github.com/UKGovernmentBEIS/inspect_evals@2329ee2bb2e688672bf34dc4c1b1907ed08aaf3a
 inspect_ai==0.3.268
 openai==3.19.2
+inspect-k8s-sandbox==0.13.0

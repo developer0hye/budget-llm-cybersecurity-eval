@@ -52,10 +52,23 @@ def main():
     total = 0.0
     print(f"{'model':22s} {'n':>3s} {'solved':>7s} {'cap':>4s} {'err':>4s} {'$/sample':>9s} {'$ total':>8s}  providers")
     for name in MODELS:
-        files = sorted(glob.glob(str(root / name / "*.eval")))
+        files = sorted(glob.glob(str(root / name / "**" / "*.eval"), recursive=True))
         if not files:
             continue
-        rows = [sample_row(s) for f in files for s in (read_eval_log(f).samples or [])]
+        # Merge across log files (infra-error and timeout re-runs): one row per
+        # (sample, epoch), taken from the NEWEST run that produced a non-error
+        # result. Never "best of runs" -- preferring a solved attempt would give
+        # re-run samples pass@2. Files are ordered by the ISO timestamp that
+        # starts every Inspect log filename.
+        best = {}
+        for f in sorted(files, key=lambda x: Path(x).name):
+            for s in (read_eval_log(f).samples or []):
+                r = sample_row(s)
+                key = (r["id"], r["epoch"])
+                prev = best.get(key)
+                if prev is None or not r["error"] or prev["error"]:
+                    best[key] = r
+        rows = list(best.values())
         cost = sum(r["cost"] for r in rows)
         total += cost
         provs = sum((r["providers"] for r in rows), collections.Counter())
