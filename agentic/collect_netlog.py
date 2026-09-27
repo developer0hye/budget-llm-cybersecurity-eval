@@ -32,6 +32,16 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "agentic"))
 sys.path.insert(0, str(ROOT))
 from run_cybench import BLOCKED_DOMAINS  # noqa: E402
+import gzip  # noqa: E402
+
+# Code hosts and mirrors/proxies of them. BLOCKED_DOMAINS is what the policy
+# removed from the allowlist; this wider set is what the audit checks, so a
+# lookup of a mirror or proxy is flagged even though the policy never listed it.
+CODE_HOST_SUFFIXES = sorted(set(BLOCKED_DOMAINS) | {
+    "githubusercontent.com", "github.io", "gitlab.com", "ghproxy.com",
+    "githack.com", "fastgit.org", "grep.app", "sourcegraph.com",
+})
+DNS_EXTRACT = "sandbox_dns.jsonl.gz"
 
 NETLOG = ROOT / "agentic" / "netlog"
 NODE_DIR = "/var/run/cilium/hubble"
@@ -58,23 +68,45 @@ def collect() -> None:
     print(f"copied {files} from node pod {pod} into {NETLOG}")
 
 
+def extract_dns() -> None:
+    """Reduce the raw export (every flow, GBs) to sandbox DNS lookups only.
+
+    Reads every exported file, including rotated ones (events-<timestamp>.log),
+    and writes one line per sandbox-pod DNS query to sandbox_dns.jsonl.gz.
+    The raw files are gitignored; this extract is what gets committed.
+    """
+    kept = 0
+    with gzip.open(NETLOG / DNS_EXTRACT, "wt") as out:
+        for f in sorted(NETLOG.glob("events*.log")):
+            with f.open(errors="replace") as fh:
+                for line in fh:
+                    if '"dns"' not in line:
+                        continue
+                    try:
+                        flow = json.loads(line).get("flow", {})
+                    except json.JSONDecodeError:
+                        continue
+                    src = flow.get("source", {})
+                    q = ((flow.get("l7") or {}).get("dns") or {}).get("query")
+                    if not q or not src.get("namespace", "").startswith("default"):
+                        continue
+                    out.write(json.dumps({"time": flow.get("time"), "pod": src.get("pod_name"),
+                                          "query": q.rstrip("."), "verdict": flow.get("verdict")}) + "\n")
+                    kept += 1
+    print(f"extracted {kept} sandbox DNS records -> {NETLOG / DNS_EXTRACT}")
+
+
 def summarise() -> None:
     counts: dict[tuple[str, str], int] = collections.Counter()
-    for f in sorted(NETLOG.glob("events.log*")):
-        for line in f.read_text().splitlines():
-            try:
-                flow = json.loads(line).get("flow", {})
-            except json.JSONDecodeError:
-                continue
-            if not flow.get("source", {}).get("namespace", "").startswith("default"):
-                continue
-            q = ((flow.get("l7") or {}).get("dns") or {}).get("query")
-            if q:
-                counts[(q.rstrip("."), flow.get("verdict", "?"))] += 1
+    with gzip.open(NETLOG / DNS_EXTRACT, "rt") as fh:
+        for line in fh:
+            r = json.loads(line)
+            counts[(r["query"], r["verdict"])] += 1
     domains = sorted({d for d, _ in counts})
 
     def is_code_host(d: str) -> bool:
-        return d in BLOCKED_DOMAINS or any(d.endswith("." + b) for b in BLOCKED_DOMAINS)
+        d = d.lower()
+        return any(d == b or d.endswith("." + b) for b in CODE_HOST_SUFFIXES)
 
     breaches = [d for d in domains if is_code_host(d) and counts.get((d, "FORWARDED"), 0)]
     lines = ["# Sandbox DNS verdicts (Cilium Hubble flow export)", "",
@@ -98,6 +130,7 @@ def main():
     args = p.parse_args()
     if not args.summary_only:
         collect()
+        extract_dns()
     summarise()
 
 
