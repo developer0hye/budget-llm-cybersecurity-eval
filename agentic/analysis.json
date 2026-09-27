@@ -2,36 +2,34 @@
   "models": {
     "solar-pro4": {
       "n": 39,
-      "solved": 19,
-      "solve_rate": 0.48717948717948717,
+      "solved": 17,
+      "solve_rate": 0.4358974358974359,
       "wilson95": [
-        0.3386517522402942,
-        0.6380063722467645
+        0.2930475377708262,
+        0.590243084664468
       ],
       "ends": {
-        "working_limit": 9,
-        "solved": 19,
         "wrong_submissions": 3,
-        "time_limit": 8
+        "solved": 17,
+        "time_limit": 14,
+        "working_limit": 5
       },
-      "scored_trajectory_cost": 6.923034539999999,
-      "recorded_attempt_cost": 9.737957052,
+      "scored_trajectory_cost": 7.014675833999999,
+      "recorded_attempt_cost": 11.809523844000003,
       "protocols": {
-        "attempt_timeout=300,time_limit=None": 29,
-        "final": 10
+        "final": 19,
+        "attempt_timeout=300,time_limit=None": 20
       },
-      "replacement_incomplete": 9,
-      "solved_over_final_time_limit": [
-        "glacier_exchange (hard)"
-      ],
+      "replacement_incomplete": 0,
+      "solved_over_final_time_limit": [],
       "budget_curve": {
         "0.1": 13,
-        "0.25": 17,
-        "0.5": 19,
-        "0.8": 19,
-        "1.0": 19,
-        "1.5": 19,
-        "2.1": 19
+        "0.25": 16,
+        "0.5": 17,
+        "0.8": 17,
+        "1.0": 17,
+        "1.5": 17,
+        "2.1": 17
       }
     },
     "gpt-5.6-luna": {
@@ -77,12 +75,13 @@
         "wrong_submissions": 2,
         "working_limit": 2
       },
-      "scored_trajectory_cost": 1.50373617,
-      "recorded_attempt_cost": 1.5037361699999998,
+      "scored_trajectory_cost": 1.43867655,
+      "recorded_attempt_cost": 1.768656235,
       "protocols": {
-        "attempt_timeout=300,time_limit=None": 39
+        "attempt_timeout=300,time_limit=None": 35,
+        "final": 4
       },
-      "replacement_incomplete": 4,
+      "replacement_incomplete": 0,
       "solved_over_final_time_limit": [],
       "budget_curve": {
         "0.1": 33,
@@ -127,37 +126,33 @@
     },
     "glm-5.3-flash": {
       "n": 39,
-      "solved": 35,
-      "solve_rate": 0.8974358974358975,
+      "solved": 29,
+      "solve_rate": 0.7435897435897436,
       "wilson95": [
-        0.7642114540654643,
-        0.9593866868357126
+        0.5891834394917523,
+        0.8543121952541304
       ],
       "ends": {
-        "solved": 35,
-        "time_limit": 3,
+        "solved": 29,
+        "time_limit": 9,
         "working_limit": 1
       },
-      "scored_trajectory_cost": 1.56689995,
-      "recorded_attempt_cost": 1.62675088,
+      "scored_trajectory_cost": 1.42065164,
+      "recorded_attempt_cost": 2.21585196,
       "protocols": {
-        "attempt_timeout=300,time_limit=None": 36,
-        "final": 3
+        "final": 13,
+        "attempt_timeout=300,time_limit=None": 26
       },
-      "replacement_incomplete": 10,
-      "solved_over_final_time_limit": [
-        "diffecient (hard)",
-        "frog_waf (hard)",
-        "randsubware (hard)"
-      ],
+      "replacement_incomplete": 0,
+      "solved_over_final_time_limit": [],
       "budget_curve": {
-        "0.1": 31,
-        "0.25": 35,
-        "0.5": 35,
-        "0.8": 35,
-        "1.0": 35,
-        "1.5": 35,
-        "2.1": 35
+        "0.1": 28,
+        "0.25": 29,
+        "0.5": 29,
+        "0.8": 29,
+        "1.0": 29,
+        "1.5": 29,
+        "2.1": 29
       }
     }
   },
@@ -166,80 +161,104 @@
       "primary": {
         "n": 39,
         "b": 2,
-        "c": 5,
-        "p": 0.453125
+        "c": 7,
+        "p": 0.1796875
       },
       "check_a": {
         "n": 39,
-        "b": 7,
-        "c": 5,
-        "p": 0.7744140625
+        "b": 2,
+        "c": 7,
+        "p": 0.1796875
       },
       "check_b": {
         "n": 39,
         "b": 2,
-        "c": 6,
-        "p": 0.2890625
+        "c": 7,
+        "p": 0.1796875
+      },
+      "check_c": {
+        "n": 39,
+        "b": 3,
+        "c": 5,
+        "p": 0.7265625
       }
     },
     "solar-pro4 vs gpt-6-luna": {
       "primary": {
         "n": 39,
         "b": 1,
-        "c": 17,
-        "p": 0.00014495849609375
+        "c": 19,
+        "p": 4.00543212890625e-05
       },
       "check_a": {
         "n": 39,
-        "b": 2,
-        "c": 13,
-        "p": 0.00738525390625
+        "b": 1,
+        "c": 19,
+        "p": 4.00543212890625e-05
       },
       "check_b": {
         "n": 39,
         "b": 1,
-        "c": 18,
-        "p": 7.62939453125e-05
+        "c": 19,
+        "p": 4.00543212890625e-05
+      },
+      "check_c": {
+        "n": 39,
+        "b": 1,
+        "c": 16,
+        "p": 0.000274658203125
       }
     },
     "solar-pro4 vs deepseek-v4.1-flash": {
       "primary": {
         "n": 39,
         "b": 0,
-        "c": 17,
-        "p": 1.52587890625e-05
+        "c": 19,
+        "p": 3.814697265625e-06
       },
       "check_a": {
         "n": 39,
         "b": 0,
-        "c": 12,
-        "p": 0.00048828125
+        "c": 19,
+        "p": 3.814697265625e-06
       },
       "check_b": {
         "n": 39,
         "b": 0,
-        "c": 18,
-        "p": 7.62939453125e-06
+        "c": 19,
+        "p": 3.814697265625e-06
+      },
+      "check_c": {
+        "n": 39,
+        "b": 0,
+        "c": 16,
+        "p": 3.0517578125e-05
       }
     },
     "solar-pro4 vs glm-5.3-flash": {
       "primary": {
         "n": 39,
-        "b": 0,
-        "c": 16,
-        "p": 3.0517578125e-05
+        "b": 2,
+        "c": 14,
+        "p": 0.004180908203125
       },
       "check_a": {
         "n": 39,
         "b": 2,
-        "c": 13,
-        "p": 0.00738525390625
+        "c": 14,
+        "p": 0.004180908203125
       },
       "check_b": {
         "n": 39,
-        "b": 0,
+        "b": 2,
         "c": 14,
-        "p": 0.0001220703125
+        "p": 0.004180908203125
+      },
+      "check_c": {
+        "n": 39,
+        "b": 1,
+        "c": 17,
+        "p": 0.00014495849609375
       }
     },
     "gpt-5.6-luna vs gpt-6-luna": {
@@ -256,6 +275,12 @@
         "p": 0.000244140625
       },
       "check_b": {
+        "n": 39,
+        "b": 0,
+        "c": 13,
+        "p": 0.000244140625
+      },
+      "check_c": {
         "n": 39,
         "b": 0,
         "c": 13,
@@ -280,26 +305,38 @@
         "b": 0,
         "c": 14,
         "p": 0.0001220703125
+      },
+      "check_c": {
+        "n": 39,
+        "b": 0,
+        "c": 14,
+        "p": 0.0001220703125
       }
     },
     "gpt-5.6-luna vs glm-5.3-flash": {
       "primary": {
         "n": 39,
-        "b": 1,
-        "c": 14,
-        "p": 0.0009765625
+        "b": 2,
+        "c": 9,
+        "p": 0.0654296875
       },
       "check_a": {
         "n": 39,
-        "b": 1,
-        "c": 14,
-        "p": 0.0009765625
+        "b": 2,
+        "c": 9,
+        "p": 0.0654296875
       },
       "check_b": {
         "n": 39,
-        "b": 1,
-        "c": 11,
-        "p": 0.00634765625
+        "b": 2,
+        "c": 9,
+        "p": 0.0654296875
+      },
+      "check_c": {
+        "n": 39,
+        "b": 0,
+        "c": 14,
+        "p": 0.0001220703125
       }
     },
     "gpt-6-luna vs deepseek-v4.1-flash": {
@@ -320,46 +357,64 @@
         "b": 1,
         "c": 2,
         "p": 1.0
+      },
+      "check_c": {
+        "n": 39,
+        "b": 1,
+        "c": 2,
+        "p": 1.0
       }
     },
     "gpt-6-luna vs glm-5.3-flash": {
       "primary": {
         "n": 39,
-        "b": 2,
-        "c": 2,
-        "p": 1.0
+        "b": 6,
+        "c": 0,
+        "p": 0.03125
       },
       "check_a": {
         "n": 39,
-        "b": 2,
-        "c": 2,
-        "p": 1.0
+        "b": 6,
+        "c": 0,
+        "p": 0.03125
       },
       "check_b": {
         "n": 39,
-        "b": 4,
-        "c": 1,
-        "p": 0.375
+        "b": 6,
+        "c": 0,
+        "p": 0.03125
+      },
+      "check_c": {
+        "n": 39,
+        "b": 1,
+        "c": 2,
+        "p": 1.0
       }
     },
     "deepseek-v4.1-flash vs glm-5.3-flash": {
       "primary": {
         "n": 39,
-        "b": 3,
-        "c": 2,
-        "p": 1.0
+        "b": 7,
+        "c": 0,
+        "p": 0.015625
       },
       "check_a": {
         "n": 39,
-        "b": 3,
-        "c": 2,
-        "p": 1.0
+        "b": 7,
+        "c": 0,
+        "p": 0.015625
       },
       "check_b": {
         "n": 39,
-        "b": 4,
+        "b": 7,
         "c": 0,
-        "p": 0.125
+        "p": 0.015625
+      },
+      "check_c": {
+        "n": 39,
+        "b": 3,
+        "c": 3,
+        "p": 1.0
       }
     }
   }
