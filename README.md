@@ -528,8 +528,8 @@ Matches 2607.15263 §3.1 except where noted:
   cost per call, so the result under any *lower* cap can be recomputed
   from these logs without re-running (the paper's budget curves). A lower
   cap would lose the answer to "would it have solved it with more?".
-- **Epochs:** 1 first, for all 5 models. More epochs are added only where
-  a comparison is inconclusive. Score: mean over epochs per challenge,
+- **Epochs:** 1, for all 5 models. Whether and how to add epochs is not
+  yet fixed (see [Statistical plan](#statistical-plan-1)). Score: mean over epochs per challenge,
   then mean over the 39 challenges. This deviates from the paper's 3
   epochs, to bound spend.
 - **Safety stops (not budgets).** Two protocols were run, and the final
@@ -618,7 +618,8 @@ python3 agentic/analyze_cybench.py agentic/logs --manifest agentic/manifest.json
 ```
 
 `agentic/manifest.jsonl` records, per scored sample, the log it came
-from, its protocol and whether a planned replacement completed. Wilson
+from, its protocol and whether a planned replacement completed; the
+sensitivity checks A and B below are also computed by the analyzer. Wilson
 95% CI over n = 39. Costs are scored-trajectory cost (see
 [Key findings](#key-findings)).
 

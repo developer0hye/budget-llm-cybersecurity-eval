@@ -152,6 +152,12 @@ def main():
     args = p.parse_args()
     root = Path(args.log_root)
     per_model, manifests, out = {}, [], {"models": {}, "pairwise": {}}
+    # Sensitivity checks for rows that did not run under FINAL_PROTOCOL (README,
+    # "Protocol as run and sensitivity checks"). A: an unsolved row whose planned
+    # replacement never ran and that lost calls to the per-call timeout counts as
+    # solved (worst case for its model's rivals). B: a solved row that ran longer
+    # than the final wall-clock time_limit counts as unsolved.
+    check_a, check_b = {}, {}
     ends = ["solved", "wrong_submissions", "no_submission", "time_limit", "working_limit", "cost_limit", "error"]
     print(f"{'model':22s} {'solved':>7s} {'rate':>6s} {'95% CI':>12s}  " + " ".join(f"{e[:10]:>10s}" for e in ends[1:])
           + f" {'$scored':>8s} {'$recorded':>9s}")
@@ -161,6 +167,12 @@ def main():
         best, manifest, recorded = load_model(root, name)
         rows = list(best.values())
         per_model[name] = {(r["id"], r["epoch"]): r["solved"] for r in rows}
+        incomplete_keys = {(m["challenge"], m["epoch"]) for m in manifest if not m["replacement_complete"]}
+        check_a[name] = {(r["id"], r["epoch"]): r["solved"] or (
+            r["protocol"] != "final" and r["call_timeouts"] > 0 and (r["id"], r["epoch"]) in incomplete_keys)
+            for r in rows}
+        check_b[name] = {(r["id"], r["epoch"]): r["solved"] and not (
+            r["protocol"] != "final" and r["total_time"] > FINAL_PROTOCOL["time_limit"]) for r in rows}
         manifests += manifest
         n, k = len(rows), sum(r["solved"] for r in rows)
         lo, hi = wilson(k, n)
@@ -198,14 +210,23 @@ def main():
         }
 
     alpha = 0.05 / max(1, math.comb(len(per_model), 2))
+    print(f"\n{'solved':22s} " + " ".join(f"{n[:12]:>12s}" for n in per_model))
+    for tag, tab in (("primary", per_model), ("check A", check_a), ("check B", check_b)):
+        print(f"{tag:22s} " + " ".join(f"{sum(tab[n].values()):12d}" for n in per_model))
     print(f"\npairwise McNemar exact (Bonferroni alpha = {alpha:.4f}); b = only first solved, c = only second")
+
+    def test(tab, a, b):
+        keys = sorted(set(tab[a]) & set(tab[b]))
+        bb = sum(tab[a][k] and not tab[b][k] for k in keys)
+        cc = sum(tab[b][k] and not tab[a][k] for k in keys)
+        return {"n": len(keys), "b": bb, "c": cc, "p": mcnemar_exact(bb, cc)}
+
     for a, b in itertools.combinations(per_model, 2):
-        keys = sorted(set(per_model[a]) & set(per_model[b]))
-        bb = sum(per_model[a][k] and not per_model[b][k] for k in keys)
-        cc = sum(per_model[b][k] and not per_model[a][k] for k in keys)
-        pv = mcnemar_exact(bb, cc)
-        out["pairwise"][f"{a} vs {b}"] = {"n": len(keys), "b": bb, "c": cc, "p": pv}
-        print(f"  {a:20s} vs {b:20s} n={len(keys)} b={bb:2d} c={cc:2d} p={pv:.4f}{'**' if pv < alpha else ''}")
+        res = {"primary": test(per_model, a, b), "check_a": test(check_a, a, b), "check_b": test(check_b, a, b)}
+        out["pairwise"][f"{a} vs {b}"] = res
+        cells = "  ".join(f"{k} {v['b']:2d}/{v['c']:<2d} p={v['p']:.4f}{'**' if v['p'] < alpha else '  '}"
+                          for k, v in res.items())
+        print(f"  {a:20s} vs {b:20s} {cells}")
 
     if args.manifest:
         Path(args.manifest).write_text("".join(json.dumps(m) + "\n" for m in manifests))
