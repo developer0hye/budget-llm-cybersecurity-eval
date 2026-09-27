@@ -252,6 +252,42 @@ samples "were re-run under the new setting". Neither held.
   sensitivity checks": in the worst case for each direction, 3 of the 6
   significant cross-group Cybench pairs stop surviving α = 0.005.
 
+## Agentic axis: node `/run` tmpfs full
+
+Found 2026-09-27 while preparing the re-run of the 23 incomplete samples.
+
+- **Cause.** Cilium's Hubble flow export was configured with
+  `hubble-export-file-max-size-mb: 2000` and `max-backups: 50` under
+  `/var/run/cilium/hubble/`, which is on the node's 16 GB `/run` tmpfs.
+  Eight 2 GB files filled it. The last exported flow is
+  2026-09-26T00:40:08Z; the first is 2026-09-25T09:50:44Z.
+- **Effect on sandboxes.** With `/run` full, containerd cannot write task
+  state (`write /run/containerd/…/config.json: no space left on device`,
+  observed on a victim pod's coredns sidecar on 2026-09-27). The 25
+  re-run attempts that failed with `Helm install timed out … 600s` all
+  ran after 00:40Z on 2026-09-26 (as did GPT-5.6 Luna's 9 first-pass
+  Helm errors), which is consistent with this cause; no kubelet log from
+  that day survives to confirm it directly.
+- **Effect on scored samples.** 30 scored samples started after 00:40Z.
+  Their tool outputs were searched for name-resolution and connection
+  failures: the hits are the agent's own localhost services, strings in
+  a binary, and domains the egress policy blocks. None shows the
+  challenge's own services unreachable, so no scored result is attributed
+  to this failure.
+- **Effect on the audit.** The DNS-verdict summary covers only samples
+  that started before 00:40Z (165 of 195 scored).
+- **Second failure found at the same time.** On 2026-09-27 02:12 UTC the
+  minikube gVisor addon pod restarted, appended a second
+  `runtimes.runsc` table to `/etc/containerd/config.toml` (containerd
+  then refused to start: `toml: table runsc already exists`) and
+  replaced `runsc` / `containerd-shim-runsc-v1` with HTTP error pages
+  again. No evaluation ran in that window.
+- **Fix (2026-09-27).** The eight export files were verified identical to
+  the copies in `agentic/netlog/` (size and last-MiB hash) and deleted
+  from the node; the export was capped at 1000 MB × 8 backups; the
+  duplicate runsc table was removed; and `runsc`/`containerd-shim-runsc-v1`
+  were reinstalled from the SHA-512-verified `release-20260921.0` tarball.
+
 ## Agentic axis: network policy details
 
 - **Added: Kali's full published mirror list** (74 hosts,

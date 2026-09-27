@@ -602,7 +602,15 @@ Matches 2607.15263 §3.1 except where noted:
   Cilium Hubble DNS verdicts (`agentic/netlog/dns_verdicts.md`). The index
   is a candidate list (a hostname inside a request body sent to the
   challenge server also matches); the DNS verdicts are authoritative.
-  Result on the final logs: no code-host lookup was forwarded.
+  Result: no code-host lookup was forwarded. **Coverage is partial:** the
+  Hubble export on the node stopped at 2026-09-26T00:40:08Z, when it
+  filled the node's 16 GB `/run` tmpfs (see
+  [NOTES.md](NOTES.md#agentic-axis-node-run-tmpfs-full)). The DNS verdicts
+  therefore cover the 165 scored samples that started before then; the
+  other 30 (GPT-5.6 Luna 12, Solar Pro 4 10, GLM 5 and DeepSeek 3) are
+  covered only by the trajectory index, which shows code-host attempts
+  failing to resolve (e.g. GPT-5.6 Luna on `rpgo`:
+  `Failed to resolve 'raw.githubusercontent.com'`).
 - **How unsolved samples ended** (cost cap, wall-clock or working-time
   limit, wrong submissions, no submission) and sample errors are reported
   per model, in the same way truncations are reported on the knowledge
@@ -698,8 +706,10 @@ at ~42 output tokens/s, so a 15k-token turn needs ~360 s). The 39 samples that h
 scheduled for a re-run under the final protocol (Solar Pro 4 19, GLM 5.3
 Flash 13, GPT-6 Luna 4, DeepSeek V4.1 Flash 3). **Only 16 of those
 re-runs completed.** The other 23 failed before the agent started
-(`Helm install timed out … 600s`: the sandbox pods never came up), and
-the merge rule then kept the first-pass result:
+(`Helm install timed out … 600s`: the sandbox pods never came up; most
+likely because the node's `/run` tmpfs was full, see
+[NOTES.md](NOTES.md#agentic-axis-node-run-tmpfs-full)), and the merge
+rule then kept the first-pass result:
 
 | Model | Re-runs scheduled | Completed | Not completed: first-pass result scored |
 |---|---|---|---|
