@@ -26,5 +26,6 @@ legacy/calibration/calibration.log
 data/
 
 # Hubble flow export: raw files are 2 GB each (16 GB total); only the summary
-# (agentic/netlog/dns_verdicts.md) is committed. Raw files stay on the run host.
+# (agentic/netlog/dns_verdicts.md) and the sandbox-DNS extract
+# (agentic/netlog/sandbox_dns.jsonl.gz) are committed. Raw files stay on the run host.
 agentic/netlog/events*.log
