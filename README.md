@@ -8,19 +8,51 @@ models, and keep them separate:
 2. **Agentic task-solving**: whether the model can *do* a security task in
    a sandbox through a tool-using agent loop. CTF challenges.
 
-The two are not interchangeable. Knowing the right ATT&CK mitigation is not
-the same as getting a shell on a box. This project's earlier run (now in
-[`legacy/`](legacy/README.md)) found them diverging. All 10 model pairs
-were non-significant on an MCQ benchmark (CyberMetric-2000, p ≥ 0.13 with
-reasoning on). On the same models' CTF runs, DeepSeek V4.1 Flash solved
-21.6% and Solar Pro 4 7.0% (reasoning off, 185 matched challenges). A
-model that looks the same on one axis can differ on the other, so each
-axis gets its own benchmark, protocol and statistics.
+## Key findings
 
-| Axis | Benchmarks | Status |
-|---|---|---|
-| Knowledge | WMDP-cyber (knowledge subset), CTIBench CTI-MCQ, CTIBench CTI-RCM | **done** (2026-09-24/25), [results](#results) |
-| Agentic | Cybench via `inspect_evals` (39 challenges × 1 epoch) | **done** (2026-09-26/27), [results](#results-1) |
+| Model | WMDP-cyber | CTI-MCQ | CTI-RCM | Cybench |
+|---|---|---|---|---|
+| DeepSeek V4.1 Flash | **84.8%** | 79.6% | **76.3%** | **92.3%** (36/39) |
+| GPT-6 Luna | 81.6% | **81.0%** | 75.1% | 89.7% (35/39) |
+| GLM 5.3 Flash | 83.3% | 78.7% | 73.9% | 89.7% (35/39) |
+| GPT-5.6 Luna | 83.8% | 80.2% | 74.0% | 56.4% (22/39) |
+| Solar Pro 4 | 77.1% | 76.0% | 72.1% | 48.7% (19/39) |
+
+Knowledge columns: accuracy over all items, reasoning on (n = 996 /
+2,500 / 1,000). Cybench: solve rate over 39 challenges, 1 epoch.
+
+1. **Knowledge does not predict agentic performance.** GPT-5.6 Luna is
+   not separable from DeepSeek V4.1 Flash, GPT-6 Luna or GLM 5.3 Flash on
+   any knowledge task (9 McNemar tests, none significant at α = 0.005),
+   but solves significantly fewer Cybench challenges than each of them
+   (p ≤ 0.0010).
+2. **Cybench splits the models into two groups:** DeepSeek V4.1 Flash,
+   GPT-6 Luna and GLM 5.3 Flash (89.7–92.3%) vs GPT-5.6 Luna and Solar
+   Pro 4 (48.7–56.4%). All 6 cross-group pairs are significant; none of
+   the 4 within-group pairs is.
+3. **On knowledge, the spread is narrow.** Solar Pro 4 scores
+   significantly lower than the other four on WMDP-cyber and CTI-MCQ
+   (2.7–7.7 pp, p ≤ 0.0011). Among the other four, the two significant
+   differences in the primary analysis both come from non-answers
+   (GPT-6 Luna's refusals, GLM's truncations), not from wrong answers.
+4. **Reasoning raises knowledge scores where there is headroom:** +4.5 to
+   +9.9 pp on WMDP-cyber for every model that can turn it off
+   (p ≤ 0.0002), but no significant gain on CTI-RCM.
+
+**Scope.** One configuration per model (pinned provider, medium reasoning
+effort). All items are public and predate these models (contamination is
+not controlled). DeepSeek runs on a third-party fp8 endpoint. Cybench is
+1 epoch, so within-group gaps of 1–3 challenges are not separable.
+
+**Contents:** [Models](#models-under-test) ·
+[Knowledge axis](#axis-1--knowledge) ([results](#results)) ·
+[Agentic axis](#axis-2--agentic-task-solving) ([results](#results-1)) ·
+[Reproducing](#reproducing) · [Earlier study](legacy/README.md)
+
+The earlier study in [`legacy/`](legacy/README.md) found the same
+divergence on a saturated benchmark (CyberMetric-2000, all models 94–95%)
+and NYU CTF Bench, which is why each axis here gets its own benchmark,
+protocol and statistics.
 
 ## Models under test
 
