@@ -1,0 +1,28 @@
+{
+  "reasoning": "off",
+  "max_tokens": 16000,
+  "sample": null,
+  "seed": null,
+  "models": {
+    "solar-pro4": {
+      "id": "upstage/solar-pro4",
+      "provider": "upstage"
+    },
+    "gpt-5.6-luna": {
+      "id": "openai/gpt-5.6-luna",
+      "provider": "openai"
+    },
+    "gpt-6-luna": {
+      "id": "openai/gpt-6-luna",
+      "provider": "openai"
+    },
+    "deepseek-v4.1-flash": {
+      "id": "deepseek/deepseek-v4.1-flash",
+      "provider": "streamlake"
+    },
+    "glm-5.3-flash": {
+      "id": "z-ai/glm-5.3-flash",
+      "provider": "z-ai"
+    }
+  }
+}

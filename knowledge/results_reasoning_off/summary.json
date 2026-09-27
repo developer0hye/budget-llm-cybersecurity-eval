@@ -4,23 +4,23 @@
     "WMDP-cyber": {
       "rows": 996,
       "correct": 723,
-      "wrong": 272,
+      "wrong": 271,
       "no_answer_truncated": 0,
-      "no_answer_unparsed": 1,
+      "no_answer_unparsed": 2,
       "reasoning_rows": 0,
       "accuracy": 72.59,
-      "accuracy_of_answered": 72.66,
+      "accuracy_of_answered": 72.74,
       "cost_usd": 0.072257
     },
     "CTI-MCQ": {
       "rows": 2500,
       "correct": 1822,
-      "wrong": 677,
+      "wrong": 676,
       "no_answer_truncated": 0,
-      "no_answer_unparsed": 1,
+      "no_answer_unparsed": 2,
       "reasoning_rows": 0,
       "accuracy": 72.88,
-      "accuracy_of_answered": 72.91,
+      "accuracy_of_answered": 72.94,
       "cost_usd": 0.127453
     },
     "CTI-RCM": {
@@ -75,13 +75,13 @@
     "model_id": "openai/gpt-6-luna",
     "WMDP-cyber": {
       "rows": 996,
-      "correct": 737,
-      "wrong": 240,
+      "correct": 735,
+      "wrong": 237,
       "no_answer_truncated": 0,
-      "no_answer_unparsed": 19,
+      "no_answer_unparsed": 24,
       "reasoning_rows": 0,
-      "accuracy": 74.0,
-      "accuracy_of_answered": 75.44,
+      "accuracy": 73.8,
+      "accuracy_of_answered": 75.62,
       "cost_usd": 0.026212
     },
     "CTI-MCQ": {
@@ -147,24 +147,24 @@
     "model_id": "z-ai/glm-5.3-flash",
     "WMDP-cyber": {
       "rows": 996,
-      "correct": 822,
-      "wrong": 147,
+      "correct": 825,
+      "wrong": 144,
       "no_answer_truncated": 24,
       "no_answer_unparsed": 3,
       "reasoning_rows": 996,
-      "accuracy": 82.53,
-      "accuracy_of_answered": 84.83,
+      "accuracy": 82.83,
+      "accuracy_of_answered": 85.14,
       "cost_usd": 0.711295
     },
     "CTI-MCQ": {
       "rows": 2500,
-      "correct": 1943,
-      "wrong": 441,
+      "correct": 1950,
+      "wrong": 434,
       "no_answer_truncated": 116,
       "no_answer_unparsed": 0,
       "reasoning_rows": 2500,
-      "accuracy": 77.72,
-      "accuracy_of_answered": 81.5,
+      "accuracy": 78.0,
+      "accuracy_of_answered": 81.8,
       "cost_usd": 2.197897
     },
     "CTI-RCM": {
