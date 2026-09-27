@@ -111,13 +111,13 @@
     "model_id": "deepseek/deepseek-v4.1-flash",
     "WMDP-cyber": {
       "rows": 996,
-      "correct": 845,
-      "wrong": 137,
+      "correct": 846,
+      "wrong": 136,
       "no_answer_truncated": 14,
       "no_answer_unparsed": 0,
       "reasoning_rows": 996,
-      "accuracy": 84.84,
-      "accuracy_of_answered": 86.05,
+      "accuracy": 84.94,
+      "accuracy_of_answered": 86.15,
       "cost_usd": 0.842818
     },
     "CTI-MCQ": {
@@ -158,13 +158,13 @@
     },
     "CTI-MCQ": {
       "rows": 2500,
-      "correct": 1968,
-      "wrong": 427,
+      "correct": 1973,
+      "wrong": 422,
       "no_answer_truncated": 105,
       "no_answer_unparsed": 0,
       "reasoning_rows": 2500,
-      "accuracy": 78.72,
-      "accuracy_of_answered": 82.17,
+      "accuracy": 78.92,
+      "accuracy_of_answered": 82.38,
       "cost_usd": 2.176076
     },
     "CTI-RCM": {

@@ -101,12 +101,15 @@ def main():
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--cost-limit", type=float, default=2.10, help="$ per sample (one challenge x one epoch)")
     p.add_argument("--stream-idle-timeout", type=int, default=120,
-                   help="Abandon and retry a model call only after this many seconds with NO streamed "
-                        "output. Replaces the 300 s total-time attempt_timeout as the hang detector: "
-                        "that cap also killed calls still streaming reasoning (GLM/Solar run at ~42 "
-                        "out-tok/s, so a 15k-token turn needs ~360 s; 110/113 GLM call errors were it)")
+                   help="Abandon and retry a model call after this many seconds with no streamed output. "
+                        "INERT in the logged runs: it arms only on a streamed chunk, and inspect_ai 0.3.268's "
+                        "OpenRouter provider does not auto-stream requests with reasoning_enabled=True, so "
+                        "the effective per-call stop is --attempt-timeout. Passing stream=True would arm it, "
+                        "but streamed reasoning_details reassembly is unverified upstream. Kept as recorded")
     p.add_argument("--attempt-timeout", type=int, default=900,
-                   help="Abandon and retry a model call after this many seconds. The first cost pilot "
+                   help="Abandon and retry a model call after this many seconds (the effective per-call "
+                        "stop; the first full pass used 300 s, which also killed calls still generating "
+                        "reasoning: GLM/Solar run at ~42 out-tok/s, so a 15k-token turn needs ~360 s). The first cost pilot "
                         "(2026-09-25) had 3 of 8 Solar Pro 4 calls return HTTP 200 headers and then no body "
                         "for 10-18 min; with no timeout a sample waits forever and cost_limit never fires")
     p.add_argument("--working-limit", type=int, default=3600,
