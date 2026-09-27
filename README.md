@@ -233,7 +233,11 @@ distinct failure modes:
   non-existent ATT&CK IDs, `M4671? M4672? … M4820`, until the 16,000-token
   cap.
 
-Write-up: [developer0hye/tips#12 — reasoning non-termination](https://github.com/developer0hye/tips/pull/12).
+These two descriptions come from reasoning traces captured by re-running
+truncated pilot items (9 GLM calls, 4 Qwen calls) with the reasoning text
+returned. Those captures are not in the committed logs, which store the
+visible response, `finish_reason` and token usage, not the reasoning text.
+The truncation counts above are recomputable from `knowledge/pilot/`.
 
 ### Statistical plan
 
