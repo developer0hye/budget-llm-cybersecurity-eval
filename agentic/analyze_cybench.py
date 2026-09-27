@@ -156,8 +156,12 @@ def main():
     # "Protocol as run and sensitivity checks"). A: an unsolved row whose planned
     # replacement never ran and that lost calls to the per-call timeout counts as
     # solved (worst case for its model's rivals). B: a solved row that ran longer
-    # than the final wall-clock time_limit counts as unsolved.
-    check_a, check_b = {}, {}
+    # than the final wall-clock time_limit counts as unsolved. C: an unsolved row
+    # that lost at least one model call to the per-call attempt_timeout counts as
+    # solved -- the upper bound if every call that did not return in time was a
+    # provider stall rather than the model not terminating (non-streaming calls
+    # cannot tell the two apart).
+    check_a, check_b, check_c = {}, {}, {}
     ends = ["solved", "wrong_submissions", "no_submission", "time_limit", "working_limit", "cost_limit", "error"]
     print(f"{'model':22s} {'solved':>7s} {'rate':>6s} {'95% CI':>12s}  " + " ".join(f"{e[:10]:>10s}" for e in ends[1:])
           + f" {'$scored':>8s} {'$recorded':>9s}")
@@ -173,6 +177,7 @@ def main():
             for r in rows}
         check_b[name] = {(r["id"], r["epoch"]): r["solved"] and not (
             r["protocol"] != "final" and r["total_time"] > FINAL_PROTOCOL["time_limit"]) for r in rows}
+        check_c[name] = {(r["id"], r["epoch"]): r["solved"] or r["call_timeouts"] > 0 for r in rows}
         manifests += manifest
         n, k = len(rows), sum(r["solved"] for r in rows)
         lo, hi = wilson(k, n)
@@ -211,7 +216,7 @@ def main():
 
     alpha = 0.05 / max(1, math.comb(len(per_model), 2))
     print(f"\n{'solved':22s} " + " ".join(f"{n[:12]:>12s}" for n in per_model))
-    for tag, tab in (("primary", per_model), ("check A", check_a), ("check B", check_b)):
+    for tag, tab in (("primary", per_model), ("check A", check_a), ("check B", check_b), ("check C", check_c)):
         print(f"{tag:22s} " + " ".join(f"{sum(tab[n].values()):12d}" for n in per_model))
     print(f"\npairwise McNemar exact (Bonferroni alpha = {alpha:.4f}); b = only first solved, c = only second")
 
@@ -222,7 +227,8 @@ def main():
         return {"n": len(keys), "b": bb, "c": cc, "p": mcnemar_exact(bb, cc)}
 
     for a, b in itertools.combinations(per_model, 2):
-        res = {"primary": test(per_model, a, b), "check_a": test(check_a, a, b), "check_b": test(check_b, a, b)}
+        res = {"primary": test(per_model, a, b), "check_a": test(check_a, a, b), "check_b": test(check_b, a, b),
+               "check_c": test(check_c, a, b)}
         out["pairwise"][f"{a} vs {b}"] = res
         cells = "  ".join(f"{k} {v['b']:2d}/{v['c']:<2d} p={v['p']:.4f}{'**' if v['p'] < alpha else '  '}"
                           for k, v in res.items())

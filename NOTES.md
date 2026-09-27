@@ -211,7 +211,8 @@ does not have), so it changes a trajectory only if the context gets that
 full. Recomputed on the final logs (2026-09-27, all 250 samples in
 `agentic/logs/`, including re-runs): 0 ended with "model context window
 exceeded", and the largest context any model call sent was 60.3% of the
-window (Solar Pro 4; input plus cache tokens, an upper bound). No sample
+window (Solar Pro 4; input plus cache tokens, an upper bound); the 23
+samples re-run later that day peak at 40.2%. No sample
 reached the threshold, so enabling compaction would not have changed any
 result, and the runs were not repeated.
 
@@ -247,10 +248,23 @@ samples "were re-run under the new setting". Neither held.
   completed on a second attempt in `idle_timeout_infra/`, so 16 of the 39
   scheduled samples have a final-protocol result and 23 do not. `analyze_cybench.py` takes the newest *non-error* row, so
   for those 23 the first-pass result is scored. The manifest
-  (`agentic/manifest.jsonl`) marks them `replacement_complete: false`.
-- **What it costs the conclusion.** See README, "Protocol as run and
-  sensitivity checks": in the worst case for each direction, 3 of the 6
-  significant cross-group Cybench pairs stop surviving α = 0.005.
+  (`agentic/manifest.jsonl`) marked them `replacement_complete: false`.
+- **Completed 2026-09-27.** After the `/run` fix below, the 23 were
+  re-run under the final protocol (`final_rerun/`; 3 concurrent sandboxes
+  per model, 4 for GPT-6 Luna) and all completed with no sample error.
+  The manifest now has no incomplete replacement. The re-run changed GLM
+  from 35/39 to 29/39 and Solar Pro 4 from 19/39 to 17/39; see README,
+  "Protocol as run and re-runs". A first launch of this re-run was
+  stopped within minutes when a victim pod failed with `no space left on
+  device`; its three logs held no samples and are kept in
+  `agentic/aborted/rerun_run_full/`.
+- **GLM turns that hit 900 s.** A streaming replay of three stalled
+  turns (the stored requests re-sent with `stream: true`) showed
+  reasoning tokens arriving throughout at ~43 tokens/s; one finished at
+  859 s after 36,557 reasoning tokens, two were still reasoning at 900 s.
+  The replay script and outputs were run from the session scratchpad and
+  are summarised in the README section "GLM and the 900 s per-call
+  limit"; the reasoning text itself is not committed.
 
 ## Agentic axis: node `/run` tmpfs full
 
@@ -268,14 +282,19 @@ Found 2026-09-27 while preparing the re-run of the 23 incomplete samples.
   ran after 00:40Z on 2026-09-26 (as did GPT-5.6 Luna's 9 first-pass
   Helm errors), which is consistent with this cause; no kubelet log from
   that day survives to confirm it directly.
-- **Effect on scored samples.** 30 scored samples started after 00:40Z.
-  Their tool outputs were searched for name-resolution and connection
+- **Effect on scored samples.** 28 of the final scored samples started
+  inside the gap (30 before GLM's `noisy_crc` and `frog_waf` were
+  replaced on 2026-09-27). Their tool outputs were searched for name-resolution and connection
   failures: the hits are the agent's own localhost services, strings in
   a binary, and domains the egress policy blocks. None shows the
   challenge's own services unreachable, so no scored result is attributed
   to this failure.
-- **Effect on the audit.** The DNS-verdict summary covers only samples
-  that started before 00:40Z (165 of 195 scored).
+- **Effect on the audit.** The export resumed at 2026-09-27T10:32:03Z
+  after the fix. The DNS-verdict summary covers the 167 scored samples
+  that started outside the gap; 28 are not covered. The local copy of the
+  last pre-gap export file was renamed `events-2026-09-26T00-40-08.log`
+  before collecting the new export, so the collector would not overwrite
+  it.
 - **Second failure found at the same time.** On 2026-09-27 02:12 UTC the
   minikube gVisor addon pod restarted, appended a second
   `runtimes.runsc` table to `/etc/containerd/config.toml` (containerd
