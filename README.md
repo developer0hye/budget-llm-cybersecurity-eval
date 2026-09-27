@@ -16,7 +16,7 @@ models, and keep them separate:
 | GPT-6 Luna | 81.6% | **81.0%** | 75.1% | 89.7% (35/39) | 0.10 / 0.50 | **$0.48** | $1.44 (**$0.041**) |
 | GLM 5.3 Flash | 83.3% | 78.9% | 73.9% | 74.4% (29/39) | 0.15 / 0.50 | $3.43 | **$1.42** ($0.049) |
 | GPT-5.6 Luna | 83.8% | 80.2% | 74.0% | 56.4% (22/39) | 0.20 / 1.20 | $1.08 | $2.99 ($0.136) |
-| Solar Pro 4 | 77.1% | 76.0% | 72.1% | 43.6% (17/39) | **0.09 / 0.36** | $4.71 | $7.01 ($0.412) |
+| Solar Pro 4 | 77.1% | 76.0% | 72.1% | 43.6% (17/39) | **0.09 / 0.36** | $4.71 | $7.01 ($0.413) |
 
 Knowledge columns: accuracy over all items, reasoning on (n = 996 /
 2,500 / 1,000). Cybench: solve rate over 39 challenges, 1 epoch.
@@ -28,9 +28,16 @@ rows (`knowledge/results_reasoning_on/summary.json`); the 68 replaced
 empty-content responses cost another $0.12 across both conditions.
 Cybench cost: the 39 scored trajectories, computed by Inspect from the
 pinned prices (`agentic/analyze_cybench.py`). Replaced trajectories add
-$4.80 (Solar Pro 4), $0.97 (DeepSeek), $0.80 (GLM) and $0.33 (GPT-6 Luna)
-of recorded-attempt cost, and calls abandoned by a timeout are billed by OpenRouter but not
-recorded at all, so billed spend is higher again.
+$4.79 (Solar Pro 4), $0.97 (DeepSeek), $0.80 (GLM) and $0.33 (GPT-6 Luna)
+of recorded-attempt cost, and calls abandoned by a timeout are not
+recorded at all, so billed spend is higher again. One cross-check: on
+2026-09-27 (UTC), the day of the 23-sample re-run, OpenRouter's daily
+usage for the API key was $3.19 against $2.93 recorded in the re-run
+logs. If nothing else used the key that day, the $0.26 gap covers a replay of three GLM
+turns (about $0.06), a launch aborted within minutes, and 10 GLM turns
+abandoned at the 900 s call limit (about $0.02 each if billed in full,
+which is an estimate). The key's total usage across the whole project,
+$56.48, cannot be split by run.
 Token price does not predict run cost: the model with the lowest price
 had the highest Cybench cost and the second-highest knowledge cost.
 
