@@ -71,6 +71,42 @@
       "cost_usd": 0.107382
     }
   },
+  "gpt-6-luna": {
+    "model_id": "openai/gpt-6-luna",
+    "WMDP-cyber": {
+      "rows": 996,
+      "correct": 737,
+      "wrong": 240,
+      "no_answer_truncated": 0,
+      "no_answer_unparsed": 19,
+      "reasoning_rows": 0,
+      "accuracy": 74.0,
+      "accuracy_of_answered": 75.44,
+      "cost_usd": 0.026212
+    },
+    "CTI-MCQ": {
+      "rows": 2500,
+      "correct": 1871,
+      "wrong": 629,
+      "no_answer_truncated": 0,
+      "no_answer_unparsed": 0,
+      "reasoning_rows": 0,
+      "accuracy": 74.84,
+      "accuracy_of_answered": 74.84,
+      "cost_usd": 0.047973
+    },
+    "CTI-RCM": {
+      "rows": 1000,
+      "correct": 738,
+      "wrong": 262,
+      "no_answer_truncated": 0,
+      "no_answer_unparsed": 0,
+      "reasoning_rows": 0,
+      "accuracy": 73.8,
+      "accuracy_of_answered": 73.8,
+      "cost_usd": 0.040631
+    }
+  },
   "deepseek-v4.1-flash": {
     "model_id": "deepseek/deepseek-v4.1-flash",
     "WMDP-cyber": {
@@ -143,5 +179,5 @@
       "cost_usd": 0.59159
     }
   },
-  "_total_cost_usd": 4.355365
+  "_total_cost_usd": 4.470181
 }

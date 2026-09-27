@@ -24,3 +24,7 @@ legacy/calibration/calibration.log
 
 # Benchmark task files: fetched at run time by knowledge/download_data.sh (CTIBench is CC BY-NC-SA 4.0)
 data/
+
+# Hubble flow export: raw files are 2 GB each (16 GB total); only the summary
+# (agentic/netlog/dns_verdicts.md) is committed. Raw files stay on the run host.
+agentic/netlog/events*.log
