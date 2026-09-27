@@ -20,7 +20,7 @@ axis gets its own benchmark, protocol and statistics.
 | Axis | Benchmarks | Status |
 |---|---|---|
 | Knowledge | WMDP-cyber (knowledge subset), CTIBench CTI-MCQ, CTIBench CTI-RCM | **done** (2026-09-24/25), [results](#results) |
-| Agentic | Cybench via `inspect_evals` (39 challenges × 3 epochs) | **in progress** |
+| Agentic | Cybench via `inspect_evals` (39 challenges × 1 epoch) | **done** (2026-09-26/27), [results](#results-1) |
 
 ## Models under test
 
@@ -478,7 +478,7 @@ the 16000 cap, and provider pinning. Do not cite its accuracies.
 
 ---
 
-## Axis 2 — Agentic task-solving (in progress)
+## Axis 2 — Agentic task-solving
 
 ### Benchmark and why
 
@@ -517,11 +517,41 @@ Matches 2607.15263 §3.1 except where noted:
 
 - **Agent:** `inspect_evals`' default ReAct agent. It has `bash` and
   `python` tools with 180 s timeouts, and 3 flag submissions per sample.
-  The system prompt is the harness default.
-- **Epochs:** 3 per challenge. Score: mean over epochs per challenge, then
-  mean over the 39 challenges.
-- **Budget:** a per-sample `cost_limit` (value below). A sample that hits
-  it is a **no-answer**, not a wrong answer, as on the knowledge axis.
+  The system prompt is the harness default. 2607.15263 does not state its
+  system prompt.
+- **Context compaction (deviation, disclosed, not re-run).** 2607.15263 §3
+  ran *"a ReAct-style agent with auto-compaction"*, compacting *"when the
+  agent context reached 90% of the model context window"* with Inspect's
+  automatic strategy (`CompactionAuto`, whose default threshold is 0.9).
+  `inspect_evals`' `cybench()` configures no compaction, and this harness
+  uses that default, so a sample that fills the window ends instead of
+  being compacted. Compaction only acts at the 90% threshold (its
+  pre-compaction memory warning needs a `memory` tool, which this agent
+  does not have), so it changes a trajectory only if the context gets that
+  full. Recomputed on the final logs (2026-09-27, all 250 samples in
+  `agentic/logs/`, including re-runs): 0 ended with "model context window
+  exceeded", and the largest context any model call sent was 60.3% of the
+  window (Solar Pro 4; input plus cache tokens, an upper bound). No sample
+  reached the threshold, so enabling compaction would not have changed any
+  result, and the runs were not repeated.
+- **Budget: `cost_limit = $2.10` per sample**, the paper's main setting.
+  A sample that hits it is a **no-answer**, not a wrong answer, as on the
+  knowledge axis. The cap is set high on purpose. Inspect logs cumulative
+  cost per call, so the result under any *lower* cap can be recomputed
+  from these logs without re-running (the paper's budget curves). A lower
+  cap would lose the answer to "would it have solved it with more?".
+- **Epochs:** 1 first, for all 5 models. More epochs are added only where
+  a comparison is inconclusive. Score: mean over epochs per challenge,
+  then mean over the 39 challenges. This deviates from the paper's 3
+  epochs, to bound spend.
+- **Safety stops (not budgets):**
+  - Per model call: `stream_idle_timeout = 120 s` (abandon only after
+    120 s with no streamed output), with `attempt_timeout = 900 s` as a
+    backstop. The first full pass used a 300 s total-time `attempt_timeout`;
+    samples that hit it at least once were re-run under the new setting
+    (Solar Pro 4 19, GLM 5.3 Flash 13, GPT-6 Luna 4, DeepSeek V4.1 Flash 3).
+  - Per sample: 3,600 s wall-clock `time_limit` and 3,600 s
+    `working_limit`.
 - **Reasoning (deviation):** `reasoning: {enabled: true}`, OpenRouter's
   medium effort, for every model, for consistency with the knowledge
   axis. The paper ran GPT-5.6 at high effort, so Luna here is expected at
@@ -531,10 +561,43 @@ Matches 2607.15263 §3.1 except where noted:
   model database, so [`agentic/run_cybench.py`](agentic/run_cybench.py)
   registers every model's pinned-provider price and context length.
   Without that, `cost_limit` cannot fire.
-- **Sandbox:** Docker (`CYBENCH_ACKNOWLEDGE_RISKS=1`). No compose file
-  mounts the Docker socket or runs privileged. The agent container is
-  limited to 2 GB, with at most 8 concurrent sandboxes on a 12-core,
-  31 GB host.
+- **Sandbox and network policy (deviation):** inspect_evals' k8s sandbox,
+  which the paper appears to have used (its cost accounting excludes
+  "Kubernetes" infrastructure). Egress is limited to each challenge's
+  `allow_domains` list, **minus `github.com`, `raw.githubusercontent.com`
+  and `bitbucket.org`**, so that public challenge sources and solutions
+  cannot be retrieved. Package mirrors (PyPI, Debian/Kali/Ubuntu,
+  RubyGems) stay reachable, so installs behave as in the paper. The
+  filtering is `BLOCKED_DOMAINS` in
+  [`agentic/run_cybench.py`](agentic/run_cybench.py).
+  - **Added: Kali's full published mirror list** (74 hosts,
+    [`agentic/kali_mirrors.txt`](agentic/kali_mirrors.txt), fetched on
+    2026-09-25). `http.kali.org` redirects each apt request to a mirror
+    picked per request and client location; from this host that was 11
+    different Korean mirrors. The upstream list's single
+    `mirror.vinehost.net` therefore left apt broken here, and
+    `flag_command`'s reference solution failed on it until the mirrors were
+    added.
+  - **Verified from inside a sandbox:** `pypi.org` returns 200, while
+    `github.com`, `raw.githubusercontent.com` and a non-listed domain are
+    unreachable.
+  - **Reference solutions pass 38/38** under the final policy.
+    `data_siege` has no reference solution upstream.
+  - **Why the change:** a first run with Docker's unrestricted egress
+    showed agents reaching public code hosts on 2 of 39 samples. That run
+    is kept in `agentic/logs_unrestricted_network/` as design data and is
+    not scored.
+- **Cluster:** minikube v1.39.0 with containerd, gVisor
+  `release-20260921.0` and Cilium 1.20.1, following the
+  inspect-k8s-sandbox local-cluster guide. It has 10 CPUs and 24 GB, with
+  a 2 GB limit per agent container. Two setup fixes were needed:
+  - minikube's gVisor addon installed HTTP error pages in place of the
+    binaries, because gVisor now ships a tarball only. The binaries and
+    `gvisor-bin/` sidecars were installed from the SHA-512-verified
+    tarball.
+  - inspect-k8s-sandbox 0.13.0 rejects every helm version, because it
+    does not strip the trailing newline from `helm version --short`. It
+    is patched in `run_cybench.py`, and helm 3.22.0 is used.
 - **Infrastructure check before any model run.** The reference solutions
   run with no model (`inspect_cyber/verify_solutions`, `solution`
   variants). A challenge whose reference solution fails in this
@@ -542,28 +605,46 @@ Matches 2607.15263 §3.1 except where noted:
 
 ### Statistical plan
 
-- **Primary:** solve rate per model with a 95% Wilson CI over the 117
-  sample-epochs.
-- **Between models:** McNemar exact test on the 39 challenges, with a
-  challenge counted as solved if solved in ≥ 2 of 3 epochs. 6 pairs,
-  Bonferroni α = 0.0083. **n = 39 has low power:** only large gaps can
+- **Primary:** solve rate per model with a 95% Wilson CI over the
+  sample-epochs (39 per epoch).
+- **Budget curve:** solve rate as a function of the per-sample cost cap,
+  from $0 to $2.10, recomputed from the logs.
+- **Between models:** McNemar exact test on the 39 challenges (1 epoch:
+  solved or not). 10 pairs, Bonferroni α = 0.005. **n = 39 has low power:** only large gaps can
   reach significance, so the CI table is the main deliverable.
-- **Noise:** per-challenge epoch agreement, i.e. how many challenges are
-  solved in 3/3, 2/3, 1/3 and 0/3 epochs.
+- **Noise:** not measurable with 1 epoch; epochs are added only where a
+  comparison is inconclusive.
 - **Refusals** count as failures (the paper does the same) and are
   reported per model from the trajectory text.
-- **Writeup-fetching audit.** The Docker sandbox has unrestricted egress,
-  and agents have been observed pulling public writeups (CTFusion,
-  arXiv:2605.11504). Every trajectory is grepped for URLs containing
-  `ctftime`, `writeup`, `cybench`, or the challenge's name next to
-  `github`. Hits are reported per model and challenge as contamination
-  via tool use.
+- **Writeup-fetching audit.** Agents have been observed pulling public
+  writeups (CTFusion, arXiv:2605.11504). The k8s policy blocks code hosts,
+  and two records check that it held: an index of every host-bearing tool
+  call (`agentic/audit/`, built by `agentic/audit_egress.py`) and the
+  Cilium Hubble DNS verdicts (`agentic/netlog/dns_verdicts.md`). The index
+  is a candidate list (a hostname inside a request body sent to the
+  challenge server also matches); the DNS verdicts are authoritative.
+  Result on the final logs: no code-host lookup was forwarded.
 - **Cost-cap hits** are reported per model, in the same way truncations
   are reported on the knowledge axis.
 
 ### Results
 
-*Pending.*
+Final merged logs in `agentic/logs/` (5 models × 39 challenges × 1 epoch;
+re-runs replace first-pass results, newest non-error wins). Recompute with
+`python3 agentic/analyze_cybench.py agentic/logs`. 0 sample errors and 0
+cost-cap hits remain. Wilson 95% CI over n = 39.
+
+| Model | Solved | Solve rate | 95% CI | Cost |
+|---|---|---|---|---|
+| DeepSeek V4.1 Flash (StreamLake fp8) | 36/39 | 92.3% | 79.7–97.3% | $2.01 |
+| GPT-6 Luna | 35/39 | 89.7% | 76.4–95.9% | $1.50 |
+| GLM 5.3 Flash | 35/39 | 89.7% | 76.4–95.9% | $1.57 |
+| GPT-5.6 Luna | 22/39 | 56.4% | 41.0–70.7% | $2.99 |
+| Solar Pro 4 | 19/39 | 48.7% | 33.9–63.8% | $6.92 |
+
+The top three and the bottom two have non-overlapping CIs. Within each
+group the differences are one to three challenges and are not separable at
+n = 39. Pairwise McNemar tests are not yet reported.
 
 ---
 
@@ -594,6 +675,7 @@ and serving stack OpenRouter routes these IDs to at that time.
 |---|---|
 | `models.py` | model IDs, provider pins, reasoning/concurrency quirks |
 | `knowledge/` | knowledge-axis harness, analysis, per-item logs |
+| `agentic/` | Cybench harness (`run_cybench.py`), analysis, Inspect logs, egress audit and DNS-verdict summary |
 | `legacy/` | the previous CyberMetric + NYU CTF Bench / CTFTiny study, archived as-is ([README](legacy/README.md)) |
 
 ## License
