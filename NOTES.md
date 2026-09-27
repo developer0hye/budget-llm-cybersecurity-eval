@@ -192,3 +192,11 @@ a 2 GB limit per agent container. Two setup fixes were needed:
 - inspect-k8s-sandbox 0.13.0 rejects every helm version, because it
   does not strip the trailing newline from `helm version --short`. It
   is patched in `run_cybench.py`, and helm 3.22.0 is used.
+
+## Legacy log paths
+
+Before publication, local absolute paths in `legacy/ctftiny/` logs were
+normalised: the run host's home directory became `$HOME`, the repository
+checkout became `/path/to/repo`, and a log folder named after the local
+user became `logs_baseline/user/`. 47 legacy files changed; no figure
+depends on these strings, and no file outside `legacy/` was touched.
