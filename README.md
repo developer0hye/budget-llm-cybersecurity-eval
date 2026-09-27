@@ -642,9 +642,28 @@ cost-cap hits remain. Wilson 95% CI over n = 39.
 | GPT-5.6 Luna | 22/39 | 56.4% | 41.0–70.7% | $2.99 |
 | Solar Pro 4 | 19/39 | 48.7% | 33.9–63.8% | $6.92 |
 
-The top three and the bottom two have non-overlapping CIs. Within each
-group the differences are one to three challenges and are not separable at
-n = 39. Pairwise McNemar tests are not yet reported.
+The top three and the bottom two have non-overlapping CIs. Pairwise
+McNemar exact tests on the 39 challenges (solved or not; Bonferroni
+α = 0.005 over 10 pairs; `mcnemar_exact` from `knowledge/analyze.py` on
+the merged results) give the same split. b is the number of challenges
+only the first model solved, and c the number only the second solved.
+
+| Pair | b / c | p |
+|---|---|---|
+| Solar Pro 4 vs GPT-6 Luna | 1 / 17 | **0.0001** |
+| Solar Pro 4 vs DeepSeek V4.1 Flash | 0 / 17 | **<0.0001** |
+| Solar Pro 4 vs GLM 5.3 Flash | 0 / 16 | **<0.0001** |
+| GPT-5.6 Luna vs GPT-6 Luna | 0 / 13 | **0.0002** |
+| GPT-5.6 Luna vs DeepSeek V4.1 Flash | 0 / 14 | **0.0001** |
+| GPT-5.6 Luna vs GLM 5.3 Flash | 1 / 14 | **0.0010** |
+| Solar Pro 4 vs GPT-5.6 Luna | 2 / 5 | 0.45 |
+| GPT-6 Luna vs DeepSeek V4.1 Flash | 1 / 2 | 1.00 |
+| GPT-6 Luna vs GLM 5.3 Flash | 2 / 2 | 1.00 |
+| DeepSeek V4.1 Flash vs GLM 5.3 Flash | 3 / 2 | 1.00 |
+
+All 6 cross-group pairs survive the correction; none of the 4
+within-group pairs is significant. Solar Pro 4 solved at most one
+challenge that a top-group model missed.
 
 ---
 
