@@ -1,0 +1,4 @@
+[
+  {"model": "qwen3.8-27b", "reasoning": "off", "wall_s": 7282, "server_seqs": 32, "client_concurrency": 64,
+   "log": "wall-clock line printed by run_local.py; device log knowledge/spark_logs/qwen3.8-27b_off.log"}
+]

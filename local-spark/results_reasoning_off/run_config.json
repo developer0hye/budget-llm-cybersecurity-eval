@@ -1,0 +1,16 @@
+{
+  "reasoning": "off",
+  "max_tokens": 16000,
+  "sample": null,
+  "seed": null,
+  "models": {
+    "gemma-4-12b": {
+      "id": "gemma-4-12b-it",
+      "provider": "local-vllm-dgx-spark:RedHatAI/gemma-4-12B-it-NVFP4"
+    },
+    "qwen3.8-27b": {
+      "id": "qwen38-27b",
+      "provider": "local-vllm-dgx-spark:nvidia/Qwen3.8-27B-NVFP4@482ca0f"
+    }
+  }
+}
