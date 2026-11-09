@@ -42,14 +42,21 @@ models.MODELS.update(LOCAL_MODELS)
 
 import analyze  # noqa: E402  (computes ALPHA from the extended MODELS at import)
 
-UPSTREAM = {"off": ROOT / "knowledge/results_reasoning_off", "on": ROOT / "knowledge/results_reasoning_on"}
-LOCAL = {"off": ROOT / "local-spark/results_reasoning_off", "on": ROOT / "local-spark/results_reasoning_on"}
+# Conditions. on_card = reasoning on with each model card's recommended sampling (local models
+# only). The OpenRouter models could not be re-run, so in the on_card analysis they keep their
+# reasoning-on rows (temperature 0, medium effort): that comparison mixes sampling settings and
+# is labelled as such in the README.
+UPSTREAM = {"off": ROOT / "knowledge/results_reasoning_off", "on": ROOT / "knowledge/results_reasoning_on",
+            "on_card": ROOT / "knowledge/results_reasoning_on"}
+LOCAL = {c: ROOT / f"local-spark/results_reasoning_{c}" for c in ("off", "on", "on_card")}
 
 _orig_load_rows = analyze.load_rows
 
 
 def load_rows_union(run: Path) -> dict:
-    cond = "on" if run.name.endswith("_on") else "off"
+    # analyze.py passes directory paths around; this wrapper is handed "cond:<name>" markers instead
+    # so one function can serve all three conditions.
+    cond = str(run).split("cond:")[-1]
     rows = _orig_load_rows(UPSTREAM[cond])
     rows.update(_orig_load_rows(LOCAL[cond]))
     return rows
@@ -58,12 +65,20 @@ def load_rows_union(run: Path) -> dict:
 analyze.load_rows = load_rows_union
 
 
+def _merge_json(path, key, value):
+    out = json.loads(Path(path).read_text())
+    out[key] = value
+    Path(path).write_text(json.dumps(out, indent=2))
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("cond", choices=["off", "on"])
+    p.add_argument("cond", choices=["off", "on", "on_card"])
     p.add_argument("--json", default=None)
     p.add_argument("--compare-off", action="store_true",
-                   help="With cond=on: also run the within-model off vs on test for every model with both runs")
+                   help="With cond on/on_card: also run the within-model off vs <cond> test")
+    p.add_argument("--compare-greedy", action="store_true",
+                   help="With cond on_card: also run the within-model greedy-on vs card-sampling-on test")
     args = p.parse_args()
     present = [n for n in LOCAL_MODELS if (LOCAL[args.cond] / f"{n}.jsonl").exists()]
     missing = [n for n in LOCAL_MODELS if n not in present]
@@ -73,16 +88,23 @@ def main():
     from math import comb
     analyze.ALPHA = 0.05 / comb(len(models.MODELS), 2)
     print(f"local models in this analysis ({args.cond}): {present}; not yet run: {missing}")
-    sys.argv = ["analyze.py", str(UPSTREAM[args.cond])] + (["--json", args.json] if args.json else [])
+    sys.argv = ["analyze.py", f"cond:{args.cond}"] + (["--json", args.json] if args.json else [])
     analyze.main()
-    if args.compare_off and args.cond == "on":
+    if args.compare_off and args.cond != "off":
         # analyze.main only runs this test when called on the off directory; call it directly so the
         # tables above stay the reasoning-on ones. Models lacking either run are skipped inside.
-        res = analyze.compare_reasoning(UPSTREAM["off"], UPSTREAM["on"])
+        res = analyze.compare_reasoning(Path("cond:off"), Path(f"cond:{args.cond}"))
         if args.json:
-            out = json.loads(Path(args.json).read_text())
-            out["reasoning_off_vs_on"] = res
-            Path(args.json).write_text(json.dumps(out, indent=2))
+            _merge_json(args.json, "reasoning_off_vs_on", res)
+    if args.compare_greedy and args.cond == "on_card":
+        print()
+        print("(The next block compares greedy reasoning-on ('off' columns) with card sampling "
+              "('on' columns), local models only.)")
+        for n in [m for m in list(models.MODELS) if m not in LOCAL_MODELS]:
+            del models.MODELS[n]
+        res = analyze.compare_reasoning(Path("cond:on"), Path("cond:on_card"))
+        if args.json:
+            _merge_json(args.json, "greedy_vs_card_sampling", res)
 
 
 if __name__ == "__main__":

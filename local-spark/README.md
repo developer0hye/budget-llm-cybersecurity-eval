@@ -37,10 +37,28 @@ sample per item.
 Different:
 
 - **Reasoning toggle.** vLLM has no `reasoning: {enabled}` field. Off/on is
-  `chat_template_kwargs.enable_thinking=false/true`. For Qwen the request
-  also carries `reasoning_effort: "medium"` when on, matching OpenRouter's
-  definition of `enabled: true`; the Qwen3.8 template only reads that field
-  at the top level of the request. Gemma 4 has no effort control.
+  `chat_template_kwargs.enable_thinking=false/true`; every reasoning-on row
+  is checked for a non-empty trace.
+- **Reasoning effort: Qwen at its maximum, not medium.** The OpenRouter runs
+  used medium effort (OpenRouter's definition of `enabled: true`). The local
+  Qwen3.8 runs use `reasoning_effort: "xhigh"`, the model's highest setting
+  and its chat template's default, by the owner's choice: the question here
+  is what each local model does at its best setting. The template reads the
+  field only at the top level of the request; with `xhigh` it prepends
+  "think carefully through the task, validate key assumptions, consider
+  plausible alternatives, …" to the system prompt (verified: +42 prompt
+  tokens vs `medium` on the same request). Each row logs the effort it ran
+  with (`reasoning_effort`). Gemma 4 has no effort control.
+- **Extra condition: model-card sampling** (`results_reasoning_on_card/`).
+  Greedy decoding is the protocol, and both model cards recommend sampling
+  for thinking (Qwen3.8: temperature 1.0, top_p 0.95, top_k 20, min_p 0,
+  presence_penalty 0; Gemma 4: 1.0, 0.95, 64 — the values in each
+  checkpoint's `generation_config.json`), warning that greedy thinking can
+  loop. So every reasoning-on run is repeated with those values and
+  `seed: 0` (logged per row as `sampling`). The OpenRouter models could not
+  be re-run, so in that table they keep their greedy, medium-effort rows:
+  read those cross comparisons as mixed-setting. The within-model
+  greedy-vs-card test is like-for-like.
 - **Reasoning tokens.** vLLM does not report
   `completion_tokens_details.reasoning_tokens`. The wrapper sets it to
   `completion_tokens` minus the tokenized final answer (off by a few
@@ -55,7 +73,7 @@ Different:
 - **Cost.** No per-call price. `usage.cost` is 0 in every row; wall-clock
   per run is reported instead, and the box cost is stated with the results.
 - **Server concurrency.** `--max-num-seqs` was raised for these short
-  prompts (`SEQS` in `queue.sh`). The first 1,944 `gemma-4-12b` reasoning-off
+  prompts (`SEQS` in `queue1.sh` / `queue2.sh`). The first 1,944 `gemma-4-12b` reasoning-off
   rows ran at 8 server sequences and the rest at 32; at temperature 0 this
   can change outputs only through batch-dependent floating-point order.
 - **Two boxes.** Runs are split across two identical DGX Sparks to finish
@@ -64,12 +82,13 @@ Different:
 ## Results
 
 **In progress.** Runs finish one at a time (fastest first: every model with
-reasoning off, then reasoning on). Only complete runs (4,496 scored rows, no
-transport errors) are committed. Every number below is printed by
-[`tables.py`](tables.py) from `analysis_reasoning_{off,on}.json`, which
+reasoning off, then reasoning on, greedy then card sampling). Only complete
+runs (4,496 scored rows, no transport errors) are committed. Every number
+below is printed by [`tables.py`](tables.py) from
+`analysis_reasoning_{off,on,on_card}.json`, which
 [`analyze_spark.py`](analyze_spark.py) recomputes from the per-item logs in
-`results_reasoning_{off,on}/`; the full test output is in
-`analysis_reasoning_{off,on}.txt`.
+`results_reasoning_{off,on,on_card}/`; the full test output is in
+`analysis_reasoning_*.txt`.
 
 Hardware: one MSI EdgeXpert MS-C931 (DGX Spark class), bought 2026-11-09 for
 KRW 11,000,000 (about $8,200). Calls cost nothing at the margin, so cost is
@@ -165,13 +184,18 @@ root:
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt
 ./knowledge/download_data.sh
 # download the checkpoints listed in llm-serve (hf download <repo> --revision <hash>)
-local-spark/llm-serve qwen27          # start one model on :8000
-.venv/bin/python local-spark/run_local.py --models qwen3.8-27b --reasoning off \
-    --concurrency 64 --out local-spark/results_reasoning_off
-# or everything, one server at a time:
-setsid nohup local-spark/queue.sh > queue.log 2>&1 < /dev/null &
-python3 local-spark/analyze_spark.py on --json local-spark/analysis_reasoning_on.json --compare-off
+local-spark/llm-serve qwen27          # start one model on :8000 (SEQS=32 for these short prompts)
+.venv/bin/python local-spark/run_local.py --models qwen3.8-27b --reasoning on \
+    --concurrency 64 --out local-spark/work_reasoning_on              # greedy, Qwen effort xhigh
+BCSE_SAMPLING=card .venv/bin/python local-spark/run_local.py --models qwen3.8-27b --reasoning on \
+    --concurrency 64 --out local-spark/work_reasoning_on_card         # model-card sampling
+# the two-box split as run (queue2.sh on the second box):
+setsid nohup local-spark/queue1.sh > queue1.log 2>&1 < /dev/null &
+local-spark/publish.sh                # copy complete runs to results_reasoning_*/ and re-analyse
+python3 local-spark/tables.py         # every table in this README
 ```
 
-The logged runs wrote to `knowledge/spark_reasoning_{off,on}/` on the
-device and were copied here unchanged.
+`BCSE_QWEN_EFFORT` overrides the Qwen effort (default `xhigh`). The logged
+runs wrote to `knowledge/spark_reasoning_{off,on,on_card}/` on the devices
+and were copied here unchanged; the queue scripts here are the ones that ran,
+with paths pointed at `local-spark/`.

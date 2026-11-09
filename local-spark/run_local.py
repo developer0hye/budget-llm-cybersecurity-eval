@@ -24,7 +24,7 @@ on one GB10 a 16k-token reasoning trace at ~20 tok/s per stream needs
 Usage (from the repo root, with the repo's .venv):
     BCSE_URL=http://127.0.0.1:8000/v1/chat/completions \
     .venv/bin/python local-spark/run_local.py --models gemma-4-12b \
-        --reasoning off --concurrency 32 --out local-spark/results_reasoning_off
+        --reasoning off --concurrency 32 --out local-spark/work_reasoning_off
 """
 
 import asyncio
@@ -83,13 +83,28 @@ async def call_model_local(session, model_id, system, prompt, api_key, reasoning
         "max_tokens": max_tokens,
         "chat_template_kwargs": {"enable_thinking": bool(reasoning_on)},
     }
-    # OpenRouter's `reasoning: {enabled: true}` means medium effort, which is
-    # what the upstream runs used. Qwen3.8's template takes the effort as a
-    # top-level field (inside chat_template_kwargs it is ignored -- verified
-    # on this server: an invalid value there is accepted, at top level it is
-    # HTTP 400). Gemma 4 has no effort control.
+    # BCSE_SAMPLING=card: the model card's recommended thinking sampling instead of the protocol's
+    # greedy decoding, run as an extra reasoning-on condition (owner's choice, 2026-11-09). Values
+    # match each checkpoint's generation_config.json; Qwen's card also sets min_p 0 and
+    # presence_penalty 0. A fixed per-request seed makes the run repeatable on the same server.
+    sampling = os.environ.get("BCSE_SAMPLING", "greedy")
+    if sampling == "card":
+        if model_id.startswith("qwen"):
+            payload.update(temperature=1.0, top_p=0.95, top_k=20, min_p=0.0, presence_penalty=0.0, seed=0)
+        else:
+            payload.update(temperature=1.0, top_p=0.95, top_k=64, seed=0)
+    # Qwen3.8 reasoning effort. The upstream OpenRouter runs used medium
+    # (OpenRouter's definition of `reasoning: {enabled: true}`); for the local
+    # Qwen runs the owner chose the model's maximum, xhigh (2026-11-09), which
+    # is also the chat template's default. xhigh makes the template prepend
+    # "think carefully through the task, validate key assumptions, ..." to the
+    # system prompt; medium adds nothing. The template reads the effort only
+    # as a top-level request field (inside chat_template_kwargs it is ignored;
+    # an invalid value at top level is HTTP 400). Gemma 4 has no effort control.
+    effort = None
     if reasoning_on and model_id.startswith("qwen"):
-        payload["reasoning_effort"] = "medium"
+        effort = os.environ.get("BCSE_QWEN_EFFORT", "xhigh")
+        payload["reasoning_effort"] = effort
     last_err = None
     for attempt in range(retries):
         try:
@@ -132,6 +147,10 @@ async def call_model_local(session, model_id, system, prompt, api_key, reasoning
                     "provider": LOCAL_PROVIDER.get(model_id),
                     "usage": usage,
                     "latency_s": round(time.time() - t0, 2),
+                    # Logged per row so a run's effort setting can be audited from the jsonl.
+                    "reasoning_effort": effort,
+                    "sampling": {k: payload[k] for k in ("temperature", "top_p", "top_k", "min_p",
+                                                         "presence_penalty", "seed") if k in payload},
                 }
         except (aiohttp.ClientError, asyncio.TimeoutError, json.JSONDecodeError, KeyError) as e:
             last_err = f"{type(e).__name__}: {e}"
@@ -182,6 +201,9 @@ if __name__ == "__main__":
     if not a.out:
         # The upstream default writes into the repo's committed results_reasoning_* dirs.
         sys.exit("--out is required (e.g. local-spark/results_reasoning_off); never write into upstream result dirs")
+    # run_config.json does not pin sampling, so keep greedy and card-sampling rows in separate dirs.
+    if (os.environ.get("BCSE_SAMPLING", "greedy") == "card") != a.out.rstrip("/").endswith("_card"):
+        sys.exit("BCSE_SAMPLING=card must write to an --out ending in _card, and greedy runs must not")
     per_task = {"WMDP-cyber": 996, "CTI-MCQ": 2500, "CTI-RCM": 1000}
     total = sum((a.sample or per_task[t]) for t in a.tasks) * len(a.models or LOCAL_MODELS)
     out_dir = REPO / (a.out or f"knowledge/results_reasoning_{a.reasoning}")
