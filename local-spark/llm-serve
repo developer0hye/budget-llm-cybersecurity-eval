@@ -92,7 +92,7 @@ start_gemma4() {
     "/root/.cache/huggingface/$GEMMA_SNAP" \
     --served-model-name gemma-4-31b-it \
     --host 0.0.0.0 --port "$PORT" --dtype auto --quantization modelopt --kv-cache-dtype fp8 \
-    --max-model-len 262144 --max-num-seqs "${SEQS:-16}" --gpu-memory-utilization 0.80 --max-num-batched-tokens 8192 \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-16}" --gpu-memory-utilization "${GPU_UTIL:-0.80}" --max-num-batched-tokens 8192 \
     --enable-chunked-prefill --enable-prefix-caching \
     --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
     --tensor-parallel-size 1 "${spec[@]}" \
@@ -130,7 +130,7 @@ start_qwen38() {
     --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice \
     --default-chat-template-kwargs '{"enable_thinking":false}' \
     --compilation-config '{"pass_config":{"fuse_act_quant":true}}' \
-    --gpu-memory-utilization 0.8 \
+    --gpu-memory-utilization "${GPU_UTIL:-0.8}" \
     >/dev/null
 }
 
@@ -148,7 +148,7 @@ start_gemma26() {
     vllm serve "/root/.cache/huggingface/$G26_SNAP" \
     --served-model-name gemma-4-26b-a4b-it \
     --host 0.0.0.0 --port "$PORT" \
-    --gpu-memory-utilization 0.8 --max-model-len 262144 \
+    --gpu-memory-utilization "${GPU_UTIL:-0.8}" --max-model-len 262144 \
     --max-num-seqs "${SEQS:-8}" --max-num-batched-tokens "${CHUNK:-8192}" \
     --enable-prefix-caching --load-format fastsafetensors --tensor-parallel-size 1 \
     --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
@@ -171,7 +171,7 @@ start_gemma12() {
     "/root/.cache/huggingface/$G12_SNAP" \
     --served-model-name gemma-4-12b-it \
     --host 0.0.0.0 --port "$PORT" --dtype auto --kv-cache-dtype fp8 \
-    --max-model-len 262144 --max-num-seqs "${SEQS:-8}" --gpu-memory-utilization 0.80 --max-num-batched-tokens 8192 \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-8}" --gpu-memory-utilization "${GPU_UTIL:-0.80}" --max-num-batched-tokens 8192 \
     --enable-chunked-prefill --enable-prefix-caching \
     --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
     --tensor-parallel-size 1 \
@@ -197,7 +197,7 @@ start_qwen27() {
     "/root/.cache/huggingface/$Q27_SNAP" \
     --served-model-name qwen38-27b \
     --host 0.0.0.0 --port "$PORT" --dtype auto --kv-cache-dtype fp8 \
-    --max-model-len 262144 --max-num-seqs "${SEQS:-8}" --gpu-memory-utilization 0.80 --max-num-batched-tokens 8192 \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-8}" --gpu-memory-utilization "${GPU_UTIL:-0.80}" --max-num-batched-tokens 8192 \
     --enable-chunked-prefill --enable-prefix-caching --mamba-cache-mode align \
     --reasoning-parser qwen3 --enable-auto-tool-choice --tool-call-parser qwen3_coder \
     --default-chat-template-kwargs '{"enable_thinking":false}' \

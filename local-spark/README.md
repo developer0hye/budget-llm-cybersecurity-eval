@@ -100,6 +100,7 @@ reported as wall-clock below.
 |---|---|---|---|---|---|
 | deepseek-v4.1-flash | OpenRouter | 80.0% | 79.3% | 76.5% | 7 / 3 |
 | glm-5.3-flash | OpenRouter | 82.8% | 78.0% | 74.8% | 144 / 3 |
+| **qwen3.8-flash-next** | **Spark** | 78.4% | 74.5% | 75.0% | 5 / 2 |
 | gpt-5.6-luna | OpenRouter | 73.9% | 75.5% | 74.1% | 0 / 7 |
 | gpt-6-luna | OpenRouter | 73.8% | 74.8% | 73.8% | 0 / 24 |
 | **qwen3.8-27b** | **Spark** | 75.6% | 71.7% | 70.9% | 2 / 15 |
@@ -109,23 +110,26 @@ reported as wall-clock below.
 
 n = 996 / 2,500 / 1,000 per model; accuracy = correct / all items. GLM 5.3
 Flash cannot turn reasoning off, so its row has reasoning on (as in the main
-README). Every model present is one Bonferroni family: with 8 models that is
-28 pairs per task, α = 0.0018. α shrinks as local models are added, so a
-verdict near α can change until the last run is in.
+README). Every model present is one Bonferroni family: with 9 models that is
+36 pairs per task, α = 0.0014. Gemma 4 31B is still to come, after which
+α = 0.0011 and a verdict near α can still change.
 
-McNemar, local model vs each other model (primary analysis, all items):
+McNemar, local model (row) vs each other model (primary analysis, all items):
 
-| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-12b | gemma-4-26b-a4b | qwen3.8-27b |
-|---|---|---|---|---|---|---|---|---|---|
-| gemma-4-12b | WMDP-cyber | − <0.001** | − <0.001** | − 0.152 | − 0.179 | − 0.619 | — | − 0.001** | − 0.007 |
-| gemma-4-12b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − 0.008 |
-| gemma-4-12b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** |
-| gemma-4-26b-a4b | WMDP-cyber | − 0.002 | − <0.001** | + 0.117 | + 0.106 | + 0.010 | + 0.001** | — | + 0.760 |
-| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − 0.005 | − 0.616 | + <0.001** | — | + 0.457 |
-| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.009 | + <0.001** | — | − 0.001** |
-| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | + 0.239 | + 0.227 | + 0.017 | + 0.007 | − 0.760 | — |
-| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.198 | + 0.008 | − 0.457 | — |
-| qwen3.8-27b | CTI-RCM | − <0.001** | − <0.001** | − 0.003 | − 0.003 | + 0.516 | + <0.001** | + 0.001** | — |
+| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-12b | gemma-4-26b-a4b | qwen3.8-27b | qwen3.8-flash-next |
+|---|---|---|---|---|---|---|---|---|---|---|
+| gemma-4-12b | WMDP-cyber | − <0.001** | − <0.001** | − 0.152 | − 0.179 | − 0.619 | — | − 0.001** | − 0.007 | − <0.001** |
+| gemma-4-12b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − 0.008 | − <0.001** |
+| gemma-4-12b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** | − <0.001** |
+| gemma-4-26b-a4b | WMDP-cyber | − 0.002 | − <0.001** | + 0.117 | + 0.106 | + 0.010 | + 0.001** | — | + 0.760 | − 0.067 |
+| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − 0.005 | − 0.616 | + <0.001** | — | + 0.457 | − 0.014 |
+| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.009 | + <0.001** | — | − 0.001** | − <0.001** |
+| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | + 0.239 | + 0.227 | + 0.017 | + 0.007 | − 0.760 | — | − 0.023 |
+| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.198 | + 0.008 | − 0.457 | — | − 0.001** |
+| qwen3.8-27b | CTI-RCM | − <0.001** | − <0.001** | − 0.003 | − 0.003 | + 0.516 | + <0.001** | + 0.001** | — | − <0.001** |
+| qwen3.8-flash-next | WMDP-cyber | − 0.201 | − <0.001** | + 0.001** | + <0.001** | + <0.001** | + <0.001** | + 0.067 | + 0.023 | — |
+| qwen3.8-flash-next | CTI-MCQ | − <0.001** | − <0.001** | − 0.266 | − 0.739 | + 0.060 | + <0.001** | + 0.014 | + 0.001** | — |
+| qwen3.8-flash-next | CTI-RCM | − 0.167 | + 0.923 | + 0.444 | + 0.290 | + <0.001** | + <0.001** | + <0.001** | + <0.001** | — |
 
 `+` / `−` = the row model got more / fewer of the discordant items right;
 `**` = below α. Verdicts that change when only items both models answered
@@ -133,25 +137,30 @@ are tested (full output in `analysis_reasoning_off.txt`):
 
 - WMDP-cyber, DeepSeek V4.1 Flash vs Gemma 4 26B-A4B: p = 0.0025 → 0.0010 (becomes significant)
 - WMDP-cyber, Gemma 4 12B vs Gemma 4 26B-A4B: p = 0.0013 → 0.0039 (no longer significant)
+- WMDP-cyber, GPT-5.6 Luna vs Qwen3.8-Flash-Next: p = 0.0011 → 0.0033 (no longer significant)
+- WMDP-cyber, GPT-6 Luna vs Qwen3.8-Flash-Next: p = 0.0006 → 0.0251 (no longer significant; GPT-6 Luna's 24 refusals)
 - CTI-MCQ, GPT-6 Luna vs Qwen3.8-27B: p = 0.0004 → 0.0035 (no longer significant)
-- CTI-RCM, Gemma 4 26B-A4B vs Qwen3.8-27B: p = 0.0011 → 0.0019 (no longer significant, just above α)
+- CTI-MCQ, Qwen3.8-27B vs Qwen3.8-Flash-Next: p = 0.0010 → 0.0048 (no longer significant)
+- CTI-RCM, Gemma 4 26B-A4B vs Qwen3.8-27B: p = 0.0011 → 0.0019 (no longer significant)
 
 What the off condition shows so far:
 
-- **WMDP-cyber**: all three local models sit with the two GPT Luna models
-  and Solar Pro 4 (every p ≥ 0.010 > α) and behind GLM 5.3 Flash and
-  DeepSeek V4.1 Flash (DeepSeek vs Gemma 4 26B-A4B: p = 0.0025, significant
-  only on both-answered items). Gemma 4 26B-A4B is ahead of Gemma 4 12B
-  (p = 0.0013).
-- **CTI-MCQ**: Gemma 4 26B-A4B and Qwen3.8-27B are level with each other and
-  with Solar Pro 4, and behind DeepSeek, GLM and GPT-5.6 Luna. Gemma 4 12B
-  is the lowest of the eight (69.3%) and behind every model except
-  Qwen3.8-27B (p = 0.008).
-- **CTI-RCM** (CVE description → CWE ID) separates the local models most:
-  Qwen3.8-27B 70.9% (level with Solar Pro 4, p = 0.52) > Gemma 4 26B-A4B
-  67.3% > Gemma 4 12B 55.9%, which is behind every other model (all
-  p < 0.001). Gemma 4 12B answers 99.7% of RCM items and gets 56.1% of
-  those right, so the gap is wrong CWE IDs, not non-answers.
+- **Qwen3.8-Flash-Next is the strongest local model and sits with the
+  OpenRouter field.** WMDP-cyber 78.4%: not separable from DeepSeek V4.1
+  Flash (p = 0.20), behind only GLM 5.3 Flash (which has reasoning on),
+  ahead of the GPT Luna models on all items (p ≤ 0.0011; on both-answered
+  items this rests partly on their non-answers). CTI-RCM 75.0%: level with
+  DeepSeek, GLM and both GPT Luna models (p ≥ 0.17). CTI-MCQ 74.5%: level
+  with the GPT Luna models, behind DeepSeek and GLM.
+- **Gemma 4 26B-A4B and Qwen3.8-27B are not separable on WMDP-cyber or
+  CTI-MCQ** (p = 0.76, 0.46) and sit with Solar Pro 4 and the GPT Luna
+  models on WMDP-cyber. On CTI-RCM (CVE description → CWE ID) Qwen3.8-27B
+  is ahead, 70.9% vs 67.3% (p = 0.0011).
+- **Gemma 4 12B is the lowest of the nine on CTI-MCQ and CTI-RCM.** On
+  CTI-RCM (55.9%) it is behind every other model (all p < 0.001); it
+  answers 99.7% of RCM items and gets 56.1% of those right, so the gap is
+  wrong CWE IDs, not non-answers. On WMDP-cyber it is level with Solar Pro 4
+  and the GPT Luna models.
 
 ### Reasoning on
 
@@ -164,6 +173,7 @@ Not run yet.
 | qwen3.8-27b | off | spark-1 | 2.02 h | 32 | 64 |
 | gemma-4-26b-a4b | off | spark-1 | 0.54 h | 32 | 64 |
 | gemma-4-12b | off | spark-1 then spark-2 | 1.32 h | 8 (first 1,944 rows) / 32 | 16 / 64 |
+| qwen3.8-flash-next | off | spark-1 | 3.27 h | 16 | 64 |
 
 From 2026-11-09 21:45 the runs are split across two identical boxes
 (spark-1, spark-2: same MSI EdgeXpert model, OTA 7.6.0, driver 580.178.04,
