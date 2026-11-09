@@ -76,15 +76,37 @@ def pairs_table(cond):
     print("\n`+` = the local model got more of the discordant items right, `−` = fewer.\n")
 
 
+def sensitivity_flips(cond):
+    """Pairs involving a local model whose verdict differs between all items and both-answered items."""
+    a = load(cond)
+    if not a:
+        return
+    k = len(a["per_model"])
+    alpha = 0.05 / (k * (k - 1) / 2)
+    flips = []
+    for t in TASKS:
+        for pair, r in a["pairwise"][t].items():
+            if not any(m in pair.split(" vs ") for m in LOCAL):
+                continue
+            prim, both = r["primary"], r["both_answered"]
+            if (prim["p"] < alpha) != (both["p"] < alpha):
+                flips.append(f"- {t}, {pair}: all items p = {prim['p']:.4f}, both answered p = {both['p']:.4f} "
+                             f"(n = {both['n']:,})")
+    print(f"Verdicts that change on both-answered items (reasoning {cond}, alpha = {alpha:.4f}):")
+    print("\n".join(flips) if flips else "- none")
+    print()
+
+
 def runs_table():
     p = HERE / "runs.json"
     if not p.exists():
         return
     runs = json.loads(p.read_text())
-    print("| Model | Reasoning | Wall-clock | Server sequences | Client concurrency |")
-    print("|---|---|---|---|---|")
+    print("| Model | Reasoning | Box | Wall-clock | Server sequences | Client concurrency |")
+    print("|---|---|---|---|---|---|")
     for r in runs:
-        print(f"| {r['model']} | {r['reasoning']} | {r['wall_s'] / 3600:.2f} h | {r['server_seqs']} | {r['client_concurrency']} |")
+        print(f"| {r['model']} | {r['reasoning']} | {r.get('host', 'spark-1')} | {r['wall_s'] / 3600:.2f} h | "
+              f"{r['server_seqs']} | {r['client_concurrency']} |")
     print()
 
 
@@ -92,4 +114,5 @@ if __name__ == "__main__":
     for c in ("on", "off"):
         accuracy_table(c)
         pairs_table(c)
+        sensitivity_flips(c)
     runs_table()

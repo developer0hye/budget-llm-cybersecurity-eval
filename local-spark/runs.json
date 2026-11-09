@@ -1,18 +1,8 @@
 [
-  {
-    "model": "qwen3.8-27b",
-    "reasoning": "off",
-    "wall_s": 7282,
-    "server_seqs": 32,
-    "client_concurrency": 64,
-    "log": "wall-clock line printed by run_local.py; device log knowledge/spark_logs/qwen3.8-27b_off.log"
-  },
-  {
-    "model": "gemma-4-26b-a4b",
-    "reasoning": "off",
-    "wall_s": 1939,
-    "server_seqs": 32,
-    "client_concurrency": 64,
-    "log": "wall-clock line printed by run_local.py; device log knowledge/spark_logs/gemma-4-26b-a4b_off.log"
-  }
+  {"model": "qwen3.8-27b", "reasoning": "off", "host": "spark-1", "wall_s": 7282, "server_seqs": 32, "client_concurrency": 64,
+   "log": "wall-clock line printed by run_local.py (knowledge/spark_logs/qwen3.8-27b_off.log on the device)"},
+  {"model": "gemma-4-26b-a4b", "reasoning": "off", "host": "spark-1", "wall_s": 1939, "server_seqs": 32, "client_concurrency": 64,
+   "log": "wall-clock line printed by run_local.py"},
+  {"model": "gemma-4-12b", "reasoning": "off", "host": "spark-1 then spark-2", "wall_s": 4736, "server_seqs": "8 (first 1,944 rows) / 32", "client_concurrency": "16 / 64",
+   "log": "two segments: spark-1 rows 1-1,944, stopped by hand to switch the server to Qwen3.8-27B, about 2,940 s (last progress line: 1,907 rows at 49.0 min); spark-2 resumed the remaining 2,552 rows in 1,796 s (wall-clock line). The first 1,944 rows are byte-identical in both copies."}
 ]
