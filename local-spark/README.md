@@ -82,31 +82,47 @@ reported as wall-clock below.
 | gpt-5.6-luna | OpenRouter | 73.9% | 75.5% | 74.1% | 0 / 7 |
 | gpt-6-luna | OpenRouter | 73.8% | 74.8% | 73.8% | 0 / 24 |
 | **qwen3.8-27b** | **Spark** | 75.6% | 71.7% | 70.9% | 2 / 15 |
+| **gemma-4-26b-a4b** | **Spark** | 76.1% | 72.4% | 67.3% | 10 / 0 |
 | solar-pro4 | OpenRouter | 72.6% | 72.9% | 70.1% | 0 / 4 |
 
 n = 996 / 2,500 / 1,000 per model; accuracy = correct / all items. GLM 5.3
 Flash cannot turn reasoning off, so its row has reasoning on (as in the main
-README). With 6 models the Bonferroni family is 15 pairs per task,
-α = 0.0033; it grows as local models are added.
+README). Every model present is one Bonferroni family: with 7 models that is
+21 pairs per task, α = 0.0024. α shrinks as local models are added, so a
+verdict near α can change until the last run is in.
 
 McNemar, local model vs each other model (primary analysis, all items):
 
-| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 |
-|---|---|---|---|---|---|---|
-| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | + 0.239 | + 0.227 | + 0.017 |
-| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.198 |
-| qwen3.8-27b | CTI-RCM | − <0.001** | − 0.003** | − 0.003** | − 0.003** | + 0.516 |
+| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-26b-a4b | qwen3.8-27b |
+|---|---|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | − 0.002 | − <0.001** | + 0.117 | + 0.106 | + 0.010 | — | + 0.760 |
+| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − 0.005 | − 0.616 | — | + 0.457 |
+| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.009 | — | − 0.001** |
+| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | + 0.239 | + 0.227 | + 0.017 | − 0.760 | — |
+| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.198 | − 0.457 | — |
+| qwen3.8-27b | CTI-RCM | − <0.001** | − <0.001** | − 0.003 | − 0.003 | + 0.516 | + 0.001** | — |
 
 `+` / `−` = the local model got more / fewer of the discordant items right;
 `**` = below α. Both-answered sensitivity results are in
-`analysis_reasoning_off.txt`. One verdict changes there: Qwen3.8-27B vs
-GPT-6 Luna on CTI-MCQ goes from p = 0.0004 to p = 0.0035 (n = 2,483), just
-above α, so that gap partly comes from non-answers.
+`analysis_reasoning_off.txt`. Two verdicts change there:
+DeepSeek V4.1 Flash vs Gemma 4 26B-A4B on WMDP-cyber goes from p = 0.0025 to
+0.0010 (significant), and Qwen3.8-27B vs GPT-6 Luna on CTI-MCQ from 0.0004
+to 0.0035 (not significant), so that gap partly comes from non-answers.
 
-- **Qwen3.8-27B, reasoning off**: on WMDP-cyber not separable from the two
-  GPT Luna models (p = 0.24, 0.23) and from Solar Pro 4 after correction
-  (p = 0.017 > α), behind DeepSeek and GLM. On both CTIBench tasks it is
-  level with Solar Pro 4 (p = 0.20, 0.52) and behind the other four.
+- **Gemma 4 26B-A4B and Qwen3.8-27B are not separable on WMDP-cyber or
+  CTI-MCQ** (p = 0.76, 0.46). On CTI-RCM (CVE description → CWE ID)
+  Qwen3.8-27B is ahead, 70.9% vs 67.3% (p = 0.0011).
+- **WMDP-cyber**: both local models sit with the two GPT Luna models and
+  Solar Pro 4 (all p ≥ 0.010 > α) and behind GLM 5.3 Flash. DeepSeek V4.1
+  Flash is ahead of Qwen3.8-27B (p = 0.0007); against Gemma 4 26B-A4B it is
+  just above α (p = 0.0025).
+- **CTI-MCQ**: both local models are level with Solar Pro 4 and behind
+  DeepSeek, GLM and GPT-5.6 Luna. Against GPT-6 Luna, Qwen3.8-27B is behind
+  (p = 0.0004) and Gemma 4 26B-A4B is not separable (p = 0.005).
+- **CTI-RCM**: Gemma 4 26B-A4B has the lowest score of the seven and is
+  behind every model except Solar Pro 4 (p = 0.009). Qwen3.8-27B is behind
+  DeepSeek and GLM; its gaps to the GPT Luna models (p = 0.003) no longer
+  clear α with 7 models.
 
 ### Reasoning on
 
@@ -117,6 +133,7 @@ Not run yet.
 | Model | Reasoning | Wall-clock | Server sequences | Client concurrency |
 |---|---|---|---|---|
 | qwen3.8-27b | off | 2.02 h | 32 | 64 |
+| gemma-4-26b-a4b | off | 0.54 h | 32 | 64 |
 
 Source: the `wall-clock` line `run_local.py` prints, collected in
 [`runs.json`](runs.json).

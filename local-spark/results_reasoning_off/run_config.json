@@ -11,6 +11,10 @@
     "qwen3.8-27b": {
       "id": "qwen38-27b",
       "provider": "local-vllm-dgx-spark:nvidia/Qwen3.8-27B-NVFP4@482ca0f"
+    },
+    "gemma-4-26b-a4b": {
+      "id": "gemma-4-26b-a4b-it",
+      "provider": "local-vllm-dgx-spark:nvidia/Gemma-4-26B-A4B-NVFP4"
     }
   }
 }

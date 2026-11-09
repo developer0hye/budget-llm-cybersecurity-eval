@@ -1,4 +1,18 @@
 [
-  {"model": "qwen3.8-27b", "reasoning": "off", "wall_s": 7282, "server_seqs": 32, "client_concurrency": 64,
-   "log": "wall-clock line printed by run_local.py; device log knowledge/spark_logs/qwen3.8-27b_off.log"}
+  {
+    "model": "qwen3.8-27b",
+    "reasoning": "off",
+    "wall_s": 7282,
+    "server_seqs": 32,
+    "client_concurrency": 64,
+    "log": "wall-clock line printed by run_local.py; device log knowledge/spark_logs/qwen3.8-27b_off.log"
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "reasoning": "off",
+    "wall_s": 1939,
+    "server_seqs": 32,
+    "client_concurrency": 64,
+    "log": "wall-clock line printed by run_local.py; device log knowledge/spark_logs/gemma-4-26b-a4b_off.log"
+  }
 ]
