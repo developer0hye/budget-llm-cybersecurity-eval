@@ -1,4 +1,4 @@
-local models in this analysis (on_card): ['gemma-4-26b-a4b']; not yet run: ['gemma-4-12b', 'gemma-4-31b', 'qwen3.8-27b', 'qwen3.8-flash-next']
+local models in this analysis (on_card): ['gemma-4-26b-a4b', 'qwen3.8-27b']; not yet run: ['gemma-4-12b', 'gemma-4-31b', 'qwen3.8-flash-next']
 
 === WMDP-cyber ===
 majority-label baseline: always 'A' = 26.8%
@@ -8,23 +8,30 @@ gpt-5.6-luna             996   83.8%    84.2%      835    157      0         4  
 glm-5.3-flash            996   83.3%    85.2%      830    144     17         5       996
 gpt-6-luna               996   81.6%    84.9%      813    145      0        38       996
 gemma-4-26b-a4b          996   78.8%    79.7%      785    200     11         0       996
+qwen3.8-27b              996   77.8%    79.2%      775    203     16         2       996
 solar-pro4               996   77.1%    77.7%      768    221      5         2       994
-pairwise McNemar (Bonferroni alpha = 0.0033); b = A right & B wrong, c = reverse
+pairwise McNemar (Bonferroni alpha = 0.0024); b = A right & B wrong, c = reverse
   deepseek-v4.1-flash  vs gemma-4-26b-a4b      n= 996 b=101 c= 40 p=0.0000** | both-answered n=976 p=0.0000
   deepseek-v4.1-flash  vs glm-5.3-flash        n= 996 b= 63 c= 47 p=0.1523   | both-answered n=965 p=0.2513
   deepseek-v4.1-flash  vs gpt-5.6-luna         n= 996 b= 57 c= 46 p=0.3245   | both-answered n=978 p=0.0725
-  deepseek-v4.1-flash  vs gpt-6-luna           n= 996 b= 74 c= 41 p=0.0027** | both-answered n=944 p=0.2954
+  deepseek-v4.1-flash  vs gpt-6-luna           n= 996 b= 74 c= 41 p=0.0027*  | both-answered n=944 p=0.2954
+  deepseek-v4.1-flash  vs qwen3.8-27b          n= 996 b=104 c= 33 p=0.0000** | both-answered n=972 p=0.0000
   deepseek-v4.1-flash  vs solar-pro4           n= 996 b=112 c= 34 p=0.0000** | both-answered n=979 p=0.0000
   gemma-4-26b-a4b      vs glm-5.3-flash        n= 996 b= 43 c= 88 p=0.0001** | both-answered n=966 p=0.0000
   gemma-4-26b-a4b      vs gpt-5.6-luna         n= 996 b= 41 c= 91 p=0.0000** | both-answered n=981 p=0.0002
   gemma-4-26b-a4b      vs gpt-6-luna           n= 996 b= 68 c= 96 p=0.0347*  | both-answered n=948 p=0.0000
+  gemma-4-26b-a4b      vs qwen3.8-27b          n= 996 b= 75 c= 65 p=0.4470   | both-answered n=971 p=0.4264
   gemma-4-26b-a4b      vs solar-pro4           n= 996 b= 79 c= 62 p=0.1776   | both-answered n=982 p=0.0672
   glm-5.3-flash        vs gpt-5.6-luna         n= 996 b= 48 c= 53 p=0.6908   | both-answered n=973 p=0.2299
   glm-5.3-flash        vs gpt-6-luna           n= 996 b= 75 c= 58 p=0.1651   | both-answered n=941 p=1.0000
+  glm-5.3-flash        vs qwen3.8-27b          n= 996 b= 99 c= 44 p=0.0000** | both-answered n=961 p=0.0000
   glm-5.3-flash        vs solar-pro4           n= 996 b=101 c= 39 p=0.0000** | both-answered n=969 p=0.0000
   gpt-5.6-luna         vs gpt-6-luna           n= 996 b= 63 c= 41 p=0.0390*  | both-answered n=957 p=0.4828
+  gpt-5.6-luna         vs qwen3.8-27b          n= 996 b= 98 c= 38 p=0.0000** | both-answered n=975 p=0.0000
   gpt-5.6-luna         vs solar-pro4           n= 996 b= 99 c= 32 p=0.0000** | both-answered n=985 p=0.0000
+  gpt-6-luna           vs qwen3.8-27b          n= 996 b=102 c= 64 p=0.0039*  | both-answered n=941 p=0.0000
   gpt-6-luna           vs solar-pro4           n= 996 b=107 c= 62 p=0.0007** | both-answered n=951 p=0.0000
+  qwen3.8-27b          vs solar-pro4           n= 996 b= 77 c= 70 p=0.6208   | both-answered n=976 p=0.3998
 
 === CTI-MCQ ===
 majority-label baseline: always 'C' = 37.1%
@@ -35,22 +42,29 @@ deepseek-v4.1-flash     2500   79.6%    82.2%     1989    432     79         0  
 glm-5.3-flash           2500   78.9%    82.4%     1973    422    105         0      2500
 solar-pro4              2500   76.0%    77.0%     1899    568     33         0      2500
 gemma-4-26b-a4b         2500   73.9%    73.9%     1847    651      2         0      2499
-pairwise McNemar (Bonferroni alpha = 0.0033); b = A right & B wrong, c = reverse
+qwen3.8-27b             2500   72.0%    73.1%     1799    662     39         0      2500
+pairwise McNemar (Bonferroni alpha = 0.0024); b = A right & B wrong, c = reverse
   deepseek-v4.1-flash  vs gemma-4-26b-a4b      n=2500 b=301 c=159 p=0.0000** | both-answered n=2419 p=0.0000
   deepseek-v4.1-flash  vs glm-5.3-flash        n=2500 b=173 c=157 p=0.4090   | both-answered n=2333 p=0.5313
   deepseek-v4.1-flash  vs gpt-5.6-luna         n=2500 b=157 c=173 p=0.4090   | both-answered n=2421 p=0.1971
   deepseek-v4.1-flash  vs gpt-6-luna           n=2500 b=135 c=171 p=0.0452*  | both-answered n=2421 p=0.4935
+  deepseek-v4.1-flash  vs qwen3.8-27b          n=2500 b=339 c=149 p=0.0000** | both-answered n=2388 p=0.0000
   deepseek-v4.1-flash  vs solar-pro4           n=2500 b=250 c=160 p=0.0000** | both-answered n=2391 p=0.0000
   gemma-4-26b-a4b      vs glm-5.3-flash        n=2500 b=164 c=290 p=0.0000** | both-answered n=2393 p=0.0000
   gemma-4-26b-a4b      vs gpt-5.6-luna         n=2500 b=146 c=304 p=0.0000** | both-answered n=2498 p=0.0000
   gemma-4-26b-a4b      vs gpt-6-luna           n=2500 b=128 c=306 p=0.0000** | both-answered n=2498 p=0.0000
+  gemma-4-26b-a4b      vs qwen3.8-27b          n=2500 b=266 c=218 p=0.0325*  | both-answered n=2459 p=0.1931
   gemma-4-26b-a4b      vs solar-pro4           n=2500 b=187 c=239 p=0.0134*  | both-answered n=2465 p=0.0004
   glm-5.3-flash        vs gpt-5.6-luna         n=2500 b=163 c=195 p=0.1012   | both-answered n=2395 p=0.1325
   glm-5.3-flash        vs gpt-6-luna           n=2500 b=134 c=186 p=0.0043*  | both-answered n=2395 p=0.9515
+  glm-5.3-flash        vs qwen3.8-27b          n=2500 b=332 c=158 p=0.0000** | both-answered n=2360 p=0.0000
   glm-5.3-flash        vs solar-pro4           n=2500 b=253 c=179 p=0.0004** | both-answered n=2365 p=0.0000
   gpt-5.6-luna         vs gpt-6-luna           n=2500 b=114 c=134 p=0.2276   | both-answered n=2500 p=0.2276
+  gpt-5.6-luna         vs qwen3.8-27b          n=2500 b=338 c=132 p=0.0000** | both-answered n=2461 p=0.0000
   gpt-5.6-luna         vs solar-pro4           n=2500 b=243 c=137 p=0.0000** | both-answered n=2467 p=0.0000
+  gpt-6-luna           vs qwen3.8-27b          n=2500 b=347 c=121 p=0.0000** | both-answered n=2461 p=0.0000
   gpt-6-luna           vs solar-pro4           n=2500 b=248 c=122 p=0.0000** | both-answered n=2467 p=0.0000
+  qwen3.8-27b          vs solar-pro4           n=2500 b=192 c=292 p=0.0000** | both-answered n=2429 p=0.0000
 
 === CTI-RCM ===
 majority-label baseline: always 'CWE-79' = 22.9%
@@ -59,47 +73,60 @@ deepseek-v4.1-flash     1000   76.3%    77.0%      763    228      9         0  
 gpt-6-luna              1000   75.1%    75.1%      751    249      0         0      1000
 gpt-5.6-luna            1000   74.0%    74.0%      740    260      0         0      1000
 glm-5.3-flash           1000   73.9%    74.3%      739    255      6         0      1000
+qwen3.8-27b             1000   73.1%    73.2%      731    268      1         0      1000
 solar-pro4              1000   72.1%    72.8%      721    270      9         0      1000
 gemma-4-26b-a4b         1000   69.9%    70.1%      699    298      3         0      1000
-pairwise McNemar (Bonferroni alpha = 0.0033); b = A right & B wrong, c = reverse
+pairwise McNemar (Bonferroni alpha = 0.0024); b = A right & B wrong, c = reverse
   deepseek-v4.1-flash  vs gemma-4-26b-a4b      n=1000 b= 91 c= 27 p=0.0000** | both-answered n=988 p=0.0000
   deepseek-v4.1-flash  vs glm-5.3-flash        n=1000 b= 48 c= 24 p=0.0063*  | both-answered n=985 p=0.0067
   deepseek-v4.1-flash  vs gpt-5.6-luna         n=1000 b= 51 c= 28 p=0.0128*  | both-answered n=991 p=0.0038
   deepseek-v4.1-flash  vs gpt-6-luna           n=1000 b= 41 c= 29 p=0.1882   | both-answered n=991 p=0.1143
+  deepseek-v4.1-flash  vs qwen3.8-27b          n=1000 b= 63 c= 31 p=0.0013** | both-answered n=990 p=0.0003
   deepseek-v4.1-flash  vs solar-pro4           n=1000 b= 77 c= 35 p=0.0001** | both-answered n=983 p=0.0000
   gemma-4-26b-a4b      vs glm-5.3-flash        n=1000 b= 31 c= 71 p=0.0001** | both-answered n=991 p=0.0001
   gemma-4-26b-a4b      vs gpt-5.6-luna         n=1000 b= 27 c= 68 p=0.0000** | both-answered n=997 p=0.0001
   gemma-4-26b-a4b      vs gpt-6-luna           n=1000 b= 23 c= 75 p=0.0000** | both-answered n=997 p=0.0000
+  gemma-4-26b-a4b      vs qwen3.8-27b          n=1000 b= 31 c= 63 p=0.0013** | both-answered n=996 p=0.0023
   gemma-4-26b-a4b      vs solar-pro4           n=1000 b= 38 c= 60 p=0.0334*  | both-answered n=988 p=0.0519
   glm-5.3-flash        vs gpt-5.6-luna         n=1000 b= 21 c= 22 p=1.0000   | both-answered n=994 p=1.0000
   glm-5.3-flash        vs gpt-6-luna           n=1000 b= 21 c= 33 p=0.1337   | both-answered n=994 p=0.2116
+  glm-5.3-flash        vs qwen3.8-27b          n=1000 b= 41 c= 33 p=0.4160   | both-answered n=993 p=0.3492
   glm-5.3-flash        vs solar-pro4           n=1000 b= 54 c= 36 p=0.0725   | both-answered n=985 p=0.0558
   gpt-5.6-luna         vs gpt-6-luna           n=1000 b= 16 c= 27 p=0.1263   | both-answered n=1000 p=0.1263
+  gpt-5.6-luna         vs qwen3.8-27b          n=1000 b= 37 c= 28 p=0.3211   | both-answered n=999 p=0.3211
   gpt-5.6-luna         vs solar-pro4           n=1000 b= 55 c= 36 p=0.0586   | both-answered n=991 p=0.0725
+  gpt-6-luna           vs qwen3.8-27b          n=1000 b= 44 c= 24 p=0.0205*  | both-answered n=999 p=0.0205
   gpt-6-luna           vs solar-pro4           n=1000 b= 59 c= 29 p=0.0018** | both-answered n=991 p=0.0025
+  qwen3.8-27b          vs solar-pro4           n=1000 b= 47 c= 37 p=0.3261   | both-answered n=991 p=0.3800
 
-=== reasoning off vs on, within model (Bonferroni alpha = 0.0033, 5 models x 3 tasks) ===
+=== reasoning off vs on, within model (Bonferroni alpha = 0.0028, 6 models x 3 tasks) ===
 b = right only with reasoning off, c = right only with reasoning on
   WMDP-cyber  solar-pro4           n= 996 off  72.6% -> on  77.1% b= 48 c= 93 p=0.0002** (on truncated: 5)
   WMDP-cyber  gpt-5.6-luna         n= 996 off  73.9% -> on  83.8% b= 33 c=132 p=0.0000** (on truncated: 0)
   WMDP-cyber  gpt-6-luna           n= 996 off  73.8% -> on  81.6% b= 42 c=120 p=0.0000** (on truncated: 0)
   WMDP-cyber  deepseek-v4.1-flash  n= 996 off  80.0% -> on  84.9% b= 42 c= 91 p=0.0000** (on truncated: 14)
   WMDP-cyber  gemma-4-26b-a4b      n= 996 off  76.1% -> on  78.8% b= 41 c= 68 p=0.0124*  (on truncated: 11)
+  WMDP-cyber  qwen3.8-27b          n= 996 off  75.6% -> on  77.8% b= 73 c= 95 p=0.1049   (on truncated: 16)
   CTI-MCQ     solar-pro4           n=2500 off  72.9% -> on  76.0% b=152 c=229 p=0.0001** (on truncated: 33)
   CTI-MCQ     gpt-5.6-luna         n=2500 off  75.5% -> on  80.2% b= 92 c=210 p=0.0000** (on truncated: 0)
   CTI-MCQ     gpt-6-luna           n=2500 off  74.8% -> on  81.0% b= 96 c=250 p=0.0000** (on truncated: 0)
   CTI-MCQ     deepseek-v4.1-flash  n=2500 off  79.3% -> on  79.6% b=166 c=173 p=0.7446   (on truncated: 79)
   CTI-MCQ     gemma-4-26b-a4b      n=2500 off  72.4% -> on  73.9% b=121 c=158 p=0.0310*  (on truncated: 2)
+  CTI-MCQ     qwen3.8-27b          n=2500 off  71.7% -> on  72.0% b=220 c=226 p=0.8129   (on truncated: 39)
   CTI-RCM     solar-pro4           n=1000 off  70.1% -> on  72.1% b= 30 c= 50 p=0.0330*  (on truncated: 9)
   CTI-RCM     gpt-5.6-luna         n=1000 off  74.1% -> on  74.0% b= 24 c= 23 p=1.0000   (on truncated: 0)
   CTI-RCM     gpt-6-luna           n=1000 off  73.8% -> on  75.1% b= 17 c= 30 p=0.0789   (on truncated: 0)
   CTI-RCM     deepseek-v4.1-flash  n=1000 off  76.5% -> on  76.3% b= 37 c= 35 p=0.9063   (on truncated: 9)
   CTI-RCM     gemma-4-26b-a4b      n=1000 off  67.3% -> on  69.9% b= 27 c= 53 p=0.0049*  (on truncated: 3)
+  CTI-RCM     qwen3.8-27b          n=1000 off  70.9% -> on  73.1% b= 31 c= 53 p=0.0214*  (on truncated: 1)
 
 (The next block compares greedy reasoning-on ('off' columns) with card sampling ('on' columns), local models only.)
 
-=== reasoning off vs on, within model (Bonferroni alpha = 0.0167, 1 models x 3 tasks) ===
+=== reasoning off vs on, within model (Bonferroni alpha = 0.0083, 2 models x 3 tasks) ===
 b = right only with reasoning off, c = right only with reasoning on
   WMDP-cyber  gemma-4-26b-a4b      n= 996 off  63.1% -> on  78.8% b= 21 c=178 p=0.0000** (on truncated: 11)
+  WMDP-cyber  qwen3.8-27b          n= 996 off  74.2% -> on  77.8% b= 30 c= 66 p=0.0003** (on truncated: 16)
   CTI-MCQ     gemma-4-26b-a4b      n=2500 off  63.8% -> on  73.9% b= 78 c=330 p=0.0000** (on truncated: 2)
+  CTI-MCQ     qwen3.8-27b          n=2500 off  70.2% -> on  72.0% b=179 c=224 p=0.0283*  (on truncated: 39)
   CTI-RCM     gemma-4-26b-a4b      n=1000 off  70.0% -> on  69.9% b= 26 c= 25 p=1.0000   (on truncated: 3)
+  CTI-RCM     qwen3.8-27b          n=1000 off  71.9% -> on  73.1% b= 20 c= 32 p=0.1263   (on truncated: 1)
