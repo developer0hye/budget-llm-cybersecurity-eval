@@ -180,7 +180,7 @@ models that is 45 pairs per task, α = 0.0011.
 - **Gemma 4 26B-A4B and Qwen3.8-27B are not separable on WMDP-cyber or
   CTI-MCQ** (p = 0.76, 0.46) and sit with Solar Pro 4 and the GPT Luna models
   on WMDP-cyber. On CTI-RCM Qwen3.8-27B is ahead, 70.9% vs 67.3%
-  (p = 0.0011, just above α with ten models).
+  (p = 0.0011, just under α; on both-answered items p = 0.0019).
 - **Gemma 4 12B is the lowest of the ten on CTI-MCQ and CTI-RCM.** On
   CTI-RCM (55.9%) it is behind every other model (all p < 0.001); it
   answers 99.7% of RCM items and gets 56.1% of those right, so the gap is
