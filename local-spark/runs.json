@@ -61,5 +61,14 @@
     "server_seqs": 128,
     "client_concurrency": 192,
     "log": "wall-clock line printed by run_local.py"
+  },
+  {
+    "model": "qwen3.8-flash-next",
+    "reasoning": "on (greedy)",
+    "host": "spark-1",
+    "wall_s": 44753,
+    "server_seqs": 32,
+    "client_concurrency": 192,
+    "log": "wall-clock lines printed by run_local.py: 44,499 s first pass (1 transport error) + 254 s second pass for that item; GPU_UTIL 0.9"
   }
 ]
