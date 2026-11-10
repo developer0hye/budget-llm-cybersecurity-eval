@@ -59,6 +59,16 @@ Different:
   be re-run, so in that table they keep their greedy, medium-effort rows:
   read those cross comparisons as mixed-setting. The within-model
   greedy-vs-card test is like-for-like.
+- **Local vs OpenRouter is not best setting vs best setting.** The local
+  Qwen runs use the maximum effort and are also run with the card's
+  sampling; the OpenRouter rows are medium effort with temperature 0 as
+  requested (whether each provider applied temperature 0 to its reasoning
+  model is not checked here). Higher effort or recommended sampling could
+  move the OpenRouter scores either way: a longer trace can help, and it
+  also hits the 16,000-token cap more often, as xhigh does for the local
+  Qwen models. A re-run of the OpenRouter models at their own best settings
+  (for example a fixed 300-item subset per task) would settle the ranking;
+  it is not done here because OpenRouter is not available for this run.
 - **Reasoning tokens.** vLLM does not report
   `completion_tokens_details.reasoning_tokens`. The wrapper sets it to
   `completion_tokens` minus the tokenized final answer (off by a few
