@@ -19,6 +19,10 @@
     "qwen3.8-flash-next": {
       "id": "qwen38-flash-next-fp4-local",
       "provider": "local-vllm-dgx-spark:nvidia/Qwen3.8-Flash-Next-FP4-Local"
+    },
+    "gemma-4-31b": {
+      "id": "gemma-4-31b-it",
+      "provider": "local-vllm-dgx-spark:nvidia/Gemma-4-31B-IT-NVFP4"
     }
   }
 }

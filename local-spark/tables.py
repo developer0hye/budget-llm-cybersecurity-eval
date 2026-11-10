@@ -110,9 +110,72 @@ def runs_table():
     print()
 
 
+def within_model_table(cond, key, title, left, right):
+    """Within-model McNemar tables stored by analyze_spark.py (off vs on, greedy vs card)."""
+    a = load(cond)
+    if not a or key not in a:
+        return
+    res = a[key]
+    models = sorted({m for t in res.values() for m in t if m in LOCAL})
+    if not models:
+        return
+    print(f"{title}\n")
+    print(f"| Model | Task | {left} | {right} | b / c | p | Truncated ({right}) |")
+    print("|---|---|---|---|---|---|---|")
+    for m in models:
+        for t in TASKS:
+            r = res.get(t, {}).get(m)
+            if not r:
+                continue
+            ptxt = "<0.001" if r["p"] < 0.001 else f"{r['p']:.3f}"
+            print(f"| {m} | {t} | {r['acc_off']:.1f}% | {r['acc_on']:.1f}% | {r['b']} / {r['c']} | {ptxt} | "
+                  f"{r['truncated_on']} |")
+    print(f"\nb = right only under {left}, c = right only under {right}; n = all items of the task.\n")
+
+
+def block(name):
+    """Markdown for one README block, captured from the printers above."""
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        if name in ("off", "on", "on_card"):
+            accuracy_table(name)
+            pairs_table(name)
+            sensitivity_flips(name)
+        elif name == "within":
+            within_model_table("on", "reasoning_off_vs_on", "Reasoning off vs on (greedy), local models",
+                               "off", "on (greedy)")
+            within_model_table("on_card", "greedy_vs_card_sampling",
+                               "Greedy vs model-card sampling, reasoning on", "greedy", "card sampling")
+            within_model_table("on_card", "reasoning_off_vs_on",
+                               "Reasoning off vs on (card sampling), local models", "off", "on (card)")
+        elif name == "runs":
+            runs_table()
+    return buf.getvalue().rstrip() + "\n"
+
+
+BLOCKS = ("off", "on", "on_card", "within", "runs")
+
+
+def update_readme():
+    """Rewrite every <!-- tables:NAME --> ... <!-- /tables:NAME --> block in README.md in place."""
+    import re
+    p = HERE / "README.md"
+    s = p.read_text(encoding="utf-8")
+    for name in BLOCKS:
+        pat = re.compile(rf"(<!-- tables:{name} -->\n).*?(<!-- /tables:{name} -->)", re.S)
+        if not pat.search(s):
+            raise SystemExit(f"README.md has no tables:{name} block")
+        s = pat.sub(lambda m: m.group(1) + block(name) + m.group(2), s)
+    p.write_text(s, encoding="utf-8", newline="\n")
+    print(f"updated {len(BLOCKS)} blocks in {p}")
+
+
 if __name__ == "__main__":
-    for c in ("on", "off"):
-        accuracy_table(c)
-        pairs_table(c)
-        sensitivity_flips(c)
-    runs_table()
+    import sys
+    if "--update-readme" in sys.argv:
+        update_readme()
+    else:
+        for name in BLOCKS:
+            print(block(name))

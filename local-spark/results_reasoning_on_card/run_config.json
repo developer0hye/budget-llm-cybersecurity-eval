@@ -1,0 +1,12 @@
+{
+  "reasoning": "on",
+  "max_tokens": 16000,
+  "sample": null,
+  "seed": null,
+  "models": {
+    "gemma-4-26b-a4b": {
+      "id": "gemma-4-26b-a4b-it",
+      "provider": "local-vllm-dgx-spark:nvidia/Gemma-4-26B-A4B-NVFP4"
+    }
+  }
+}

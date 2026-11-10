@@ -81,7 +81,7 @@ Different:
 
 ## Results
 
-**In progress.** Runs finish one at a time (fastest first: every model with
+**In progress** (reasoning-on runs for Qwen3.8-Flash-Next, Qwen3.8-27B, Gemma 4 12B and Gemma 4 31B are still running). Runs finish one at a time (fastest first: every model with
 reasoning off, then reasoning on, greedy then card sampling). Only complete
 runs (4,496 scored rows, no transport errors) are committed. Every number
 below is printed by [`tables.py`](tables.py) from
@@ -94,96 +94,238 @@ Hardware: one MSI EdgeXpert MS-C931 (DGX Spark class), bought 2026-11-09 for
 KRW 11,000,000 (about $8,200). Calls cost nothing at the margin, so cost is
 reported as wall-clock below.
 
+### Headline so far
+
+1. **With reasoning off, the best local models reach the OpenRouter field on
+   two of three tasks.** Qwen3.8-Flash-Next and Gemma 4 31B both score 78.4%
+   on WMDP-cyber, not separable from DeepSeek V4.1 Flash (p = 0.20, 0.22) and
+   ahead of both GPT Luna models. On CTI-RCM, Qwen3.8-Flash-Next (75.0%) is
+   level with DeepSeek, GLM and both GPT Luna models (p ≥ 0.17). On CTI-MCQ
+   every local model is behind DeepSeek and GLM.
+2. **Gemma 4 with greedy thinking loses points to loops, not to wrong
+   answers.** Gemma 4 26B-A4B with reasoning on at temperature 0 hits the
+   16,000-token cap on 659 of 4,496 items (24% of WMDP-cyber), and its
+   WMDP-cyber score falls from 76.1% (off) to 63.0%. Of the items it does
+   answer, 83.0% are right. With the model card's sampling the cap is hit 16
+   times and the score is 78.8%, so the "reasoning hurts" result is an
+   artifact of greedy decoding for this model. The OpenRouter models all
+   gained from reasoning on WMDP-cyber (+4.5 to +9.9 pp).
+
 ### Reasoning off
 
+<!-- tables:off -->
 | Model (reasoning off) | Where | WMDP-cyber | CTI-MCQ | CTI-RCM | Non-answers (trunc / unparsed) |
 |---|---|---|---|---|---|
 | deepseek-v4.1-flash | OpenRouter | 80.0% | 79.3% | 76.5% | 7 / 3 |
 | glm-5.3-flash | OpenRouter | 82.8% | 78.0% | 74.8% | 144 / 3 |
 | **qwen3.8-flash-next** | **Spark** | 78.4% | 74.5% | 75.0% | 5 / 2 |
 | gpt-5.6-luna | OpenRouter | 73.9% | 75.5% | 74.1% | 0 / 7 |
+| **gemma-4-31b** | **Spark** | 78.4% | 74.8% | 70.1% | 5 / 1 |
 | gpt-6-luna | OpenRouter | 73.8% | 74.8% | 73.8% | 0 / 24 |
 | **qwen3.8-27b** | **Spark** | 75.6% | 71.7% | 70.9% | 2 / 15 |
 | **gemma-4-26b-a4b** | **Spark** | 76.1% | 72.4% | 67.3% | 10 / 0 |
 | solar-pro4 | OpenRouter | 72.6% | 72.9% | 70.1% | 0 / 4 |
 | **gemma-4-12b** | **Spark** | 71.8% | 69.3% | 55.9% | 15 / 9 |
 
-n = 996 / 2,500 / 1,000 per model; accuracy = correct / all items. GLM 5.3
-Flash cannot turn reasoning off, so its row has reasoning on (as in the main
-README). Every model present is one Bonferroni family: with 9 models that is
-36 pairs per task, α = 0.0014. Gemma 4 31B is still to come, after which
-α = 0.0011 and a verdict near α can still change.
+n = 996 / 2,500 / 1,000 per model. Accuracy = correct / all items. 10 models, Bonferroni alpha = 0.05/45 = 0.0011 per task.
 
-McNemar, local model (row) vs each other model (primary analysis, all items):
+Local model vs each OpenRouter model, reasoning off: p (primary) and who is ahead; ** = below the Bonferroni alpha.
 
-| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-12b | gemma-4-26b-a4b | qwen3.8-27b | qwen3.8-flash-next |
-|---|---|---|---|---|---|---|---|---|---|---|
-| gemma-4-12b | WMDP-cyber | − <0.001** | − <0.001** | − 0.152 | − 0.179 | − 0.619 | — | − 0.001** | − 0.007 | − <0.001** |
-| gemma-4-12b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − 0.008 | − <0.001** |
-| gemma-4-12b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** | − <0.001** |
-| gemma-4-26b-a4b | WMDP-cyber | − 0.002 | − <0.001** | + 0.117 | + 0.106 | + 0.010 | + 0.001** | — | + 0.760 | − 0.067 |
-| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − 0.005 | − 0.616 | + <0.001** | — | + 0.457 | − 0.014 |
-| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.009 | + <0.001** | — | − 0.001** | − <0.001** |
-| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | + 0.239 | + 0.227 | + 0.017 | + 0.007 | − 0.760 | — | − 0.023 |
-| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.198 | + 0.008 | − 0.457 | — | − 0.001** |
-| qwen3.8-27b | CTI-RCM | − <0.001** | − <0.001** | − 0.003 | − 0.003 | + 0.516 | + <0.001** | + 0.001** | — | − <0.001** |
-| qwen3.8-flash-next | WMDP-cyber | − 0.201 | − <0.001** | + 0.001** | + <0.001** | + <0.001** | + <0.001** | + 0.067 | + 0.023 | — |
-| qwen3.8-flash-next | CTI-MCQ | − <0.001** | − <0.001** | − 0.266 | − 0.739 | + 0.060 | + <0.001** | + 0.014 | + 0.001** | — |
-| qwen3.8-flash-next | CTI-RCM | − 0.167 | + 0.923 | + 0.444 | + 0.290 | + <0.001** | + <0.001** | + <0.001** | + <0.001** | — |
+| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-12b | gemma-4-26b-a4b | gemma-4-31b | qwen3.8-27b | qwen3.8-flash-next |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| gemma-4-12b | WMDP-cyber | − <0.001** | − <0.001** | − 0.152 | − 0.179 | − 0.619 | — | − 0.001 | − <0.001** | − 0.007 | − <0.001** |
+| gemma-4-12b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** | − 0.008 | − <0.001** |
+| gemma-4-12b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** | − <0.001** | − <0.001** |
+| gemma-4-26b-a4b | WMDP-cyber | − 0.002 | − <0.001** | + 0.117 | + 0.106 | + 0.010 | + 0.001 | — | − 0.058 | + 0.760 | − 0.067 |
+| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − 0.005 | − 0.616 | + <0.001** | — | − 0.003 | + 0.457 | − 0.014 |
+| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.009 | + <0.001** | — | − 0.001** | − 0.001** | − <0.001** |
+| gemma-4-31b | WMDP-cyber | − 0.217 | − <0.001** | + <0.001** | + <0.001** | + <0.001** | + <0.001** | + 0.058 | — | + 0.028 | − 1.000 |
+| gemma-4-31b | CTI-MCQ | − <0.001** | − <0.001** | − 0.415 | − 0.961 | + 0.023 | + <0.001** | + 0.003 | — | + <0.001** | + 0.805 |
+| gemma-4-31b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 1.000 | + <0.001** | + 0.001** | — | − 0.509 | − <0.001** |
+| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | + 0.239 | + 0.227 | + 0.017 | + 0.007 | − 0.760 | − 0.028 | — | − 0.023 |
+| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.198 | + 0.008 | − 0.457 | − <0.001** | — | − 0.001** |
+| qwen3.8-27b | CTI-RCM | − <0.001** | − <0.001** | − 0.003 | − 0.003 | + 0.516 | + <0.001** | + 0.001** | + 0.509 | — | − <0.001** |
+| qwen3.8-flash-next | WMDP-cyber | − 0.201 | − <0.001** | + 0.001** | + <0.001** | + <0.001** | + <0.001** | + 0.067 | + 1.000 | + 0.023 | — |
+| qwen3.8-flash-next | CTI-MCQ | − <0.001** | − <0.001** | − 0.266 | − 0.739 | + 0.060 | + <0.001** | + 0.014 | − 0.805 | + 0.001** | — |
+| qwen3.8-flash-next | CTI-RCM | − 0.167 | + 0.923 | + 0.444 | + 0.290 | + <0.001** | + <0.001** | + <0.001** | + <0.001** | + <0.001** | — |
 
-`+` / `−` = the row model got more / fewer of the discordant items right;
-`**` = below α. Verdicts that change when only items both models answered
-are tested (full output in `analysis_reasoning_off.txt`):
+`+` = the local model got more of the discordant items right, `−` = fewer.
 
-- WMDP-cyber, DeepSeek V4.1 Flash vs Gemma 4 26B-A4B: p = 0.0025 → 0.0010 (becomes significant)
-- WMDP-cyber, Gemma 4 12B vs Gemma 4 26B-A4B: p = 0.0013 → 0.0039 (no longer significant)
-- WMDP-cyber, GPT-5.6 Luna vs Qwen3.8-Flash-Next: p = 0.0011 → 0.0033 (no longer significant)
-- WMDP-cyber, GPT-6 Luna vs Qwen3.8-Flash-Next: p = 0.0006 → 0.0251 (no longer significant; GPT-6 Luna's 24 refusals)
-- CTI-MCQ, GPT-6 Luna vs Qwen3.8-27B: p = 0.0004 → 0.0035 (no longer significant)
-- CTI-MCQ, Qwen3.8-27B vs Qwen3.8-Flash-Next: p = 0.0010 → 0.0048 (no longer significant)
-- CTI-RCM, Gemma 4 26B-A4B vs Qwen3.8-27B: p = 0.0011 → 0.0019 (no longer significant)
+Verdicts that change on both-answered items (reasoning off, alpha = 0.0011):
+- WMDP-cyber, deepseek-v4.1-flash vs gemma-4-26b-a4b: all items p = 0.0025, both answered p = 0.0010 (n = 987)
+- WMDP-cyber, gemma-4-31b vs gpt-5.6-luna: all items p = 0.0010, both answered p = 0.0023 (n = 987)
+- WMDP-cyber, gemma-4-31b vs gpt-6-luna: all items p = 0.0008, both answered p = 0.0165 (n = 972)
+- WMDP-cyber, gpt-5.6-luna vs qwen3.8-flash-next: all items p = 0.0011, both answered p = 0.0033 (n = 989)
+- WMDP-cyber, gpt-6-luna vs qwen3.8-flash-next: all items p = 0.0006, both answered p = 0.0251 (n = 972)
+- CTI-MCQ, gemma-4-12b vs gemma-4-26b-a4b: all items p = 0.0007, both answered p = 0.0012 (n = 2,482)
+- CTI-MCQ, gemma-4-31b vs qwen3.8-27b: all items p = 0.0003, both answered p = 0.0019 (n = 2,482)
+- CTI-MCQ, gpt-6-luna vs qwen3.8-27b: all items p = 0.0004, both answered p = 0.0035 (n = 2,483)
+- CTI-MCQ, qwen3.8-27b vs qwen3.8-flash-next: all items p = 0.0010, both answered p = 0.0048 (n = 2,476)
+- CTI-RCM, gemma-4-26b-a4b vs qwen3.8-27b: all items p = 0.0011, both answered p = 0.0019 (n = 998)
+<!-- /tables:off -->
 
-What the off condition shows so far:
+GLM 5.3 Flash cannot turn reasoning off, so its row has reasoning on (as in
+the main README). Every model present is one Bonferroni family; with all ten
+models that is 45 pairs per task, α = 0.0011.
 
-- **Qwen3.8-Flash-Next is the strongest local model and sits with the
-  OpenRouter field.** WMDP-cyber 78.4%: not separable from DeepSeek V4.1
-  Flash (p = 0.20), behind only GLM 5.3 Flash (which has reasoning on),
-  ahead of the GPT Luna models on all items (p ≤ 0.0011; on both-answered
-  items this rests partly on their non-answers). CTI-RCM 75.0%: level with
-  DeepSeek, GLM and both GPT Luna models (p ≥ 0.17). CTI-MCQ 74.5%: level
-  with the GPT Luna models, behind DeepSeek and GLM.
+- **Qwen3.8-Flash-Next and Gemma 4 31B are the strongest local models and
+  are not separable from each other** on WMDP-cyber or CTI-MCQ (p = 1.00,
+  0.81). Both are level with DeepSeek V4.1 Flash on WMDP-cyber
+  (p = 0.20, 0.22), behind GLM 5.3 Flash (which runs with reasoning on), and
+  ahead of both GPT Luna models on all items (p ≤ 0.0011; on both-answered
+  items these gaps are not significant, so they rest partly on the GPT Luna
+  models' non-answers). On CTI-RCM they split: Qwen3.8-Flash-Next 75.0% is
+  level with DeepSeek, GLM and the GPT Luna models (p ≥ 0.17), Gemma 4 31B
+  70.1% is behind all four and level with Solar Pro 4 (p = 1.00).
 - **Gemma 4 26B-A4B and Qwen3.8-27B are not separable on WMDP-cyber or
-  CTI-MCQ** (p = 0.76, 0.46) and sit with Solar Pro 4 and the GPT Luna
-  models on WMDP-cyber. On CTI-RCM (CVE description → CWE ID) Qwen3.8-27B
-  is ahead, 70.9% vs 67.3% (p = 0.0011).
-- **Gemma 4 12B is the lowest of the nine on CTI-MCQ and CTI-RCM.** On
+  CTI-MCQ** (p = 0.76, 0.46) and sit with Solar Pro 4 and the GPT Luna models
+  on WMDP-cyber. On CTI-RCM Qwen3.8-27B is ahead, 70.9% vs 67.3%
+  (p = 0.0011, just above α with ten models).
+- **Gemma 4 12B is the lowest of the ten on CTI-MCQ and CTI-RCM.** On
   CTI-RCM (55.9%) it is behind every other model (all p < 0.001); it
   answers 99.7% of RCM items and gets 56.1% of those right, so the gap is
-  wrong CWE IDs, not non-answers. On WMDP-cyber it is level with Solar Pro 4
-  and the GPT Luna models.
+  wrong CWE IDs, not non-answers.
 
 ### Reasoning on
 
-Not run yet.
+Two conditions for the local models: greedy decoding as in the protocol
+(`results_reasoning_on/`), and the model card's sampling
+(`results_reasoning_on_card/`). The OpenRouter rows are the same greedy,
+medium-effort runs in both tables, because they could not be re-run; in the
+card-sampling table, local-vs-OpenRouter tests compare different settings.
+
+<!-- tables:on -->
+| Model (reasoning on) | Where | WMDP-cyber | CTI-MCQ | CTI-RCM | Non-answers (trunc / unparsed) |
+|---|---|---|---|---|---|
+| deepseek-v4.1-flash | OpenRouter | 84.9% | 79.6% | 76.3% | 102 / 0 |
+| gpt-5.6-luna | OpenRouter | 83.8% | 80.2% | 74.0% | 0 / 4 |
+| gpt-6-luna | OpenRouter | 81.6% | 81.0% | 75.1% | 0 / 38 |
+| glm-5.3-flash | OpenRouter | 83.3% | 78.9% | 73.9% | 128 / 5 |
+| solar-pro4 | OpenRouter | 77.1% | 76.0% | 72.1% | 47 / 2 |
+| **gemma-4-26b-a4b** | **Spark** | 63.0% | 63.8% | 70.0% | 659 / 0 |
+
+n = 996 / 2,500 / 1,000 per model. Accuracy = correct / all items. 6 models, Bonferroni alpha = 0.05/15 = 0.0033 per task.
+
+Local model vs each OpenRouter model, reasoning on: p (primary) and who is ahead; ** = below the Bonferroni alpha.
+
+| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-26b-a4b |
+|---|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — |
+| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — |
+| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.033 | — |
+
+`+` = the local model got more of the discordant items right, `−` = fewer.
+
+Verdicts that change on both-answered items (reasoning on, alpha = 0.0033):
+- WMDP-cyber, gemma-4-26b-a4b vs gpt-5.6-luna: all items p = 0.0000, both answered p = 0.0141 (n = 754)
+- WMDP-cyber, gemma-4-26b-a4b vs solar-pro4: all items p = 0.0000, both answered p = 0.6445 (n = 757)
+- CTI-MCQ, gemma-4-26b-a4b vs solar-pro4: all items p = 0.0000, both answered p = 0.0206 (n = 2,076)
+<!-- /tables:on -->
+
+<!-- tables:on_card -->
+| Model (reasoning on_card) | Where | WMDP-cyber | CTI-MCQ | CTI-RCM | Non-answers (trunc / unparsed) |
+|---|---|---|---|---|---|
+| deepseek-v4.1-flash | OpenRouter | 84.9% | 79.6% | 76.3% | 102 / 0 |
+| gpt-5.6-luna | OpenRouter | 83.8% | 80.2% | 74.0% | 0 / 4 |
+| gpt-6-luna | OpenRouter | 81.6% | 81.0% | 75.1% | 0 / 38 |
+| glm-5.3-flash | OpenRouter | 83.3% | 78.9% | 73.9% | 128 / 5 |
+| solar-pro4 | OpenRouter | 77.1% | 76.0% | 72.1% | 47 / 2 |
+| **gemma-4-26b-a4b** | **Spark** | 78.8% | 73.9% | 69.9% | 16 / 0 |
+
+n = 996 / 2,500 / 1,000 per model. Accuracy = correct / all items. 6 models, Bonferroni alpha = 0.05/15 = 0.0033 per task.
+
+Local model vs each OpenRouter model, reasoning on_card: p (primary) and who is ahead; ** = below the Bonferroni alpha.
+
+| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-26b-a4b |
+|---|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − 0.035 | + 0.178 | — |
+| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.013 | — |
+| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.033 | — |
+
+`+` = the local model got more of the discordant items right, `−` = fewer.
+
+Verdicts that change on both-answered items (reasoning on_card, alpha = 0.0033):
+- WMDP-cyber, gemma-4-26b-a4b vs gpt-6-luna: all items p = 0.0347, both answered p = 0.0000 (n = 948)
+- CTI-MCQ, gemma-4-26b-a4b vs solar-pro4: all items p = 0.0134, both answered p = 0.0004 (n = 2,465)
+<!-- /tables:on_card -->
+
+<!-- tables:within -->
+Reasoning off vs on (greedy), local models
+
+| Model | Task | off | on (greedy) | b / c | p | Truncated (on (greedy)) |
+|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | 76.1% | 63.0% | 169 / 39 | <0.001 | 239 |
+| gemma-4-26b-a4b | CTI-MCQ | 72.4% | 63.8% | 329 / 114 | <0.001 | 403 |
+| gemma-4-26b-a4b | CTI-RCM | 67.3% | 70.0% | 24 / 51 | 0.002 | 17 |
+
+b = right only under off, c = right only under on (greedy); n = all items of the task.
+
+Greedy vs model-card sampling, reasoning on
+
+| Model | Task | greedy | card sampling | b / c | p | Truncated (card sampling) |
+|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | 63.0% | 78.8% | 21 / 178 | <0.001 | 11 |
+| gemma-4-26b-a4b | CTI-MCQ | 63.8% | 73.9% | 78 / 330 | <0.001 | 2 |
+| gemma-4-26b-a4b | CTI-RCM | 70.0% | 69.9% | 26 / 25 | 1.000 | 3 |
+
+b = right only under greedy, c = right only under card sampling; n = all items of the task.
+
+Reasoning off vs on (card sampling), local models
+
+| Model | Task | off | on (card) | b / c | p | Truncated (on (card)) |
+|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | 76.1% | 78.8% | 41 / 68 | 0.012 | 11 |
+| gemma-4-26b-a4b | CTI-MCQ | 72.4% | 73.9% | 121 / 158 | 0.031 | 2 |
+| gemma-4-26b-a4b | CTI-RCM | 67.3% | 69.9% | 27 / 53 | 0.005 | 3 |
+
+b = right only under off, c = right only under on (card); n = all items of the task.
+<!-- /tables:within -->
+
+The within-model tests are paired on all items of a task (n = 996 / 2,500 /
+1,000). The off-vs-on family follows the main README (every toggleable
+model present × 3 tasks, Bonferroni); the greedy-vs-card family is the
+local models present × 3 tasks.
+
+- **Gemma 4 26B-A4B, greedy**: 239 WMDP-cyber, 403 CTI-MCQ and 17 CTI-RCM
+  items end at the 16,000-token cap. The traces repeat; truncated items are
+  non-answers by the protocol. Accuracy over answered items is 83.0% /
+  76.1% (WMDP-cyber / CTI-MCQ), so the drop from reasoning off
+  (76.1% → 63.0%, 72.4% → 63.8%) is the cap, not worse answers.
+- **Gemma 4 26B-A4B, card sampling**: 16 truncations in total. Against
+  greedy: WMDP-cyber +15.8 pp (b/c = 21/178) and CTI-MCQ +10.1 pp (78/330),
+  both p < 0.001; CTI-RCM unchanged (p = 1.00). Against reasoning off it is
+  higher on all three tasks (+2.7, +1.5, +2.6 pp), but none of the three
+  differences clears α.
+- Against the OpenRouter models' reasoning-on rows (a mixed-setting
+  comparison), Gemma 4 26B-A4B with card sampling is level with Solar Pro 4
+  on all three tasks and with GPT-6 Luna on WMDP-cyber (p = 0.035), and
+  behind the others.
 
 ### Wall-clock per run
 
+<!-- tables:runs -->
 | Model | Reasoning | Box | Wall-clock | Server sequences | Client concurrency |
 |---|---|---|---|---|---|
 | qwen3.8-27b | off | spark-1 | 2.02 h | 32 | 64 |
 | gemma-4-26b-a4b | off | spark-1 | 0.54 h | 32 | 64 |
 | gemma-4-12b | off | spark-1 then spark-2 | 1.32 h | 8 (first 1,944 rows) / 32 | 16 / 64 |
 | qwen3.8-flash-next | off | spark-1 | 3.27 h | 16 | 64 |
+| gemma-4-31b | off | spark-2 | 0.55 h | 128 | 192 |
+| gemma-4-26b-a4b | on (greedy) | spark-2 | 4.00 h | 32 / 64 / 128 / 256 / 128 | 64-384 |
+| gemma-4-26b-a4b | on (card sampling) | spark-2 | 1.85 h | 128 | 192 |
+<!-- /tables:runs -->
 
 From 2026-11-09 21:45 the runs are split across two identical boxes
 (spark-1, spark-2: same MSI EdgeXpert model, OTA 7.6.0, driver 580.178.04,
 image digests, checkpoint revisions and `llm-serve` flags). The
 `gemma-4-12b` reasoning-off run was stopped by hand on spark-1 after 1,944
 rows (to free the server) and resumed on spark-2; the 1,944 rows are
-byte-identical in both copies. Sources: the `wall-clock` line
-`run_local.py` prints, collected in [`runs.json`](runs.json); the
-spark-1 segment of that run is approximate (about 2,940 s, from its last
-progress line).
+byte-identical in both copies. The `gemma-4-26b-a4b` greedy reasoning-on run
+was restarted four times while server concurrency was being tuned (32 → 64
+→ 128 → 256 → 128; generation throughput 908, 1,267, 1,657 and 1,425 tok/s
+over 8-minute windows), so its wall-clock overstates the steady-state time.
+Sources: the `wall-clock` line `run_local.py` prints, collected in
+[`runs.json`](runs.json).
 
 ## Reproducing
 
