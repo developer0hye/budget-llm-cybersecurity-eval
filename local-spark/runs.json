@@ -70,5 +70,14 @@
     "server_seqs": 32,
     "client_concurrency": 192,
     "log": "wall-clock lines printed by run_local.py: 44,499 s first pass (1 transport error) + 254 s second pass for that item; GPU_UTIL 0.9"
+  },
+  {
+    "model": "qwen3.8-27b",
+    "reasoning": "on (greedy)",
+    "host": "spark-2",
+    "wall_s": 41994,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "wall-clock lines printed by run_local.py: 33,090 s first pass + 1,783 s second pass + 7,121 s third pass (the last 2 items, sharing the server with the card-sampling run)"
   }
 ]
