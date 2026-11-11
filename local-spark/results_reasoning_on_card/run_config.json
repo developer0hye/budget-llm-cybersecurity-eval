@@ -19,6 +19,10 @@
     "gemma-4-31b": {
       "id": "gemma-4-31b-it",
       "provider": "local-vllm-dgx-spark:nvidia/Gemma-4-31B-IT-NVFP4"
+    },
+    "gemma-4-12b": {
+      "id": "gemma-4-12b-it",
+      "provider": "local-vllm-dgx-spark:RedHatAI/gemma-4-12B-it-NVFP4"
     }
   }
 }
