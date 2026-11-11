@@ -115,5 +115,14 @@
     "server_seqs": 128,
     "client_concurrency": 192,
     "log": "single pass (0 transport errors); 59 truncations total (33 WMDP-cyber, 12 CTI-MCQ, 14 CTI-RCM); ran on the gemma12 server reused from the queue, reprioritized ahead of the greedy reasoning-on run"
+  },
+  {
+    "model": "gemma-4-31b",
+    "reasoning": "on (greedy)",
+    "host": "spark-1",
+    "wall_s": 7047,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "resumed after the card-sampling run from the 1,269 rows left by the pre-reprioritization attempt; this segment 7,047 s. Only 37 truncations total (7 WMDP-cyber, 29 CTI-MCQ, 1 CTI-RCM, ~0.8%), so unlike Gemma 4 26B-A4B and 12B the 31B does not loop under greedy thinking"
   }
 ]

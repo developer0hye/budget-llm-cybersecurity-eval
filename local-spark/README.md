@@ -91,7 +91,7 @@ Different:
 
 ## Results
 
-**In progress** (the off and card-sampling cells are complete for all five local models; only the two loop-heavy greedy reasoning-on runs, Gemma 4 12B and 31B, are still running, last in the queue). Runs finish one at a time (fastest first: every model with
+**In progress** (the off and card-sampling cells are complete for all five local models, and Gemma 4 31B greedy is done; only the Gemma 4 12B greedy reasoning-on run is still going, last in the queue). Runs finish one at a time (fastest first: every model with
 reasoning off, then reasoning on, greedy then card sampling). Only complete
 runs (4,496 scored rows, no transport errors) are committed. Every number
 below is printed by [`tables.py`](tables.py) from
@@ -119,7 +119,11 @@ reported as wall-clock below.
    answer, 83.0% are right. With the model card's sampling the cap is hit 16
    times and the score is 78.8%, so the "reasoning hurts" result is an
    artifact of greedy decoding for this model. The OpenRouter models all
-   gained from reasoning on WMDP-cyber (+4.5 to +9.9 pp).
+   gained from reasoning on WMDP-cyber (+4.5 to +9.9 pp). The collapse is a
+   smaller-model effect: Gemma 4 12B greedy loops even harder (42% of items end
+   at the cap), but **Gemma 4 31B greedy barely loops at all** (37 of 4,496
+   items, 0.8%), and its reasoning-off, greedy, and card-sampling scores are
+   all statistically indistinguishable.
 3. **Neither Qwen3.8 model gains from greedy reasoning at xhigh, but card
    sampling does — most for Flash-Next.** Against reasoning off,
    Qwen3.8-Flash-Next moves −1.0 / −2.4 / +1.0 pp
@@ -228,38 +232,49 @@ card-sampling table, local-vs-OpenRouter tests compare different settings.
 | gpt-6-luna | OpenRouter | 81.6% | 81.0% | 75.1% | 0 / 38 |
 | glm-5.3-flash | OpenRouter | 83.3% | 78.9% | 73.9% | 128 / 5 |
 | **qwen3.8-flash-next** | **Spark** | 77.4% | 72.1% | 76.0% | 340 / 0 |
+| **gemma-4-31b** | **Spark** | 79.9% | 73.7% | 71.7% | 37 / 5 |
 | solar-pro4 | OpenRouter | 77.1% | 76.0% | 72.1% | 47 / 2 |
 | **qwen3.8-27b** | **Spark** | 74.2% | 70.2% | 71.9% | 293 / 1 |
 | **gemma-4-26b-a4b** | **Spark** | 63.0% | 63.8% | 70.0% | 659 / 0 |
 
-n = 996 / 2,500 / 1,000 per model. Accuracy = correct / all items. 8 models, Bonferroni alpha = 0.05/28 = 0.0018 per task.
+n = 996 / 2,500 / 1,000 per model. Accuracy = correct / all items. 9 models, Bonferroni alpha = 0.05/36 = 0.0014 per task.
 
 Local model vs each OpenRouter model, reasoning on: p (primary) and who is ahead; ** = below the Bonferroni alpha.
 
-| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-26b-a4b | qwen3.8-27b | qwen3.8-flash-next |
-|---|---|---|---|---|---|---|---|---|---|
-| gemma-4-26b-a4b | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** |
-| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** |
-| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.033 | — | − 0.064 | − <0.001** |
-| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.018 | + <0.001** | — | − 0.007 |
-| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | + <0.001** | — | − 0.029 |
-| qwen3.8-27b | CTI-RCM | − <0.001** | − 0.024 | − 0.014 | − <0.001** | − 0.916 | + 0.064 | — | − <0.001** |
-| qwen3.8-flash-next | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − 0.001** | + 0.865 | + <0.001** | + 0.007 | — |
-| qwen3.8-flash-next | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | + <0.001** | + 0.029 | — |
-| qwen3.8-flash-next | CTI-RCM | − 0.815 | + 0.006 | + 0.009 | + 0.281 | + <0.001** | + <0.001** | + <0.001** | — |
+| Local model | Task | deepseek-v4.1-flash | glm-5.3-flash | gpt-5.6-luna | gpt-6-luna | solar-pro4 | gemma-4-26b-a4b | gemma-4-31b | qwen3.8-27b | qwen3.8-flash-next |
+|---|---|---|---|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** | − <0.001** |
+| gemma-4-26b-a4b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | — | − <0.001** | − <0.001** | − <0.001** |
+| gemma-4-26b-a4b | CTI-RCM | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.033 | — | − 0.064 | − 0.064 | − <0.001** |
+| gemma-4-31b | WMDP-cyber | − <0.001** | − 0.003 | − <0.001** | − 0.207 | + 0.014 | + <0.001** | — | + <0.001** | + 0.030 |
+| gemma-4-31b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.006 | + <0.001** | — | + <0.001** | + 0.088 |
+| gemma-4-31b | CTI-RCM | − <0.001** | − 0.028 | − 0.013 | − <0.001** | − 0.749 | + 0.064 | — | − 0.908 | − <0.001** |
+| qwen3.8-27b | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − 0.018 | + <0.001** | − <0.001** | — | − 0.007 |
+| qwen3.8-27b | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | + <0.001** | − <0.001** | — | − 0.029 |
+| qwen3.8-27b | CTI-RCM | − <0.001** | − 0.024 | − 0.014 | − <0.001** | − 0.916 | + 0.064 | + 0.908 | — | − <0.001** |
+| qwen3.8-flash-next | WMDP-cyber | − <0.001** | − <0.001** | − <0.001** | − 0.001** | + 0.865 | + <0.001** | − 0.030 | + 0.007 | — |
+| qwen3.8-flash-next | CTI-MCQ | − <0.001** | − <0.001** | − <0.001** | − <0.001** | − <0.001** | + <0.001** | − 0.088 | + 0.029 | — |
+| qwen3.8-flash-next | CTI-RCM | − 0.815 | + 0.006 | + 0.009 | + 0.281 | + <0.001** | + <0.001** | + <0.001** | + <0.001** | — |
 
 `+` = the local model got more of the discordant items right, `−` = fewer.
 
-Verdicts that change on both-answered items (reasoning on, alpha = 0.0018):
+Verdicts that change on both-answered items (reasoning on, alpha = 0.0014):
+- WMDP-cyber, gemma-4-26b-a4b vs gemma-4-31b: all items p = 0.0000, both answered p = 0.2604 (n = 756)
 - WMDP-cyber, gemma-4-26b-a4b vs gpt-5.6-luna: all items p = 0.0000, both answered p = 0.0141 (n = 754)
 - WMDP-cyber, gemma-4-26b-a4b vs qwen3.8-27b: all items p = 0.0000, both answered p = 0.0535 (n = 729)
 - WMDP-cyber, gemma-4-26b-a4b vs qwen3.8-flash-next: all items p = 0.0000, both answered p = 1.0000 (n = 735)
 - WMDP-cyber, gemma-4-26b-a4b vs solar-pro4: all items p = 0.0000, both answered p = 0.6445 (n = 757)
+- WMDP-cyber, gemma-4-31b vs glm-5.3-flash: all items p = 0.0027, both answered p = 0.0004 (n = 970)
+- WMDP-cyber, gemma-4-31b vs gpt-6-luna: all items p = 0.2072, both answered p = 0.0005 (n = 951)
+- WMDP-cyber, gemma-4-31b vs qwen3.8-27b: all items p = 0.0000, both answered p = 0.0048 (n = 941)
 - WMDP-cyber, gpt-5.6-luna vs qwen3.8-flash-next: all items p = 0.0000, both answered p = 0.0067 (n = 938)
 - WMDP-cyber, gpt-6-luna vs qwen3.8-flash-next: all items p = 0.0013, both answered p = 0.0023 (n = 905)
+- CTI-MCQ, gemma-4-26b-a4b vs gemma-4-31b: all items p = 0.0000, both answered p = 0.5421 (n = 2,081)
 - CTI-MCQ, gemma-4-26b-a4b vs qwen3.8-27b: all items p = 0.0000, both answered p = 0.3346 (n = 1,923)
 - CTI-MCQ, gemma-4-26b-a4b vs qwen3.8-flash-next: all items p = 0.0000, both answered p = 0.0106 (n = 1,885)
 - CTI-MCQ, gemma-4-26b-a4b vs solar-pro4: all items p = 0.0000, both answered p = 0.0206 (n = 2,076)
+- CTI-MCQ, gemma-4-31b vs qwen3.8-27b: all items p = 0.0001, both answered p = 0.9581 (n = 2,239)
+- CTI-MCQ, gemma-4-31b vs qwen3.8-flash-next: all items p = 0.0882, both answered p = 0.0001 (n = 2,190)
 - CTI-MCQ, gpt-5.6-luna vs qwen3.8-flash-next: all items p = 0.0000, both answered p = 0.1194 (n = 2,219)
 - CTI-MCQ, gpt-6-luna vs qwen3.8-flash-next: all items p = 0.0000, both answered p = 0.0029 (n = 2,219)
 - CTI-MCQ, qwen3.8-27b vs qwen3.8-flash-next: all items p = 0.0292, both answered p = 0.0004 (n = 2,059)
@@ -328,6 +343,9 @@ Reasoning off vs on (greedy), local models
 | gemma-4-26b-a4b | WMDP-cyber | 76.1% | 63.0% | 169 / 39 | <0.001 | 239 |
 | gemma-4-26b-a4b | CTI-MCQ | 72.4% | 63.8% | 329 / 114 | <0.001 | 403 |
 | gemma-4-26b-a4b | CTI-RCM | 67.3% | 70.0% | 24 / 51 | 0.002 | 17 |
+| gemma-4-31b | WMDP-cyber | 78.4% | 79.9% | 40 / 55 | 0.151 | 7 |
+| gemma-4-31b | CTI-MCQ | 74.8% | 73.7% | 141 / 114 | 0.103 | 29 |
+| gemma-4-31b | CTI-RCM | 70.1% | 71.7% | 28 / 44 | 0.076 | 1 |
 | qwen3.8-27b | WMDP-cyber | 75.6% | 74.2% | 85 / 71 | 0.298 | 51 |
 | qwen3.8-27b | CTI-MCQ | 71.7% | 70.2% | 238 / 199 | 0.069 | 232 |
 | qwen3.8-27b | CTI-RCM | 70.9% | 71.9% | 28 / 38 | 0.268 | 10 |
@@ -344,6 +362,9 @@ Greedy vs model-card sampling, reasoning on
 | gemma-4-26b-a4b | WMDP-cyber | 63.0% | 78.8% | 21 / 178 | <0.001 | 11 |
 | gemma-4-26b-a4b | CTI-MCQ | 63.8% | 73.9% | 78 / 330 | <0.001 | 2 |
 | gemma-4-26b-a4b | CTI-RCM | 70.0% | 69.9% | 26 / 25 | 1.000 | 3 |
+| gemma-4-31b | WMDP-cyber | 79.9% | 81.0% | 17 / 28 | 0.135 | 0 |
+| gemma-4-31b | CTI-MCQ | 73.7% | 74.5% | 85 / 106 | 0.148 | 0 |
+| gemma-4-31b | CTI-RCM | 71.7% | 70.5% | 32 / 20 | 0.126 | 0 |
 | qwen3.8-27b | WMDP-cyber | 74.2% | 77.8% | 30 / 66 | <0.001 | 16 |
 | qwen3.8-27b | CTI-MCQ | 70.2% | 72.0% | 179 / 224 | 0.028 | 39 |
 | qwen3.8-27b | CTI-RCM | 71.9% | 73.1% | 20 / 32 | 0.126 | 1 |
@@ -386,6 +407,12 @@ local models present × 3 tasks.
   non-answers by the protocol. Accuracy over answered items is 83.0% /
   76.1% (WMDP-cyber / CTI-MCQ), so the drop from reasoning off
   (76.1% → 63.0%, 72.4% → 63.8%) is the cap, not worse answers.
+- **Gemma 4 31B, greedy**: only 37 items end at the cap (7 WMDP-cyber, 29
+  CTI-MCQ, 1 CTI-RCM, 0.8%) — the 31B does not loop the way the 26B-A4B and 12B
+  do. Its greedy scores (79.9 / 73.7 / 71.7) are within noise of reasoning off
+  (78.4 / 74.8 / 70.1; all p ≥ 0.08) and of card sampling (81.0 / 74.5 / 70.5;
+  all p ≥ 0.13), so for this model the decoding choice does not change the
+  result. This is the opposite of the smaller Gemmas, where greedy collapses.
 - **Gemma 4 26B-A4B, card sampling**: 16 truncations in total. Against
   greedy: WMDP-cyber +15.8 pp (b/c = 21/178) and CTI-MCQ +10.1 pp (78/330),
   both p < 0.001; CTI-RCM unchanged (p = 1.00). Against reasoning off it is
@@ -506,6 +533,7 @@ local models present × 3 tasks.
 | qwen3.8-flash-next | on (card sampling) | spark-1 | 23.06 h | 32 | 192 |
 | gemma-4-31b | on (card sampling) | spark-1 | 2.48 h | 128 | 192 |
 | gemma-4-12b | on (card sampling) | spark-2 | 3.94 h | 128 | 192 |
+| gemma-4-31b | on (greedy) | spark-1 | 1.96 h | 128 | 192 |
 <!-- /tables:runs -->
 
 From 2026-11-09 21:45 the runs are split across two identical boxes

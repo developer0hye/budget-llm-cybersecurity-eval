@@ -212,14 +212,17 @@ b = right only with reasoning off, c = right only with reasoning on
 
 (The next block compares greedy reasoning-on ('off' columns) with card sampling ('on' columns), local models only.)
 
-=== reasoning off vs on, within model (Bonferroni alpha = 0.0056, 3 models x 3 tasks) ===
+=== reasoning off vs on, within model (Bonferroni alpha = 0.0042, 4 models x 3 tasks) ===
 b = right only with reasoning off, c = right only with reasoning on
   WMDP-cyber  gemma-4-26b-a4b      n= 996 off  63.1% -> on  78.8% b= 21 c=178 p=0.0000** (on truncated: 11)
+  WMDP-cyber  gemma-4-31b          n= 996 off  79.9% -> on  81.0% b= 17 c= 28 p=0.1352   (on truncated: 0)
   WMDP-cyber  qwen3.8-27b          n= 996 off  74.2% -> on  77.8% b= 30 c= 66 p=0.0003** (on truncated: 16)
   WMDP-cyber  qwen3.8-flash-next   n= 996 off  77.4% -> on  80.5% b= 24 c= 55 p=0.0006** (on truncated: 24)
   CTI-MCQ     gemma-4-26b-a4b      n=2500 off  63.8% -> on  73.9% b= 78 c=330 p=0.0000** (on truncated: 2)
+  CTI-MCQ     gemma-4-31b          n=2500 off  73.7% -> on  74.5% b= 85 c=106 p=0.1477   (on truncated: 0)
   CTI-MCQ     qwen3.8-27b          n=2500 off  70.2% -> on  72.0% b=179 c=224 p=0.0283*  (on truncated: 39)
   CTI-MCQ     qwen3.8-flash-next   n=2500 off  72.1% -> on  77.6% b=107 c=244 p=0.0000** (on truncated: 30)
   CTI-RCM     gemma-4-26b-a4b      n=1000 off  70.0% -> on  69.9% b= 26 c= 25 p=1.0000   (on truncated: 3)
+  CTI-RCM     gemma-4-31b          n=1000 off  71.7% -> on  70.5% b= 32 c= 20 p=0.1263   (on truncated: 0)
   CTI-RCM     qwen3.8-27b          n=1000 off  71.9% -> on  73.1% b= 20 c= 32 p=0.1263   (on truncated: 1)
   CTI-RCM     qwen3.8-flash-next   n=1000 off  76.0% -> on  76.2% b= 15 c= 17 p=0.8601   (on truncated: 0)
