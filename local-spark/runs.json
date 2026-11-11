@@ -97,5 +97,14 @@
     "server_seqs": 32,
     "client_concurrency": 192,
     "log": "two passes: about 78,009 s first pass (timestamp delta; run_local wall-clock not retained by the queue) + 5,006 s second pass; KV-cache-bound server (SEQS 32, GPU_UTIL 0.9, 96 GiB weights), and card sampling (temperature 1.0) generates longer traces than the greedy run, so the wall is nearly double the greedy 12.43 h"
+  },
+  {
+    "model": "gemma-4-31b",
+    "reasoning": "on (card sampling)",
+    "host": "spark-1",
+    "wall_s": 8910,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "single pass, no re-sends (0 transport errors, 0 truncations); ran on the gemma4 (31B) server reused from the queue after Flash-Next, reprioritized ahead of the greedy reasoning-on run"
   }
 ]
