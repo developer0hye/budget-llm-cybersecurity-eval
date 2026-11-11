@@ -88,5 +88,14 @@
     "server_seqs": 128,
     "client_concurrency": 192,
     "log": "two passes: about 48,166 s first pass (timestamp delta; run_local wall-clock not retained by the queue) + 1,471 s second pass for one re-sent item; the qwen27 server was shared with the greedy run's third pass (its last 2 items), which slowed the first pass"
+  },
+  {
+    "model": "qwen3.8-flash-next",
+    "reasoning": "on (card sampling)",
+    "host": "spark-1",
+    "wall_s": 83015,
+    "server_seqs": 32,
+    "client_concurrency": 192,
+    "log": "two passes: about 78,009 s first pass (timestamp delta; run_local wall-clock not retained by the queue) + 5,006 s second pass; KV-cache-bound server (SEQS 32, GPU_UTIL 0.9, 96 GiB weights), and card sampling (temperature 1.0) generates longer traces than the greedy run, so the wall is nearly double the greedy 12.43 h"
   }
 ]
