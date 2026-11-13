@@ -119,7 +119,7 @@ Hardware: one MSI EdgeXpert MS-C931 (DGX Spark class), bought 2026-11-09 for
 KRW 11,000,000 (about $8,200). Calls cost nothing at the margin, so cost is
 reported as wall-clock below.
 
-### Headline so far
+### Headline
 
 1. **With reasoning off, the best local models reach the OpenRouter field on
    two of three tasks.** Qwen3.8-Flash-Next and Gemma 4 31B both score 78.4%

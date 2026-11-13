@@ -82,7 +82,7 @@ per-call limit caps how long any single agent turn may reason.
 [Knowledge axis](#axis-1--knowledge) ([results](#results)) ·
 [Agentic axis](#axis-2--agentic-task-solving) ([results](#results-1)) ·
 [Reproducing](#reproducing) · [Earlier study](legacy/README.md) ·
-[Local open-weight models on one DGX Spark](local-spark/README.md) (knowledge axis, in progress)
+[Local open-weight models on one DGX Spark](local-spark/README.md) (knowledge axis)
 
 The earlier study in [`legacy/`](legacy/README.md) found the same
 divergence on a saturated benchmark (CyberMetric-2000, all models 94–95%)
