@@ -59,6 +59,14 @@ Different:
   be re-run, so in that table they keep their greedy, medium-effort rows:
   read those cross comparisons as mixed-setting. The within-model
   greedy-vs-card test is like-for-like.
+- **Rule: do not run Gemma 4 12B or 26B-A4B with thinking at greedy
+  decoding.** Use the model card's sampling. Greedy thinking loops until
+  the 16,000-token cap: Gemma 4 12B on 44% of its scored items (mean
+  7,422 completion tokens, against 1% and 2,508 with card sampling) and
+  Gemma 4 26B-A4B on 15% (WMDP-cyber 63.0% greedy vs 78.8% card). Those
+  greedy scores measure the loop, not the model. Gemma 4 31B greedy is
+  the exception (0.8% at the cap). The 26B-A4B greedy cell is kept as
+  evidence of the loop; the 12B greedy run was stopped (see Results).
 - **Local vs OpenRouter is not best setting vs best setting.** The local
   Qwen runs use the maximum effort and are also run with the card's
   sampling; the OpenRouter rows are medium effort with temperature 0 as
@@ -74,9 +82,16 @@ Different:
   `completion_tokens` minus the tokenized final answer (off by a few
   template tokens), and stores the trace length in characters as
   `reasoning_chars`. Engagement checks use this field.
-- **Per-call timeout** 3600 s instead of 600 s. A 16k-token trace at
-  ~20 tok/s per stream takes ~800 s on this box; a 600 s timeout would
-  discard and retry it.
+- **Per-call timeout** 3600 s instead of 600 s. The 20 tok/s-per-stream
+  estimate behind it (a 16k-token trace in ~800 s) holds only at low
+  concurrency. At 128 server sequences Gemma 4 12B decodes ~730 tok/s in
+  total, ~5.7 tok/s per stream, so a looping 16k-token trace needs ~47 min.
+  With 192 client requests on a 128-sequence server (64 always queued),
+  queue wait plus generation passed 3600 s, `run_local.py` retried each
+  timeout up to 6 times, and about 80% of ~50 h of generation was thrown
+  away. For long-trace runs keep the client concurrency at or below the
+  server's `SEQS` (`CONC` in `queue_common.sh`) and size `BCSE_TIMEOUT_S`
+  from cap tokens ÷ per-stream speed.
 - **Weights.** All five are 4-bit (NVFP4) quantizations, four from
   NVIDIA's ModelOpt releases and one from Red Hat. No BF16 reference was
   run, so quantization error and model capability are not separable here.
@@ -91,7 +106,7 @@ Different:
 
 ## Results
 
-**In progress** (the off and card-sampling cells are complete for all five local models, and Gemma 4 31B greedy is done; only the Gemma 4 12B greedy reasoning-on run is still going, last in the queue). Runs finish one at a time (fastest first: every model with
+**Complete except one cell** (the off and card-sampling cells are complete for all five local models, and every greedy reasoning-on cell except Gemma 4 12B is done). The Gemma 4 12B greedy reasoning-on run was stopped on 2026-11-13 at 4,331 of 4,496 items, 849 of them timeouts, and is not committed: greedy thinking is not a valid setting for this model (rule above), and its card-sampling cell is the Gemma 4 12B reasoning-on result. Runs finish one at a time (fastest first: every model with
 reasoning off, then reasoning on, greedy then card sampling). Only complete
 runs (4,496 scored rows, no transport errors) are committed. Every number
 below is printed by [`tables.py`](tables.py) from
@@ -120,7 +135,7 @@ reported as wall-clock below.
    times and the score is 78.8%, so the "reasoning hurts" result is an
    artifact of greedy decoding for this model. The OpenRouter models all
    gained from reasoning on WMDP-cyber (+4.5 to +9.9 pp). The collapse is a
-   smaller-model effect: Gemma 4 12B greedy loops even harder (42% of items end
+   smaller-model effect: Gemma 4 12B greedy loops even harder (44% of scored items end
    at the cap), but **Gemma 4 31B greedy barely loops at all** (37 of 4,496
    items, 0.8%), and its reasoning-off, greedy, and card-sampling scores are
    all statistically indistinguishable.
@@ -423,7 +438,7 @@ local models present × 3 tasks.
   on all three tasks and with GPT-6 Luna on WMDP-cyber (p = 0.035), and
   behind the others.
 - **Gemma 4 31B, card sampling**: 0 truncations on all three tasks (the greedy
-  reasoning-on run, expected to loop like Gemma 4 26B-A4B's, is still running).
+  reasoning-on run did not loop either: 37 items at the cap, see above).
   Against reasoning off it barely moves — WMDP-cyber +2.6 pp (p = 0.009, above
   α), CTI-MCQ −0.3 pp (p = 0.75), CTI-RCM +0.4 pp (p = 0.73) — so card-sampling
   reasoning ≈ reasoning off for this model. At 81.0% it is the top local

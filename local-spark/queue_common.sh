@@ -28,12 +28,16 @@ serve() {
 }
 
 run() {  # run <model short name> <off|on|on_card>; a second pass retries transport failures
+  # CONC (default 192) and BCSE_TIMEOUT_S (run_local.py, default 3600) are overridable. 2026-11-13: Gemma 4 12B
+  # greedy reasoning-on sent 192 requests to a 128-sequence server; queue wait plus ~47 min for a 16k-token looping
+  # trace (~5.7 tok/s per stream at 128 sequences) passed 3600 s, run_local.py retried each timeout up to 6 times, and
+  # about 80% of 50 h of generation was thrown away. Keep CONC <= the server SEQS for long-trace runs.
   local m=$1 cond=$2 r=${2%_card} sampling=greedy
   [ "$cond" = on_card ] && sampling=card
   for pass in 1 2; do
     log "run $m $cond pass $pass (server: $CUR)"
     BCSE_SAMPLING=$sampling "$PY" -u "$REPO/local-spark/run_local.py" --models "$m" --reasoning "$r" \
-      --concurrency 192 --out "local-spark/work_reasoning_$cond" >> "$LOGS/${m}_$cond.log" 2>&1
+      --concurrency "${CONC:-192}" --out "local-spark/work_reasoning_$cond" >> "$LOGS/${m}_$cond.log" 2>&1
     grep -q "INCOMPLETE $m" "$LOGS/${m}_$cond.log" 2>/dev/null || break
   done
   log "done $m $cond: $(tail -n 6 "$LOGS/${m}_$cond.log" | tr '\r' '\n' | grep -E '^'"$m"'|wall-clock|INCOMPLETE' | tr '\n' ' ')"
