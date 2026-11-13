@@ -1,0 +1,24 @@
+{
+  "reasoning": "on",
+  "max_tokens": 16000,
+  "sample": null,
+  "seed": null,
+  "models": {
+    "qwen3.8-flash-next": {
+      "id": "qwen38-flash-next-fp4-local",
+      "provider": "local-vllm-dgx-spark:nvidia/Qwen3.8-Flash-Next-FP4-Local"
+    },
+    "gemma-4-26b-a4b": {
+      "id": "gemma-4-26b-a4b-it",
+      "provider": "local-vllm-dgx-spark:nvidia/Gemma-4-26B-A4B-NVFP4"
+    },
+    "qwen3.8-27b": {
+      "id": "qwen38-27b",
+      "provider": "local-vllm-dgx-spark:nvidia/Qwen3.8-27B-NVFP4@482ca0f"
+    },
+    "gemma-4-31b": {
+      "id": "gemma-4-31b-it",
+      "provider": "local-vllm-dgx-spark:nvidia/Gemma-4-31B-IT-NVFP4"
+    }
+  }
+}

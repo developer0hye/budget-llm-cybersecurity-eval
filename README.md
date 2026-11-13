@@ -81,7 +81,8 @@ per-call limit caps how long any single agent turn may reason.
 **Contents:** [Models](#models-under-test) ·
 [Knowledge axis](#axis-1--knowledge) ([results](#results)) ·
 [Agentic axis](#axis-2--agentic-task-solving) ([results](#results-1)) ·
-[Reproducing](#reproducing) · [Earlier study](legacy/README.md)
+[Reproducing](#reproducing) · [Earlier study](legacy/README.md) ·
+[Local open-weight models on one DGX Spark](local-spark/README.md) (knowledge axis)
 
 The earlier study in [`legacy/`](legacy/README.md) found the same
 divergence on a saturated benchmark (CyberMetric-2000, all models 94–95%)
@@ -810,6 +811,7 @@ and serving stack OpenRouter routes these IDs to at that time.
 | `models.py` | model IDs, provider pins, reasoning/concurrency quirks |
 | `knowledge/` | knowledge-axis harness, analysis, re-scoring (`rescore.py`), per-item logs |
 | `agentic/` | Cybench harness (`run_cybench.py`), analysis (`analyze_cybench.py`, `analysis.json`, per-sample `manifest.jsonl`), Inspect logs, egress audit and DNS-verdict summary |
+| `local-spark/` | knowledge axis on five open-weight models served by vLLM on one DGX Spark: wrapper, serving script, per-item logs, analysis ([README](local-spark/README.md)) |
 | `legacy/` | the previous CyberMetric + NYU CTF Bench / CTFTiny study, archived as-is ([README](legacy/README.md)) |
 
 ## License

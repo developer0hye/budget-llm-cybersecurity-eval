@@ -1,0 +1,2723 @@
+{
+  "per_model": {
+    "deepseek-v4.1-flash": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 84.94,
+        "accuracy_of_answered": 86.15,
+        "correct": 846,
+        "wrong": 136,
+        "no_answer_truncated": 14,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 996,
+        "cost_usd": 0.8428,
+        "providers": {
+          "StreamLake": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 79.56,
+        "accuracy_of_answered": 82.16,
+        "correct": 1989,
+        "wrong": 432,
+        "no_answer_truncated": 79,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 3.2112,
+        "providers": {
+          "StreamLake": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 76.3,
+        "accuracy_of_answered": 76.99,
+        "correct": 763,
+        "wrong": 228,
+        "no_answer_truncated": 9,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.8117,
+        "providers": {
+          "StreamLake": 1000
+        }
+      }
+    },
+    "gpt-5.6-luna": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 83.84,
+        "accuracy_of_answered": 84.17,
+        "correct": 835,
+        "wrong": 157,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 4,
+        "reasoning_rows": 977,
+        "cost_usd": 0.2627,
+        "providers": {
+          "OpenAI": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 80.2,
+        "accuracy_of_answered": 80.2,
+        "correct": 2005,
+        "wrong": 495,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2362,
+        "cost_usd": 0.6314,
+        "providers": {
+          "OpenAI": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 74.0,
+        "accuracy_of_answered": 74.0,
+        "correct": 740,
+        "wrong": 260,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.184,
+        "providers": {
+          "OpenAI": 1000
+        }
+      }
+    },
+    "glm-5.3-flash": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 83.33,
+        "accuracy_of_answered": 85.22,
+        "correct": 830,
+        "wrong": 144,
+        "no_answer_truncated": 17,
+        "no_answer_unparsed": 5,
+        "reasoning_rows": 996,
+        "cost_usd": 0.6667,
+        "providers": {
+          "Z.AI": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 78.92,
+        "accuracy_of_answered": 82.38,
+        "correct": 1973,
+        "wrong": 422,
+        "no_answer_truncated": 105,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 2.1761,
+        "providers": {
+          "Z.AI": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 73.9,
+        "accuracy_of_answered": 74.35,
+        "correct": 739,
+        "wrong": 255,
+        "no_answer_truncated": 6,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.5897,
+        "providers": {
+          "Z.AI": 1000
+        }
+      }
+    },
+    "gpt-6-luna": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 81.63,
+        "accuracy_of_answered": 84.86,
+        "correct": 813,
+        "wrong": 145,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 38,
+        "reasoning_rows": 996,
+        "cost_usd": 0.125,
+        "providers": {
+          "OpenAI": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 81.0,
+        "accuracy_of_answered": 81.0,
+        "correct": 2025,
+        "wrong": 475,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 0.2701,
+        "providers": {
+          "OpenAI": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 75.1,
+        "accuracy_of_answered": 75.1,
+        "correct": 751,
+        "wrong": 249,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.0894,
+        "providers": {
+          "OpenAI": 1000
+        }
+      }
+    },
+    "gemma-4-31b": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 81.02,
+        "accuracy_of_answered": 81.02,
+        "correct": 807,
+        "wrong": 189,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 996,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Gemma-4-31B-IT-NVFP4": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 74.52,
+        "accuracy_of_answered": 74.61,
+        "correct": 1863,
+        "wrong": 634,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 3,
+        "reasoning_rows": 2500,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Gemma-4-31B-IT-NVFP4": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 70.5,
+        "accuracy_of_answered": 70.5,
+        "correct": 705,
+        "wrong": 295,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Gemma-4-31B-IT-NVFP4": 1000
+        }
+      }
+    },
+    "qwen3.8-flash-next": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 80.52,
+        "accuracy_of_answered": 82.51,
+        "correct": 802,
+        "wrong": 170,
+        "no_answer_truncated": 24,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 996,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Qwen3.8-Flash-Next-FP4-Local": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 77.6,
+        "accuracy_of_answered": 78.54,
+        "correct": 1940,
+        "wrong": 530,
+        "no_answer_truncated": 30,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Qwen3.8-Flash-Next-FP4-Local": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 76.2,
+        "accuracy_of_answered": 76.2,
+        "correct": 762,
+        "wrong": 238,
+        "no_answer_truncated": 0,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Qwen3.8-Flash-Next-FP4-Local": 1000
+        }
+      }
+    },
+    "gemma-4-26b-a4b": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 78.82,
+        "accuracy_of_answered": 79.7,
+        "correct": 785,
+        "wrong": 200,
+        "no_answer_truncated": 11,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 996,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Gemma-4-26B-A4B-NVFP4": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 73.88,
+        "accuracy_of_answered": 73.94,
+        "correct": 1847,
+        "wrong": 651,
+        "no_answer_truncated": 2,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2499,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Gemma-4-26B-A4B-NVFP4": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 69.9,
+        "accuracy_of_answered": 70.11,
+        "correct": 699,
+        "wrong": 298,
+        "no_answer_truncated": 3,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Gemma-4-26B-A4B-NVFP4": 1000
+        }
+      }
+    },
+    "qwen3.8-27b": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 77.81,
+        "accuracy_of_answered": 79.24,
+        "correct": 775,
+        "wrong": 203,
+        "no_answer_truncated": 16,
+        "no_answer_unparsed": 2,
+        "reasoning_rows": 996,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Qwen3.8-27B-NVFP4@482ca0f": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 71.96,
+        "accuracy_of_answered": 73.1,
+        "correct": 1799,
+        "wrong": 662,
+        "no_answer_truncated": 39,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Qwen3.8-27B-NVFP4@482ca0f": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 73.1,
+        "accuracy_of_answered": 73.17,
+        "correct": 731,
+        "wrong": 268,
+        "no_answer_truncated": 1,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:nvidia/Qwen3.8-27B-NVFP4@482ca0f": 1000
+        }
+      }
+    },
+    "solar-pro4": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 77.11,
+        "accuracy_of_answered": 77.65,
+        "correct": 768,
+        "wrong": 221,
+        "no_answer_truncated": 5,
+        "no_answer_unparsed": 2,
+        "reasoning_rows": 994,
+        "cost_usd": 0.8932,
+        "providers": {
+          "Upstage": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 75.96,
+        "accuracy_of_answered": 76.98,
+        "correct": 1899,
+        "wrong": 568,
+        "no_answer_truncated": 33,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 2.8743,
+        "providers": {
+          "Upstage": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 72.1,
+        "accuracy_of_answered": 72.75,
+        "correct": 721,
+        "wrong": 270,
+        "no_answer_truncated": 9,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0.9394,
+        "providers": {
+          "Upstage": 1000
+        }
+      }
+    },
+    "gemma-4-12b": {
+      "WMDP-cyber": {
+        "n": 996,
+        "accuracy": 73.09,
+        "accuracy_of_answered": 75.68,
+        "correct": 728,
+        "wrong": 234,
+        "no_answer_truncated": 33,
+        "no_answer_unparsed": 1,
+        "reasoning_rows": 996,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:RedHatAI/gemma-4-12B-it-NVFP4": 996
+        }
+      },
+      "CTI-MCQ": {
+        "n": 2500,
+        "accuracy": 69.08,
+        "accuracy_of_answered": 69.41,
+        "correct": 1727,
+        "wrong": 761,
+        "no_answer_truncated": 12,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 2500,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:RedHatAI/gemma-4-12B-it-NVFP4": 2500
+        }
+      },
+      "CTI-RCM": {
+        "n": 1000,
+        "accuracy": 55.7,
+        "accuracy_of_answered": 56.49,
+        "correct": 557,
+        "wrong": 429,
+        "no_answer_truncated": 14,
+        "no_answer_unparsed": 0,
+        "reasoning_rows": 1000,
+        "cost_usd": 0,
+        "providers": {
+          "local-vllm-dgx-spark:RedHatAI/gemma-4-12B-it-NVFP4": 1000
+        }
+      }
+    }
+  },
+  "pairwise": {
+    "WMDP-cyber": {
+      "deepseek-v4.1-flash vs gemma-4-12b": {
+        "primary": {
+          "n": 996,
+          "b": 158,
+          "c": 40,
+          "p": 8.687309292103867e-18
+        },
+        "both_answered": {
+          "n": 954,
+          "b": 131,
+          "c": 36,
+          "p": 6.980809407093549e-14
+        }
+      },
+      "deepseek-v4.1-flash vs gemma-4-26b-a4b": {
+        "primary": {
+          "n": 996,
+          "b": 101,
+          "c": 40,
+          "p": 2.8749799610187777e-07
+        },
+        "both_answered": {
+          "n": 976,
+          "b": 95,
+          "c": 37,
+          "p": 4.6385411141544356e-07
+        }
+      },
+      "deepseek-v4.1-flash vs gemma-4-31b": {
+        "primary": {
+          "n": 996,
+          "b": 78,
+          "c": 39,
+          "p": 0.0003961778187923077
+        },
+        "both_answered": {
+          "n": 982,
+          "b": 78,
+          "c": 30,
+          "p": 4.314751521794873e-06
+        }
+      },
+      "deepseek-v4.1-flash vs glm-5.3-flash": {
+        "primary": {
+          "n": 996,
+          "b": 63,
+          "c": 47,
+          "p": 0.15233780606025277
+        },
+        "both_answered": {
+          "n": 965,
+          "b": 52,
+          "c": 40,
+          "p": 0.25132210347485445
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 57,
+          "c": 46,
+          "p": 0.32447878028806587
+        },
+        "both_answered": {
+          "n": 978,
+          "b": 54,
+          "c": 36,
+          "p": 0.07254953219246181
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 74,
+          "c": 41,
+          "p": 0.00268570100596285
+        },
+        "both_answered": {
+          "n": 944,
+          "b": 42,
+          "c": 32,
+          "p": 0.29541328065567013
+        }
+      },
+      "deepseek-v4.1-flash vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 104,
+          "c": 33,
+          "p": 9.310987342771928e-10
+        },
+        "both_answered": {
+          "n": 972,
+          "b": 99,
+          "c": 30,
+          "p": 8.373849734269565e-10
+        }
+      },
+      "deepseek-v4.1-flash vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 80,
+          "c": 36,
+          "p": 5.4004505269050944e-05
+        },
+        "both_answered": {
+          "n": 966,
+          "b": 66,
+          "c": 31,
+          "p": 0.0004901579489633008
+        }
+      },
+      "deepseek-v4.1-flash vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 112,
+          "c": 34,
+          "p": 6.42131847302157e-11
+        },
+        "both_answered": {
+          "n": 979,
+          "b": 109,
+          "c": 29,
+          "p": 4.201557931039116e-12
+        }
+      },
+      "gemma-4-12b vs gemma-4-26b-a4b": {
+        "primary": {
+          "n": 996,
+          "b": 52,
+          "c": 109,
+          "p": 8.288365255084622e-06
+        },
+        "both_answered": {
+          "n": 961,
+          "b": 51,
+          "c": 88,
+          "p": 0.0021470973863251053
+        }
+      },
+      "gemma-4-12b vs gemma-4-31b": {
+        "primary": {
+          "n": 996,
+          "b": 51,
+          "c": 130,
+          "p": 3.833761507743866e-09
+        },
+        "both_answered": {
+          "n": 962,
+          "b": 51,
+          "c": 100,
+          "p": 8.212852870228109e-05
+        }
+      },
+      "gemma-4-12b vs glm-5.3-flash": {
+        "primary": {
+          "n": 996,
+          "b": 43,
+          "c": 145,
+          "p": 3.986378634118616e-14
+        },
+        "both_answered": {
+          "n": 945,
+          "b": 34,
+          "c": 119,
+          "p": 2.9629797823733012e-12
+        }
+      },
+      "gemma-4-12b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 45,
+          "c": 152,
+          "p": 8.956372819028382e-15
+        },
+        "both_answered": {
+          "n": 959,
+          "b": 43,
+          "c": 120,
+          "p": 1.3043589948660315e-09
+        }
+      },
+      "gemma-4-12b vs gpt-6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 68,
+          "c": 153,
+          "p": 1.0648479970261976e-08
+        },
+        "both_answered": {
+          "n": 925,
+          "b": 38,
+          "c": 124,
+          "p": 7.625841619726282e-12
+        }
+      },
+      "gemma-4-12b vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 65,
+          "c": 112,
+          "p": 0.0005092331512842402
+        },
+        "both_answered": {
+          "n": 950,
+          "b": 61,
+          "c": 87,
+          "p": 0.039518382596540225
+        }
+      },
+      "gemma-4-12b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 58,
+          "c": 132,
+          "p": 8.210999869009013e-08
+        },
+        "both_answered": {
+          "n": 943,
+          "b": 46,
+          "c": 104,
+          "p": 2.4715829058159294e-06
+        }
+      },
+      "gemma-4-12b vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 66,
+          "c": 106,
+          "p": 0.0028336257642690554
+        },
+        "both_answered": {
+          "n": 961,
+          "b": 66,
+          "c": 82,
+          "p": 0.2174455477829045
+        }
+      },
+      "gemma-4-26b-a4b vs gemma-4-31b": {
+        "primary": {
+          "n": 996,
+          "b": 46,
+          "c": 68,
+          "p": 0.048724686398681945
+        },
+        "both_answered": {
+          "n": 985,
+          "b": 46,
+          "c": 58,
+          "p": 0.28069032903417923
+        }
+      },
+      "gemma-4-26b-a4b vs glm-5.3-flash": {
+        "primary": {
+          "n": 996,
+          "b": 43,
+          "c": 88,
+          "p": 0.00010469417286583186
+        },
+        "both_answered": {
+          "n": 966,
+          "b": 32,
+          "c": 80,
+          "p": 6.566339353826234e-06
+        }
+      },
+      "gemma-4-26b-a4b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 41,
+          "c": 91,
+          "p": 1.6057112657658862e-05
+        },
+        "both_answered": {
+          "n": 981,
+          "b": 39,
+          "c": 80,
+          "p": 0.0002154893598654859
+        }
+      },
+      "gemma-4-26b-a4b vs gpt-6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 68,
+          "c": 96,
+          "p": 0.03468069745563244
+        },
+        "both_answered": {
+          "n": 948,
+          "b": 39,
+          "c": 88,
+          "p": 1.6333804091764826e-05
+        }
+      },
+      "gemma-4-26b-a4b vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 75,
+          "c": 65,
+          "p": 0.4469896132741677
+        },
+        "both_answered": {
+          "n": 971,
+          "b": 69,
+          "c": 59,
+          "p": 0.4264394964440242
+        }
+      },
+      "gemma-4-26b-a4b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 56,
+          "c": 73,
+          "p": 0.15865371419232255
+        },
+        "both_answered": {
+          "n": 964,
+          "b": 45,
+          "c": 65,
+          "p": 0.06956519633623019
+        }
+      },
+      "gemma-4-26b-a4b vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 79,
+          "c": 62,
+          "p": 0.1776298367511035
+        },
+        "both_answered": {
+          "n": 982,
+          "b": 77,
+          "c": 55,
+          "p": 0.06717037054890534
+        }
+      },
+      "gemma-4-31b vs glm-5.3-flash": {
+        "primary": {
+          "n": 996,
+          "b": 54,
+          "c": 77,
+          "p": 0.054170800387233015
+        },
+        "both_answered": {
+          "n": 974,
+          "b": 42,
+          "c": 77,
+          "p": 0.0017105290774106674
+        }
+      },
+      "gemma-4-31b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 46,
+          "c": 74,
+          "p": 0.013376326728236736
+        },
+        "both_answered": {
+          "n": 992,
+          "b": 43,
+          "c": 74,
+          "p": 0.005319279348701672
+        }
+      },
+      "gemma-4-31b vs gpt-6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 75,
+          "c": 81,
+          "p": 0.6890542729314679
+        },
+        "both_answered": {
+          "n": 958,
+          "b": 45,
+          "c": 81,
+          "p": 0.0017094927839213544
+        }
+      },
+      "gemma-4-31b vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 85,
+          "c": 53,
+          "p": 0.008083354723191848
+        },
+        "both_answered": {
+          "n": 978,
+          "b": 75,
+          "c": 53,
+          "p": 0.0630087826083342
+        }
+      },
+      "gemma-4-31b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 60,
+          "c": 55,
+          "p": 0.7093227303228257
+        },
+        "both_answered": {
+          "n": 972,
+          "b": 46,
+          "c": 55,
+          "p": 0.4261600154669939
+        }
+      },
+      "gemma-4-31b vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 81,
+          "c": 42,
+          "p": 0.0005560923592546708
+        },
+        "both_answered": {
+          "n": 989,
+          "b": 75,
+          "c": 42,
+          "p": 0.00292812834069717
+        }
+      },
+      "glm-5.3-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 48,
+          "c": 53,
+          "p": 0.6908264239959594
+        },
+        "both_answered": {
+          "n": 973,
+          "b": 48,
+          "c": 36,
+          "p": 0.2298644069691204
+        }
+      },
+      "glm-5.3-flash vs gpt-6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 75,
+          "c": 58,
+          "p": 0.16508338915578705
+        },
+        "both_answered": {
+          "n": 941,
+          "b": 47,
+          "c": 48,
+          "p": 1.0
+        }
+      },
+      "glm-5.3-flash vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 99,
+          "c": 44,
+          "p": 4.887162472052845e-06
+        },
+        "both_answered": {
+          "n": 961,
+          "b": 91,
+          "c": 34,
+          "p": 3.473800882847061e-07
+        }
+      },
+      "glm-5.3-flash vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 68,
+          "c": 40,
+          "p": 0.009057983337532568
+        },
+        "both_answered": {
+          "n": 955,
+          "b": 54,
+          "c": 30,
+          "p": 0.011634454119925829
+        }
+      },
+      "glm-5.3-flash vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 101,
+          "c": 39,
+          "p": 1.6065634901570299e-07
+        },
+        "both_answered": {
+          "n": 969,
+          "b": 96,
+          "c": 26,
+          "p": 1.261164445962075e-10
+        }
+      },
+      "gpt-5.6-luna vs gpt-6-luna": {
+        "primary": {
+          "n": 996,
+          "b": 63,
+          "c": 41,
+          "p": 0.03895793340131187
+        },
+        "both_answered": {
+          "n": 957,
+          "b": 33,
+          "c": 40,
+          "p": 0.4827885568440213
+        }
+      },
+      "gpt-5.6-luna vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 98,
+          "c": 38,
+          "p": 2.729862604765942e-07
+        },
+        "both_answered": {
+          "n": 975,
+          "b": 89,
+          "c": 36,
+          "p": 2.3655419809308213e-06
+        }
+      },
+      "gpt-5.6-luna vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 73,
+          "c": 40,
+          "p": 0.0024558111031850413
+        },
+        "both_answered": {
+          "n": 968,
+          "b": 54,
+          "c": 37,
+          "p": 0.09294694311794123
+        }
+      },
+      "gpt-5.6-luna vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 99,
+          "c": 32,
+          "p": 3.6957118322321716e-09
+        },
+        "both_answered": {
+          "n": 985,
+          "b": 92,
+          "c": 31,
+          "p": 3.317352917439988e-08
+        }
+      },
+      "gpt-6-luna vs qwen3.8-27b": {
+        "primary": {
+          "n": 996,
+          "b": 102,
+          "c": 64,
+          "p": 0.00394668920971389
+        },
+        "both_answered": {
+          "n": 941,
+          "b": 91,
+          "c": 35,
+          "p": 6.35688930091294e-07
+        }
+      },
+      "gpt-6-luna vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 75,
+          "c": 64,
+          "p": 0.39641508495172617
+        },
+        "both_answered": {
+          "n": 934,
+          "b": 58,
+          "c": 33,
+          "p": 0.011456340539425671
+        }
+      },
+      "gpt-6-luna vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 107,
+          "c": 62,
+          "p": 0.0006677136382200454
+        },
+        "both_answered": {
+          "n": 951,
+          "b": 100,
+          "c": 33,
+          "p": 4.962954006694652e-09
+        }
+      },
+      "qwen3.8-27b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 996,
+          "b": 43,
+          "c": 70,
+          "p": 0.01408749552375807
+        },
+        "both_answered": {
+          "n": 965,
+          "b": 33,
+          "c": 65,
+          "p": 0.0016005802102081266
+        }
+      },
+      "qwen3.8-27b vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 77,
+          "c": 70,
+          "p": 0.6208422313416992
+        },
+        "both_answered": {
+          "n": 976,
+          "b": 76,
+          "c": 65,
+          "p": 0.39978672017322225
+        }
+      },
+      "qwen3.8-flash-next vs solar-pro4": {
+        "primary": {
+          "n": 996,
+          "b": 83,
+          "c": 49,
+          "p": 0.0039051217080269887
+        },
+        "both_answered": {
+          "n": 969,
+          "b": 80,
+          "c": 40,
+          "p": 0.0003304000183913207
+        }
+      }
+    },
+    "CTI-MCQ": {
+      "deepseek-v4.1-flash vs gemma-4-12b": {
+        "primary": {
+          "n": 2500,
+          "b": 406,
+          "c": 144,
+          "p": 6.98323647605666e-30
+        },
+        "both_answered": {
+          "n": 2409,
+          "b": 394,
+          "c": 110,
+          "p": 1.594193006428383e-38
+        }
+      },
+      "deepseek-v4.1-flash vs gemma-4-26b-a4b": {
+        "primary": {
+          "n": 2500,
+          "b": 301,
+          "c": 159,
+          "p": 3.4436463021727346e-11
+        },
+        "both_answered": {
+          "n": 2419,
+          "b": 300,
+          "c": 116,
+          "p": 7.089525197138209e-20
+        }
+      },
+      "deepseek-v4.1-flash vs gemma-4-31b": {
+        "primary": {
+          "n": 2500,
+          "b": 279,
+          "c": 153,
+          "p": 1.3941470406397752e-09
+        },
+        "both_answered": {
+          "n": 2418,
+          "b": 279,
+          "c": 114,
+          "p": 4.496777756622076e-17
+        }
+      },
+      "deepseek-v4.1-flash vs glm-5.3-flash": {
+        "primary": {
+          "n": 2500,
+          "b": 173,
+          "c": 157,
+          "p": 0.40899949606305985
+        },
+        "both_answered": {
+          "n": 2333,
+          "b": 133,
+          "c": 122,
+          "p": 0.5312501889400695
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 157,
+          "c": 173,
+          "p": 0.40899949606305985
+        },
+        "both_answered": {
+          "n": 2421,
+          "b": 157,
+          "c": 134,
+          "p": 0.19708304233908194
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 135,
+          "c": 171,
+          "p": 0.045235354938361956
+        },
+        "both_answered": {
+          "n": 2421,
+          "b": 135,
+          "c": 123,
+          "p": 0.49352606601265137
+        }
+      },
+      "deepseek-v4.1-flash vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 339,
+          "c": 149,
+          "p": 4.425363231178431e-18
+        },
+        "both_answered": {
+          "n": 2388,
+          "b": 322,
+          "c": 116,
+          "p": 1.7205272994438546e-23
+        }
+      },
+      "deepseek-v4.1-flash vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 214,
+          "c": 165,
+          "p": 0.013573262940612153
+        },
+        "both_answered": {
+          "n": 2396,
+          "b": 201,
+          "c": 129,
+          "p": 8.754324571286215e-05
+        }
+      },
+      "deepseek-v4.1-flash vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 250,
+          "c": 160,
+          "p": 1.0239728382881965e-05
+        },
+        "both_answered": {
+          "n": 2391,
+          "b": 227,
+          "c": 118,
+          "p": 4.5644363790705915e-09
+        }
+      },
+      "gemma-4-12b vs gemma-4-26b-a4b": {
+        "primary": {
+          "n": 2500,
+          "b": 167,
+          "c": 287,
+          "p": 1.9464670437690107e-08
+        },
+        "both_answered": {
+          "n": 2486,
+          "b": 166,
+          "c": 279,
+          "p": 9.450700420267581e-08
+        }
+      },
+      "gemma-4-12b vs gemma-4-31b": {
+        "primary": {
+          "n": 2500,
+          "b": 160,
+          "c": 296,
+          "p": 1.9092965857228013e-10
+        },
+        "both_answered": {
+          "n": 2485,
+          "b": 160,
+          "c": 287,
+          "p": 1.9842465009117567e-09
+        }
+      },
+      "gemma-4-12b vs glm-5.3-flash": {
+        "primary": {
+          "n": 2500,
+          "b": 151,
+          "c": 397,
+          "p": 1.6977720972216304e-26
+        },
+        "both_answered": {
+          "n": 2384,
+          "b": 116,
+          "c": 389,
+          "p": 1.7905428175418105e-35
+        }
+      },
+      "gemma-4-12b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 122,
+          "c": 400,
+          "p": 1.582579171550528e-35
+        },
+        "both_answered": {
+          "n": 2488,
+          "b": 122,
+          "c": 390,
+          "p": 1.1137629294477235e-33
+        }
+      },
+      "gemma-4-12b vs gpt-6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 114,
+          "c": 412,
+          "p": 1.3730831996428292e-40
+        },
+        "both_answered": {
+          "n": 2488,
+          "b": 114,
+          "c": 403,
+          "p": 7.717932204360826e-39
+        }
+      },
+      "gemma-4-12b vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 227,
+          "c": 299,
+          "p": 0.0019353075613175402
+        },
+        "both_answered": {
+          "n": 2450,
+          "b": 214,
+          "c": 290,
+          "p": 0.0008186139674094845
+        }
+      },
+      "gemma-4-12b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 154,
+          "c": 367,
+          "p": 4.391530328196886e-21
+        },
+        "both_answered": {
+          "n": 2458,
+          "b": 145,
+          "c": 355,
+          "p": 2.297009901661964e-21
+        }
+      },
+      "gemma-4-12b vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 162,
+          "c": 334,
+          "p": 8.744442230676864e-15
+        },
+        "both_answered": {
+          "n": 2455,
+          "b": 141,
+          "c": 324,
+          "p": 1.2029741046907874e-17
+        }
+      },
+      "gemma-4-26b-a4b vs gemma-4-31b": {
+        "primary": {
+          "n": 2500,
+          "b": 185,
+          "c": 201,
+          "p": 0.4452185997322582
+        },
+        "both_answered": {
+          "n": 2495,
+          "b": 185,
+          "c": 200,
+          "p": 0.47557991843346686
+        }
+      },
+      "gemma-4-26b-a4b vs glm-5.3-flash": {
+        "primary": {
+          "n": 2500,
+          "b": 164,
+          "c": 290,
+          "p": 3.557646579280622e-09
+        },
+        "both_answered": {
+          "n": 2393,
+          "b": 124,
+          "c": 289,
+          "p": 2.820022294864429e-16
+        }
+      },
+      "gemma-4-26b-a4b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 146,
+          "c": 304,
+          "p": 7.534526115797311e-14
+        },
+        "both_answered": {
+          "n": 2498,
+          "b": 146,
+          "c": 302,
+          "p": 1.3820326222259394e-13
+        }
+      },
+      "gemma-4-26b-a4b vs gpt-6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 128,
+          "c": 306,
+          "p": 6.6943446732515284e-18
+        },
+        "both_answered": {
+          "n": 2498,
+          "b": 128,
+          "c": 305,
+          "p": 9.461446696315926e-18
+        }
+      },
+      "gemma-4-26b-a4b vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 266,
+          "c": 218,
+          "p": 0.03254285385610842
+        },
+        "both_answered": {
+          "n": 2459,
+          "b": 246,
+          "c": 217,
+          "p": 0.19311051308188693
+        }
+      },
+      "gemma-4-26b-a4b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 173,
+          "c": 266,
+          "p": 1.0510069868756208e-05
+        },
+        "both_answered": {
+          "n": 2468,
+          "b": 162,
+          "c": 265,
+          "p": 7.0815937095573e-07
+        }
+      },
+      "gemma-4-26b-a4b vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 187,
+          "c": 239,
+          "p": 0.013382003818643583
+        },
+        "both_answered": {
+          "n": 2465,
+          "b": 166,
+          "c": 238,
+          "p": 0.0003988564855393929
+        }
+      },
+      "gemma-4-31b vs glm-5.3-flash": {
+        "primary": {
+          "n": 2500,
+          "b": 156,
+          "c": 266,
+          "p": 9.543999689390489e-08
+        },
+        "both_answered": {
+          "n": 2392,
+          "b": 116,
+          "c": 265,
+          "p": 1.5725942832291874e-14
+        }
+      },
+      "gemma-4-31b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 142,
+          "c": 284,
+          "p": 5.384292478469636e-12
+        },
+        "both_answered": {
+          "n": 2497,
+          "b": 142,
+          "c": 284,
+          "p": 5.384292478469636e-12
+        }
+      },
+      "gemma-4-31b vs gpt-6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 129,
+          "c": 291,
+          "p": 1.77605189486685e-15
+        },
+        "both_answered": {
+          "n": 2497,
+          "b": 129,
+          "c": 291,
+          "p": 1.77605189486685e-15
+        }
+      },
+      "gemma-4-31b vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 267,
+          "c": 203,
+          "p": 0.003616211928515023
+        },
+        "both_answered": {
+          "n": 2459,
+          "b": 243,
+          "c": 202,
+          "p": 0.057814030662803044
+        }
+      },
+      "gemma-4-31b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 166,
+          "c": 243,
+          "p": 0.00016447322687951094
+        },
+        "both_answered": {
+          "n": 2469,
+          "b": 157,
+          "c": 243,
+          "p": 1.995805429650304e-05
+        }
+      },
+      "gemma-4-31b vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 191,
+          "c": 227,
+          "p": 0.08679247748205983
+        },
+        "both_answered": {
+          "n": 2464,
+          "b": 166,
+          "c": 226,
+          "p": 0.0028359459049446052
+        }
+      },
+      "glm-5.3-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 163,
+          "c": 195,
+          "p": 0.10120412765185705
+        },
+        "both_answered": {
+          "n": 2395,
+          "b": 163,
+          "c": 136,
+          "p": 0.13254351100159184
+        }
+      },
+      "glm-5.3-flash vs gpt-6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 134,
+          "c": 186,
+          "p": 0.00428573878294856
+        },
+        "both_answered": {
+          "n": 2395,
+          "b": 134,
+          "c": 136,
+          "p": 0.9514872319029751
+        }
+      },
+      "glm-5.3-flash vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 332,
+          "c": 158,
+          "p": 2.8108175390550167e-15
+        },
+        "both_answered": {
+          "n": 2360,
+          "b": 311,
+          "c": 119,
+          "p": 7.09401967347744e-21
+        }
+      },
+      "glm-5.3-flash vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 200,
+          "c": 167,
+          "p": 0.09470861501258133
+        },
+        "both_answered": {
+          "n": 2371,
+          "b": 192,
+          "c": 120,
+          "p": 5.433121670241498e-05
+        }
+      },
+      "glm-5.3-flash vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 253,
+          "c": 179,
+          "p": 0.0004315889889483232
+        },
+        "both_answered": {
+          "n": 2365,
+          "b": 229,
+          "c": 129,
+          "p": 1.3991325401427096e-07
+        }
+      },
+      "gpt-5.6-luna vs gpt-6-luna": {
+        "primary": {
+          "n": 2500,
+          "b": 114,
+          "c": 134,
+          "p": 0.2275537562891068
+        },
+        "both_answered": {
+          "n": 2500,
+          "b": 114,
+          "c": 134,
+          "p": 0.2275537562891068
+        }
+      },
+      "gpt-5.6-luna vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 338,
+          "c": 132,
+          "p": 6.881072040692854e-22
+        },
+        "both_answered": {
+          "n": 2461,
+          "b": 314,
+          "c": 132,
+          "p": 3.4943255823740604e-18
+        }
+      },
+      "gpt-5.6-luna vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 216,
+          "c": 151,
+          "p": 0.000812310037200499
+        },
+        "both_answered": {
+          "n": 2470,
+          "b": 203,
+          "c": 151,
+          "p": 0.00663359951305378
+        }
+      },
+      "gpt-5.6-luna vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 243,
+          "c": 137,
+          "p": 5.9457244406241454e-08
+        },
+        "both_answered": {
+          "n": 2467,
+          "b": 217,
+          "c": 137,
+          "p": 2.4917768032019702e-05
+        }
+      },
+      "gpt-6-luna vs qwen3.8-27b": {
+        "primary": {
+          "n": 2500,
+          "b": 347,
+          "c": 121,
+          "p": 2.4606854394624496e-26
+        },
+        "both_answered": {
+          "n": 2461,
+          "b": 326,
+          "c": 121,
+          "p": 8.489508591739332e-23
+        }
+      },
+      "gpt-6-luna vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 219,
+          "c": 134,
+          "p": 7.077894565122717e-06
+        },
+        "both_answered": {
+          "n": 2470,
+          "b": 206,
+          "c": 134,
+          "p": 0.00011164846039089315
+        }
+      },
+      "gpt-6-luna vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 248,
+          "c": 122,
+          "p": 5.329604207306828e-11
+        },
+        "both_answered": {
+          "n": 2467,
+          "b": 222,
+          "c": 122,
+          "p": 7.684641074995944e-08
+        }
+      },
+      "qwen3.8-27b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 2500,
+          "b": 157,
+          "c": 298,
+          "p": 3.698071025229626e-11
+        },
+        "both_answered": {
+          "n": 2436,
+          "b": 148,
+          "c": 281,
+          "p": 1.3289360352357256e-10
+        }
+      },
+      "qwen3.8-27b vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 192,
+          "c": 292,
+          "p": 6.327343144037043e-06
+        },
+        "both_answered": {
+          "n": 2429,
+          "b": 172,
+          "c": 270,
+          "p": 3.625322735945952e-06
+        }
+      },
+      "qwen3.8-flash-next vs solar-pro4": {
+        "primary": {
+          "n": 2500,
+          "b": 230,
+          "c": 189,
+          "p": 0.050556397140810234
+        },
+        "both_answered": {
+          "n": 2437,
+          "b": 206,
+          "c": 177,
+          "p": 0.15241337370280963
+        }
+      }
+    },
+    "CTI-RCM": {
+      "deepseek-v4.1-flash vs gemma-4-12b": {
+        "primary": {
+          "n": 1000,
+          "b": 225,
+          "c": 19,
+          "p": 7.089183692806759e-46
+        },
+        "both_answered": {
+          "n": 977,
+          "b": 215,
+          "c": 18,
+          "p": 5.153259518701582e-44
+        }
+      },
+      "deepseek-v4.1-flash vs gemma-4-26b-a4b": {
+        "primary": {
+          "n": 1000,
+          "b": 91,
+          "c": 27,
+          "p": 2.6899026850690616e-09
+        },
+        "both_answered": {
+          "n": 988,
+          "b": 89,
+          "c": 25,
+          "p": 1.3151843662610907e-09
+        }
+      },
+      "deepseek-v4.1-flash vs gemma-4-31b": {
+        "primary": {
+          "n": 1000,
+          "b": 83,
+          "c": 25,
+          "p": 1.8829338019072794e-08
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 83,
+          "c": 21,
+          "p": 6.676043770502301e-10
+        }
+      },
+      "deepseek-v4.1-flash vs glm-5.3-flash": {
+        "primary": {
+          "n": 1000,
+          "b": 48,
+          "c": 24,
+          "p": 0.006309827313666047
+        },
+        "both_answered": {
+          "n": 985,
+          "b": 45,
+          "c": 22,
+          "p": 0.006741447363103126
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 51,
+          "c": 28,
+          "p": 0.012812402175831366
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 51,
+          "c": 25,
+          "p": 0.0038362357516146246
+        }
+      },
+      "deepseek-v4.1-flash vs gpt-6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 41,
+          "c": 29,
+          "p": 0.18821620302302766
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 41,
+          "c": 27,
+          "p": 0.11425430684992328
+        }
+      },
+      "deepseek-v4.1-flash vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 63,
+          "c": 31,
+          "p": 0.0012613865981312992
+        },
+        "both_answered": {
+          "n": 990,
+          "b": 63,
+          "c": 28,
+          "p": 0.00031283899640671654
+        }
+      },
+      "deepseek-v4.1-flash vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 37,
+          "c": 36,
+          "p": 1.0
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 37,
+          "c": 34,
+          "p": 0.8125886494061618
+        }
+      },
+      "deepseek-v4.1-flash vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 77,
+          "c": 35,
+          "p": 8.980220370452065e-05
+        },
+        "both_answered": {
+          "n": 983,
+          "b": 75,
+          "c": 32,
+          "p": 3.918715378691485e-05
+        }
+      },
+      "gemma-4-12b vs gemma-4-26b-a4b": {
+        "primary": {
+          "n": 1000,
+          "b": 22,
+          "c": 164,
+          "p": 4.877110717955508e-28
+        },
+        "both_answered": {
+          "n": 983,
+          "b": 22,
+          "c": 155,
+          "p": 7.898630386582173e-26
+        }
+      },
+      "gemma-4-12b vs gemma-4-31b": {
+        "primary": {
+          "n": 1000,
+          "b": 17,
+          "c": 165,
+          "p": 1.2458763261719167e-31
+        },
+        "both_answered": {
+          "n": 986,
+          "b": 17,
+          "c": 157,
+          "p": 1.4401210951380775e-29
+        }
+      },
+      "gemma-4-12b vs glm-5.3-flash": {
+        "primary": {
+          "n": 1000,
+          "b": 16,
+          "c": 198,
+          "p": 4.29696704252583e-41
+        },
+        "both_answered": {
+          "n": 980,
+          "b": 16,
+          "c": 188,
+          "p": 1.9968615445377835e-38
+        }
+      },
+      "gemma-4-12b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 15,
+          "c": 198,
+          "p": 6.390699216487652e-42
+        },
+        "both_answered": {
+          "n": 986,
+          "b": 15,
+          "c": 188,
+          "p": 3.1144671166800764e-39
+        }
+      },
+      "gemma-4-12b vs gpt-6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 16,
+          "c": 210,
+          "p": 2.5784696775154947e-44
+        },
+        "both_answered": {
+          "n": 986,
+          "b": 16,
+          "c": 200,
+          "p": 1.2523864367767874e-41
+        }
+      },
+      "gemma-4-12b vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 15,
+          "c": 189,
+          "p": 1.680071514237714e-39
+        },
+        "both_answered": {
+          "n": 985,
+          "b": 15,
+          "c": 180,
+          "p": 4.282009198420324e-37
+        }
+      },
+      "gemma-4-12b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 10,
+          "c": 215,
+          "p": 2.908817475910833e-51
+        },
+        "both_answered": {
+          "n": 986,
+          "b": 10,
+          "c": 205,
+          "p": 1.8768478869125658e-48
+        }
+      },
+      "gemma-4-12b vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 20,
+          "c": 184,
+          "p": 2.1315723269334445e-34
+        },
+        "both_answered": {
+          "n": 977,
+          "b": 20,
+          "c": 174,
+          "p": 7.63977495776644e-32
+        }
+      },
+      "gemma-4-26b-a4b vs gemma-4-31b": {
+        "primary": {
+          "n": 1000,
+          "b": 29,
+          "c": 35,
+          "p": 0.5323087760278421
+        },
+        "both_answered": {
+          "n": 997,
+          "b": 29,
+          "c": 34,
+          "p": 0.6146550157654618
+        }
+      },
+      "gemma-4-26b-a4b vs glm-5.3-flash": {
+        "primary": {
+          "n": 1000,
+          "b": 31,
+          "c": 71,
+          "p": 9.307650827247335e-05
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 29,
+          "c": 69,
+          "p": 6.572240952992274e-05
+        }
+      },
+      "gemma-4-26b-a4b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 27,
+          "c": 68,
+          "p": 3.1140616591069675e-05
+        },
+        "both_answered": {
+          "n": 997,
+          "b": 27,
+          "c": 66,
+          "p": 6.467045262218053e-05
+        }
+      },
+      "gemma-4-26b-a4b vs gpt-6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 23,
+          "c": 75,
+          "p": 1.3172242120654852e-07
+        },
+        "both_answered": {
+          "n": 997,
+          "b": 23,
+          "c": 73,
+          "p": 3.1102323718136e-07
+        }
+      },
+      "gemma-4-26b-a4b vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 31,
+          "c": 63,
+          "p": 0.0012613865981312992
+        },
+        "both_answered": {
+          "n": 996,
+          "b": 31,
+          "c": 61,
+          "p": 0.0023146015214254912
+        }
+      },
+      "gemma-4-26b-a4b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 18,
+          "c": 81,
+          "p": 1.0114972150081559e-10
+        },
+        "both_answered": {
+          "n": 997,
+          "b": 18,
+          "c": 79,
+          "p": 2.7205432952211394e-10
+        }
+      },
+      "gemma-4-26b-a4b vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 38,
+          "c": 60,
+          "p": 0.03336002889694201
+        },
+        "both_answered": {
+          "n": 988,
+          "b": 38,
+          "c": 58,
+          "p": 0.05191052214883845
+        }
+      },
+      "gemma-4-31b vs glm-5.3-flash": {
+        "primary": {
+          "n": 1000,
+          "b": 32,
+          "c": 66,
+          "p": 0.0007698826407272646
+        },
+        "both_answered": {
+          "n": 994,
+          "b": 30,
+          "c": 66,
+          "p": 0.00030559732759326285
+        }
+      },
+      "gemma-4-31b vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 28,
+          "c": 63,
+          "p": 0.00031283899640671654
+        },
+        "both_answered": {
+          "n": 1000,
+          "b": 28,
+          "c": 63,
+          "p": 0.00031283899640671654
+        }
+      },
+      "gemma-4-31b vs gpt-6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 22,
+          "c": 68,
+          "p": 1.2492581287631034e-06
+        },
+        "both_answered": {
+          "n": 1000,
+          "b": 22,
+          "c": 68,
+          "p": 1.2492581287631034e-06
+        }
+      },
+      "gemma-4-31b vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 28,
+          "c": 54,
+          "p": 0.00543592487756628
+        },
+        "both_answered": {
+          "n": 999,
+          "b": 28,
+          "c": 54,
+          "p": 0.00543592487756628
+        }
+      },
+      "gemma-4-31b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 18,
+          "c": 75,
+          "p": 1.915369707081593e-09
+        },
+        "both_answered": {
+          "n": 1000,
+          "b": 18,
+          "c": 75,
+          "p": 1.915369707081593e-09
+        }
+      },
+      "gemma-4-31b vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 43,
+          "c": 59,
+          "p": 0.13709880575603417
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 43,
+          "c": 59,
+          "p": 0.13709880575603417
+        }
+      },
+      "glm-5.3-flash vs gpt-5.6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 21,
+          "c": 22,
+          "p": 1.0
+        },
+        "both_answered": {
+          "n": 994,
+          "b": 21,
+          "c": 21,
+          "p": 1.0
+        }
+      },
+      "glm-5.3-flash vs gpt-6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 21,
+          "c": 33,
+          "p": 0.13367423536410528
+        },
+        "both_answered": {
+          "n": 994,
+          "b": 21,
+          "c": 31,
+          "p": 0.21160856876151612
+        }
+      },
+      "glm-5.3-flash vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 41,
+          "c": 33,
+          "p": 0.4159851975073048
+        },
+        "both_answered": {
+          "n": 993,
+          "b": 41,
+          "c": 32,
+          "p": 0.3491818381705883
+        }
+      },
+      "glm-5.3-flash vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 19,
+          "c": 42,
+          "p": 0.004444019471066868
+        },
+        "both_answered": {
+          "n": 994,
+          "b": 19,
+          "c": 42,
+          "p": 0.004444019471066868
+        }
+      },
+      "glm-5.3-flash vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 54,
+          "c": 36,
+          "p": 0.07254953219246181
+        },
+        "both_answered": {
+          "n": 985,
+          "b": 54,
+          "c": 35,
+          "p": 0.05577832765373429
+        }
+      },
+      "gpt-5.6-luna vs gpt-6-luna": {
+        "primary": {
+          "n": 1000,
+          "b": 16,
+          "c": 27,
+          "p": 0.12628947438543037
+        },
+        "both_answered": {
+          "n": 1000,
+          "b": 16,
+          "c": 27,
+          "p": 0.12628947438543037
+        }
+      },
+      "gpt-5.6-luna vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 37,
+          "c": 28,
+          "p": 0.3210841356849956
+        },
+        "both_answered": {
+          "n": 999,
+          "b": 37,
+          "c": 28,
+          "p": 0.3210841356849956
+        }
+      },
+      "gpt-5.6-luna vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 16,
+          "c": 38,
+          "p": 0.003838265880326097
+        },
+        "both_answered": {
+          "n": 1000,
+          "b": 16,
+          "c": 38,
+          "p": 0.003838265880326097
+        }
+      },
+      "gpt-5.6-luna vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 55,
+          "c": 36,
+          "p": 0.05857352841018888
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 54,
+          "c": 36,
+          "p": 0.07254953219246181
+        }
+      },
+      "gpt-6-luna vs qwen3.8-27b": {
+        "primary": {
+          "n": 1000,
+          "b": 44,
+          "c": 24,
+          "p": 0.02052693371370707
+        },
+        "both_answered": {
+          "n": 999,
+          "b": 44,
+          "c": 24,
+          "p": 0.02052693371370707
+        }
+      },
+      "gpt-6-luna vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 20,
+          "c": 31,
+          "p": 0.16077960181198847
+        },
+        "both_answered": {
+          "n": 1000,
+          "b": 20,
+          "c": 31,
+          "p": 0.16077960181198847
+        }
+      },
+      "gpt-6-luna vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 59,
+          "c": 29,
+          "p": 0.001824028645627199
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 58,
+          "c": 29,
+          "p": 0.0024794197938160733
+        }
+      },
+      "qwen3.8-27b vs qwen3.8-flash-next": {
+        "primary": {
+          "n": 1000,
+          "b": 21,
+          "c": 52,
+          "p": 0.0003713401159383162
+        },
+        "both_answered": {
+          "n": 999,
+          "b": 21,
+          "c": 52,
+          "p": 0.0003713401159383162
+        }
+      },
+      "qwen3.8-27b vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 47,
+          "c": 37,
+          "p": 0.32613417119198296
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 46,
+          "c": 37,
+          "p": 0.379999396411918
+        }
+      },
+      "qwen3.8-flash-next vs solar-pro4": {
+        "primary": {
+          "n": 1000,
+          "b": 65,
+          "c": 24,
+          "p": 1.611384920056498e-05
+        },
+        "both_answered": {
+          "n": 991,
+          "b": 64,
+          "c": 24,
+          "p": 2.3726590787439643e-05
+        }
+      }
+    }
+  },
+  "baselines": {
+    "WMDP-cyber": {
+      "majority_label": "A",
+      "majority_accuracy": 26.81
+    },
+    "CTI-MCQ": {
+      "majority_label": "C",
+      "majority_accuracy": 37.12
+    },
+    "CTI-RCM": {
+      "majority_label": "CWE-79",
+      "majority_accuracy": 22.9
+    }
+  },
+  "reasoning_off_vs_on": {
+    "WMDP-cyber": {
+      "solar-pro4": {
+        "n": 996,
+        "acc_off": 72.59,
+        "acc_on": 77.11,
+        "b": 48,
+        "c": 93,
+        "p": 0.00018818083935730328,
+        "truncated_on": 5
+      },
+      "gpt-5.6-luna": {
+        "n": 996,
+        "acc_off": 73.9,
+        "acc_on": 83.84,
+        "b": 33,
+        "c": 132,
+        "p": 3.1645459188923214e-15,
+        "truncated_on": 0
+      },
+      "gpt-6-luna": {
+        "n": 996,
+        "acc_off": 73.8,
+        "acc_on": 81.63,
+        "b": 42,
+        "c": 120,
+        "p": 6.797926739267764e-10,
+        "truncated_on": 0
+      },
+      "deepseek-v4.1-flash": {
+        "n": 996,
+        "acc_off": 80.02,
+        "acc_on": 84.94,
+        "b": 42,
+        "c": 91,
+        "p": 2.5896429596984333e-05,
+        "truncated_on": 14
+      },
+      "gemma-4-12b": {
+        "n": 996,
+        "acc_off": 71.79,
+        "acc_on": 73.09,
+        "b": 68,
+        "c": 81,
+        "p": 0.32558038049943583,
+        "truncated_on": 33
+      },
+      "gemma-4-26b-a4b": {
+        "n": 996,
+        "acc_off": 76.1,
+        "acc_on": 78.82,
+        "b": 41,
+        "c": 68,
+        "p": 0.01240363724333,
+        "truncated_on": 11
+      },
+      "gemma-4-31b": {
+        "n": 996,
+        "acc_off": 78.41,
+        "acc_on": 81.02,
+        "b": 33,
+        "c": 59,
+        "p": 0.008780930806975222,
+        "truncated_on": 0
+      },
+      "qwen3.8-27b": {
+        "n": 996,
+        "acc_off": 75.6,
+        "acc_on": 77.81,
+        "b": 73,
+        "c": 95,
+        "p": 0.10491191481478204,
+        "truncated_on": 16
+      },
+      "qwen3.8-flash-next": {
+        "n": 996,
+        "acc_off": 78.41,
+        "acc_on": 80.52,
+        "b": 63,
+        "c": 84,
+        "p": 0.09870072731432866,
+        "truncated_on": 24
+      }
+    },
+    "CTI-MCQ": {
+      "solar-pro4": {
+        "n": 2500,
+        "acc_off": 72.88,
+        "acc_on": 75.96,
+        "b": 152,
+        "c": 229,
+        "p": 9.390114951118694e-05,
+        "truncated_on": 33
+      },
+      "gpt-5.6-luna": {
+        "n": 2500,
+        "acc_off": 75.48,
+        "acc_on": 80.2,
+        "b": 92,
+        "c": 210,
+        "p": 9.118077671005452e-12,
+        "truncated_on": 0
+      },
+      "gpt-6-luna": {
+        "n": 2500,
+        "acc_off": 74.84,
+        "acc_on": 81.0,
+        "b": 96,
+        "c": 250,
+        "p": 5.873548556032193e-17,
+        "truncated_on": 0
+      },
+      "deepseek-v4.1-flash": {
+        "n": 2500,
+        "acc_off": 79.28,
+        "acc_on": 79.56,
+        "b": 166,
+        "c": 173,
+        "p": 0.7445731616644513,
+        "truncated_on": 79
+      },
+      "gemma-4-12b": {
+        "n": 2500,
+        "acc_off": 69.28,
+        "acc_on": 69.08,
+        "b": 213,
+        "c": 208,
+        "p": 0.8454627646602131,
+        "truncated_on": 12
+      },
+      "gemma-4-26b-a4b": {
+        "n": 2500,
+        "acc_off": 72.4,
+        "acc_on": 73.88,
+        "b": 121,
+        "c": 158,
+        "p": 0.03095720839640105,
+        "truncated_on": 2
+      },
+      "gemma-4-31b": {
+        "n": 2500,
+        "acc_off": 74.76,
+        "acc_on": 74.52,
+        "b": 124,
+        "c": 118,
+        "p": 0.7479737604627914,
+        "truncated_on": 0
+      },
+      "qwen3.8-27b": {
+        "n": 2500,
+        "acc_off": 71.72,
+        "acc_on": 71.96,
+        "b": 220,
+        "c": 226,
+        "p": 0.8128779267457623,
+        "truncated_on": 39
+      },
+      "qwen3.8-flash-next": {
+        "n": 2500,
+        "acc_off": 74.52,
+        "acc_on": 77.6,
+        "b": 152,
+        "c": 229,
+        "p": 9.390114951118694e-05,
+        "truncated_on": 30
+      }
+    },
+    "CTI-RCM": {
+      "solar-pro4": {
+        "n": 1000,
+        "acc_off": 70.1,
+        "acc_on": 72.1,
+        "b": 30,
+        "c": 50,
+        "p": 0.03299261842647618,
+        "truncated_on": 9
+      },
+      "gpt-5.6-luna": {
+        "n": 1000,
+        "acc_off": 74.1,
+        "acc_on": 74.0,
+        "b": 24,
+        "c": 23,
+        "p": 1.0,
+        "truncated_on": 0
+      },
+      "gpt-6-luna": {
+        "n": 1000,
+        "acc_off": 73.8,
+        "acc_on": 75.1,
+        "b": 17,
+        "c": 30,
+        "p": 0.07894069368148848,
+        "truncated_on": 0
+      },
+      "deepseek-v4.1-flash": {
+        "n": 1000,
+        "acc_off": 76.5,
+        "acc_on": 76.3,
+        "b": 37,
+        "c": 35,
+        "p": 0.9062943247030809,
+        "truncated_on": 9
+      },
+      "gemma-4-12b": {
+        "n": 1000,
+        "acc_off": 55.9,
+        "acc_on": 55.7,
+        "b": 86,
+        "c": 84,
+        "p": 0.9388949735923949,
+        "truncated_on": 14
+      },
+      "gemma-4-26b-a4b": {
+        "n": 1000,
+        "acc_off": 67.3,
+        "acc_on": 69.9,
+        "b": 27,
+        "c": 53,
+        "p": 0.004868154149559423,
+        "truncated_on": 3
+      },
+      "gemma-4-31b": {
+        "n": 1000,
+        "acc_off": 70.1,
+        "acc_on": 70.5,
+        "b": 35,
+        "c": 39,
+        "p": 0.72754708348947,
+        "truncated_on": 0
+      },
+      "qwen3.8-27b": {
+        "n": 1000,
+        "acc_off": 70.9,
+        "acc_on": 73.1,
+        "b": 31,
+        "c": 53,
+        "p": 0.02138318993714459,
+        "truncated_on": 1
+      },
+      "qwen3.8-flash-next": {
+        "n": 1000,
+        "acc_off": 75.0,
+        "acc_on": 76.2,
+        "b": 38,
+        "c": 50,
+        "p": 0.24079312453900145,
+        "truncated_on": 0
+      }
+    }
+  },
+  "greedy_vs_card_sampling": {
+    "WMDP-cyber": {
+      "gemma-4-26b-a4b": {
+        "n": 996,
+        "acc_off": 63.05,
+        "acc_on": 78.82,
+        "b": 21,
+        "c": 178,
+        "p": 3.487600547651221e-32,
+        "truncated_on": 11
+      },
+      "gemma-4-31b": {
+        "n": 996,
+        "acc_off": 79.92,
+        "acc_on": 81.02,
+        "b": 17,
+        "c": 28,
+        "p": 0.1351564508456704,
+        "truncated_on": 0
+      },
+      "qwen3.8-27b": {
+        "n": 996,
+        "acc_off": 74.2,
+        "acc_on": 77.81,
+        "b": 30,
+        "c": 66,
+        "p": 0.00030559732759326285,
+        "truncated_on": 16
+      },
+      "qwen3.8-flash-next": {
+        "n": 996,
+        "acc_off": 77.41,
+        "acc_on": 80.52,
+        "b": 24,
+        "c": 55,
+        "p": 0.0006393977673643525,
+        "truncated_on": 24
+      }
+    },
+    "CTI-MCQ": {
+      "gemma-4-26b-a4b": {
+        "n": 2500,
+        "acc_off": 63.8,
+        "acc_on": 73.88,
+        "b": 78,
+        "c": 330,
+        "p": 5.671204315359217e-38,
+        "truncated_on": 2
+      },
+      "gemma-4-31b": {
+        "n": 2500,
+        "acc_off": 73.68,
+        "acc_on": 74.52,
+        "b": 85,
+        "c": 106,
+        "p": 0.14766209721852694,
+        "truncated_on": 0
+      },
+      "qwen3.8-27b": {
+        "n": 2500,
+        "acc_off": 70.16,
+        "acc_on": 71.96,
+        "b": 179,
+        "c": 224,
+        "p": 0.028269457369101365,
+        "truncated_on": 39
+      },
+      "qwen3.8-flash-next": {
+        "n": 2500,
+        "acc_off": 72.12,
+        "acc_on": 77.6,
+        "b": 107,
+        "c": 244,
+        "p": 1.9313369265651862e-13,
+        "truncated_on": 30
+      }
+    },
+    "CTI-RCM": {
+      "gemma-4-26b-a4b": {
+        "n": 1000,
+        "acc_off": 70.0,
+        "acc_on": 69.9,
+        "b": 26,
+        "c": 25,
+        "p": 1.0,
+        "truncated_on": 3
+      },
+      "gemma-4-31b": {
+        "n": 1000,
+        "acc_off": 71.7,
+        "acc_on": 70.5,
+        "b": 32,
+        "c": 20,
+        "p": 0.12634707581392135,
+        "truncated_on": 0
+      },
+      "qwen3.8-27b": {
+        "n": 1000,
+        "acc_off": 71.9,
+        "acc_on": 73.1,
+        "b": 20,
+        "c": 32,
+        "p": 0.12634707581392135,
+        "truncated_on": 1
+      },
+      "qwen3.8-flash-next": {
+        "n": 1000,
+        "acc_off": 76.0,
+        "acc_on": 76.2,
+        "b": 15,
+        "c": 17,
+        "p": 0.860050065908581,
+        "truncated_on": 0
+      }
+    }
+  }
+}

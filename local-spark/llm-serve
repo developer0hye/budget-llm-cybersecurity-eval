@@ -1,0 +1,235 @@
+#!/bin/bash
+# llm-serve — run one vLLM model on DGX Spark behind an OpenAI-compatible API on port 8000.
+#
+#   llm-serve gemma4   Gemma 4 31B IT NVFP4 + draft-model speculative decoding
+#   llm-serve qwen38   Qwen3.8-Flash-Next FP4-Local + MTP speculative decoding
+#   llm-serve gemma26  Gemma 4 26B-A4B NVFP4 (MoE, 4B active) + MTP assistant drafter
+#   llm-serve gemma12  Gemma 4 12B NVFP4 (RedHatAI, preliminary), no speculative decoding
+#   llm-serve qwen27   Qwen3.8-27B NVFP4 (NVIDIA mixed NVFP4/FP8) + built-in MTP head
+#   llm-serve stop | status | logs
+#   SPEC=off llm-serve gemma4|gemma26   same model without speculative decoding (baseline measurement)
+#   SEQS=32 CHUNK=16384 llm-serve gemma26   more concurrent sequences / larger prefill batches (defaults 8 / 8192,
+#                                           the vLLM recipe values) for throughput-bound batch jobs
+#   SEQS=N llm-serve gemma4|qwen38|gemma12|qwen27  max concurrent sequences (defaults 16 / 4 / 8 / 8). Raise it for many
+#                                           short prompts with long outputs (benchmark sweeps), where decode
+#                                           batching helps; long-document prefill does not get faster (see N2SF page §6)
+#
+# Settings are copied from the two community recipes whose published speeds we compare against,
+# so a measurement gap points at the machine, not at a different configuration:
+#   Gemma: github.com/BHCC2025/Gemma-4-31B-IT-DGX-Spark-TP1-TP2 (recipes/tp1.sh, lib/common.sh)
+#          published single-stream decode on one Spark: 24.2 tok/s code / 16.6 tok/s prose
+#   Qwen:  github.com/sojufx/Qwen3.8-Flash-Next-FP4-Local-DGX-Spark-Recipe (start.sh)
+#          published: 66.2 tok/s counting decode (sparkDash), ~41-54 tok/s wall-clock suite
+#   Gemma 26B: recipes.vllm.ai/Google/gemma-4-26B-A4B-it (variant "NVFP4 - NVIDIA", DGX Spark,
+#          spec decoding on). Chosen over faster community builds because it uses only the NVIDIA and
+#          Google checkpoints; the recipe pins eugr/spark-vllm:nightly-20260704 (vLLM 0.24 and generic
+#          nightlies fail on this checkpoint) and passes moe_backend=triton for the drafter.
+# Deviations from the recipes, on purpose:
+#   - bind 0.0.0.0:8000 instead of 127.0.0.1:8001 so internal clients can call it; ufw limits
+#     port 8000 to 192.168.0.0/16. --network host (not -p) keeps the port under ufw, because
+#     Docker's -p publishing edits iptables directly and bypasses ufw.
+#   - --restart unless-stopped so the last started model comes back after a reboot.
+#
+# Only one model at a time: 121 GiB is shared by CPU and GPU and the Qwen weights alone are ~96 GiB.
+set -euo pipefail
+
+PORT=8000
+HF="$HOME/.cache/huggingface"
+RUNTIME="$HOME/.cache/llm-serving"     # compile/autotune caches, kept across restarts
+
+GEMMA_IMAGE="vllm/vllm-openai:v0.29.0@sha256:c2914767605584b6d8f45686b82de173ecc99e781897aa3d0a66dacd72c51ae1"
+GEMMA_SNAP="hub/models--nvidia--Gemma-4-31B-IT-NVFP4/snapshots/4135a98a9b728a548947683219633b25682223ac"
+DRAFT_SNAP="hub/models--google--gemma-4-31B-it-assistant/snapshots/627c5ec1458b9086b841a91e0512fd31fd2fbbf1"
+QWEN_IMAGE="eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595"
+QWEN_SNAP="hub/models--nvidia--Qwen3.8-Flash-Next-FP4-Local/snapshots/b9ce18a6887e18c089fdea8509a33e63429a3300"
+G26_IMAGE="eugr/spark-vllm:nightly-20260704@sha256:761a1542d89cccdf770580563057c0bc686c0b495fa309d7eaa5c9676328ff7f"
+G26_SNAP="hub/models--nvidia--Gemma-4-26B-A4B-NVFP4/snapshots/a19cfe00be84568a6867111c9a68c9c44fdcffe6"
+G26_DRAFT_SNAP="hub/models--google--gemma-4-26B-A4B-it-assistant/snapshots/6e5aaaf4c42b98394530b8fda2e95cadd65c151c"
+# Gemma 4 12B: NVIDIA publishes no NVFP4 build for 12B, so this uses Red Hat AI's llm-compressor NVFP4
+# (W4A4, GPTQ; the card marks it preliminary). Its architecture Gemma4UnifiedForConditionalGeneration is
+# registered in vLLM 0.29.0. The 12B assistant drafter (Gemma4UnifiedAssistantForCausalLM) is registered
+# in neither local image, so no speculative decoding here.
+G12_IMAGE="$GEMMA_IMAGE"
+G12_SNAP="hub/models--RedHatAI--gemma-4-12B-it-NVFP4/snapshots/8965ad1c93dccb43e05e7882d98f2d32c0dd434d"
+# Qwen3.8-27B: dense 27B hybrid (Gated DeltaNet + gated attention), NVIDIA modelopt mixed NVFP4 (MLP, lm_head)
+# + FP8 (attention). Revision 482ca0f is the one the 2026-10-08 NVIDIA-forum single-Spark study used
+# (vLLM MTP3 21.9 tok/s, MTP5 24.8 tok/s). Speculative decoding uses the checkpoint's own MTP head, no drafter.
+Q27_IMAGE="$GEMMA_IMAGE"
+Q27_SNAP="hub/models--nvidia--Qwen3.8-27B-NVFP4/snapshots/482ca0f3832238542f8f5295dde86b5f22711d80"
+
+need() { [ -f "$HF/$1/config.json" ] || { echo "MISSING $HF/$1 — run ~/llm-serving/prefetch.sh"; exit 3; }; }
+
+stop_all() {
+  local ids; ids=$(docker ps -aq --filter "name=^llm-")
+  [ -z "$ids" ] && return 0
+  echo "Stopping: $(docker ps -a --filter "name=^llm-" --format '{{.Names}}' | tr '\n' ' ')"
+  docker rm -f $ids >/dev/null
+}
+
+# Page cache (e.g. from the weight download) counts against what the GPU can allocate on unified
+# memory, and vLLM can refuse to start. Dropping it needs root; without passwordless sudo, print a hint.
+drop_caches() {
+  sync
+  echo 3 | sudo -n tee /proc/sys/vm/drop_caches >/dev/null 2>&1 \
+    || echo "Hint: if startup fails with insufficient memory, run: sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'"
+}
+
+start_gemma4() {
+  need "$GEMMA_SNAP"; need "$DRAFT_SNAP"
+  # SPEC=off drops the draft model: plain decoding, used only to measure the recipe's 6.8 tok/s baseline.
+  local spec=(--speculative-config "{\"model\":\"/root/.cache/huggingface/$DRAFT_SNAP\",\"num_speculative_tokens\":${DRAFT_TOKENS:-4}}")
+  [ "${SPEC:-draft}" = off ] && spec=()
+  stop_all; drop_caches; mkdir -p "$RUNTIME/gemma4"
+  docker run -d --name llm-gemma4-31b --restart unless-stopped \
+    --gpus all --network host --ipc host --shm-size 32g \
+    --ulimit memlock=-1:-1 --cap-add IPC_LOCK --ulimit nofile=1048576:1048576 \
+    -v "$RUNTIME/gemma4:/root/.cache" -v "$HF:/root/.cache/huggingface:ro" \
+    -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e VLLM_ENGINE_READY_TIMEOUT_S=3600 \
+    -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True -e CUTE_DSL_ARCH=sm_121a \
+    -e TORCH_CUDA_ARCH_LIST=12.1a -e FLASHINFER_CUDA_ARCH_LIST=12.1a -e FLASHINFER_DISABLE_VERSION_CHECK=1 \
+    -e VLLM_USE_DEEP_GEMM=0 \
+    "$GEMMA_IMAGE" \
+    "/root/.cache/huggingface/$GEMMA_SNAP" \
+    --served-model-name gemma-4-31b-it \
+    --host 0.0.0.0 --port "$PORT" --dtype auto --quantization modelopt --kv-cache-dtype fp8 \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-16}" --gpu-memory-utilization "${GPU_UTIL:-0.80}" --max-num-batched-tokens 8192 \
+    --enable-chunked-prefill --enable-prefix-caching \
+    --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
+    --tensor-parallel-size 1 "${spec[@]}" \
+    >/dev/null
+}
+
+start_qwen38() {
+  need "$QWEN_SNAP"
+  stop_all; drop_caches; mkdir -p "$RUNTIME/qwen38"/{vllm,flashinfer,triton,b12x}
+  docker run -d --name llm-qwen38-flash --init --restart unless-stopped \
+    --gpus all --ipc host --network host --shm-size=16g \
+    --ulimit memlock=-1 --ulimit stack=67108864 \
+    --security-opt seccomp=unconfined --security-opt apparmor=unconfined \
+    -v "$HF:/root/.cache/huggingface" \
+    -v "$RUNTIME/qwen38/vllm:/root/.cache/vllm" \
+    -v "$RUNTIME/qwen38/flashinfer:/root/.cache/flashinfer" \
+    -v "$RUNTIME/qwen38/triton:/root/.triton" \
+    -v "$RUNTIME/qwen38/b12x:/root/.cache/b12x" \
+    -e HF_HUB_OFFLINE=1 -e VLLM_PLE_TABLE_MEMORY=disk -e B12X_DISK_BACKEND=io_uring -e CUTE_DSL_ARCH=sm_121a \
+    -e SAFETENSORS_FAST_GPU=1 -e VLLM_WORKER_MULTIPROC_METHOD=spawn -e VLLM_SSM_CONV_STATE_LAYOUT=DS \
+    -e VLLM_USE_AOT_COMPILE=1 -e VLLM_USE_MEGA_AOT_ARTIFACT=1 -e VLLM_USE_V2_MODEL_RUNNER=1 \
+    -e B12X_POLICY_MODE=auto -e VLLM_MXFP8_LM_HEAD=1 -e VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=w13 \
+    -e VLLM_B12X_MOE_FP4_FORCE_A16=1 -e B12X_W4A16_A4_PREFILL=1 \
+    --entrypoint /usr/local/bin/vllm "$QWEN_IMAGE" \
+    serve "/root/.cache/huggingface/$QWEN_SNAP" \
+    --host 0.0.0.0 --port "$PORT" --served-model-name qwen38-flash-next-fp4-local \
+    --tensor-parallel-size 1 --pipeline-parallel-size 1 \
+    --mamba-cache-mode align --enable-prefix-caching --enable-chunked-prefill \
+    --dtype bfloat16 --kv-cache-dtype fp8 --quantization modelopt_mixed \
+    --block-size 16 --load-format b12x \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-4}" --max-num-batched-tokens 4096 \
+    --speculative-config '{"method":"mtp","num_speculative_tokens":3,"rejection_sample_method":"standard"}' \
+    --gdn-decode-kernel b12x --linear-backend b12x --moe-backend b12x \
+    --no-enable-flashinfer-autotune --mm-encoder-tp-mode data \
+    --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice \
+    --default-chat-template-kwargs '{"enable_thinking":false}' \
+    --compilation-config '{"pass_config":{"fuse_act_quant":true}}' \
+    --gpu-memory-utilization "${GPU_UTIL:-0.8}" \
+    >/dev/null
+}
+
+start_gemma26() {
+  need "$G26_SNAP"; need "$G26_DRAFT_SNAP"
+  local spec=(--speculative-config "{\"method\":\"mtp\",\"model\":\"/root/.cache/huggingface/$G26_DRAFT_SNAP\",\"num_speculative_tokens\":${DRAFT_TOKENS:-4},\"moe_backend\":\"triton\"}")
+  [ "${SPEC:-draft}" = off ] && spec=()
+  stop_all; drop_caches
+  # --privileged is kept from the recipe (its fastsafetensors loader path was tested that way).
+  docker run -d --name llm-gemma4-26b --restart unless-stopped \
+    --gpus all --privileged --ipc host --network host \
+    -v "$HF:/root/.cache/huggingface" \
+    -e HF_HUB_OFFLINE=1 -e VLLM_USE_V2_MODEL_RUNNER=1 \
+    "$G26_IMAGE" \
+    vllm serve "/root/.cache/huggingface/$G26_SNAP" \
+    --served-model-name gemma-4-26b-a4b-it \
+    --host 0.0.0.0 --port "$PORT" \
+    --gpu-memory-utilization "${GPU_UTIL:-0.8}" --max-model-len 262144 \
+    --max-num-seqs "${SEQS:-8}" --max-num-batched-tokens "${CHUNK:-8192}" \
+    --enable-prefix-caching --load-format fastsafetensors --tensor-parallel-size 1 \
+    --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
+    "${spec[@]}" \
+    >/dev/null
+}
+
+start_gemma12() {
+  need "$G12_SNAP"
+  stop_all; drop_caches; mkdir -p "$RUNTIME/gemma12"
+  docker run -d --name llm-gemma4-12b --restart unless-stopped \
+    --gpus all --network host --ipc host --shm-size 32g \
+    --ulimit memlock=-1:-1 --cap-add IPC_LOCK --ulimit nofile=1048576:1048576 \
+    -v "$RUNTIME/gemma12:/root/.cache" -v "$HF:/root/.cache/huggingface:ro" \
+    -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e VLLM_ENGINE_READY_TIMEOUT_S=3600 \
+    -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True -e CUTE_DSL_ARCH=sm_121a \
+    -e TORCH_CUDA_ARCH_LIST=12.1a -e FLASHINFER_CUDA_ARCH_LIST=12.1a -e FLASHINFER_DISABLE_VERSION_CHECK=1 \
+    -e VLLM_USE_DEEP_GEMM=0 \
+    "$G12_IMAGE" \
+    "/root/.cache/huggingface/$G12_SNAP" \
+    --served-model-name gemma-4-12b-it \
+    --host 0.0.0.0 --port "$PORT" --dtype auto --kv-cache-dtype fp8 \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-8}" --gpu-memory-utilization "${GPU_UTIL:-0.80}" --max-num-batched-tokens 8192 \
+    --enable-chunked-prefill --enable-prefix-caching \
+    --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
+    --tensor-parallel-size 1 \
+    >/dev/null
+}
+
+start_qwen27() {
+  need "$Q27_SNAP"
+  local spec=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${DRAFT_TOKENS:-3}}")
+  [ "${SPEC:-mtp}" = off ] && spec=()
+  stop_all; drop_caches; mkdir -p "$RUNTIME/qwen27"
+  # Thinking is off unless a request enables it, same as qwen38, so the N2SF harness sees the same
+  # server-side default for both Qwen models.
+  docker run -d --name llm-qwen38-27b --restart unless-stopped \
+    --gpus all --network host --ipc host --shm-size 32g \
+    --ulimit memlock=-1:-1 --cap-add IPC_LOCK --ulimit nofile=1048576:1048576 \
+    -v "$RUNTIME/qwen27:/root/.cache" -v "$HF:/root/.cache/huggingface:ro" \
+    -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e VLLM_ENGINE_READY_TIMEOUT_S=3600 \
+    -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True -e CUTE_DSL_ARCH=sm_121a \
+    -e TORCH_CUDA_ARCH_LIST=12.1a -e FLASHINFER_CUDA_ARCH_LIST=12.1a -e FLASHINFER_DISABLE_VERSION_CHECK=1 \
+    -e VLLM_USE_DEEP_GEMM=0 \
+    "$Q27_IMAGE" \
+    "/root/.cache/huggingface/$Q27_SNAP" \
+    --served-model-name qwen38-27b \
+    --host 0.0.0.0 --port "$PORT" --dtype auto --kv-cache-dtype fp8 \
+    --max-model-len 262144 --max-num-seqs "${SEQS:-8}" --gpu-memory-utilization "${GPU_UTIL:-0.80}" --max-num-batched-tokens 8192 \
+    --enable-chunked-prefill --enable-prefix-caching --mamba-cache-mode align \
+    --reasoning-parser qwen3 --enable-auto-tool-choice --tool-call-parser qwen3_coder \
+    --default-chat-template-kwargs '{"enable_thinking":false}' \
+    --tensor-parallel-size 1 "${spec[@]}" \
+    >/dev/null
+}
+
+wait_ready() {
+  local name; name=$(docker ps --filter "name=^llm-" --format '{{.Names}}' | head -1)
+  [ -z "$name" ] && { echo "FAILED: no llm-* container running"; exit 1; }
+  echo "Waiting for $name on :$PORT (first start compiles kernels; Qwen took ~14 min in its recipe)..."
+  local t0=$SECONDS
+  until curl -sf "http://localhost:$PORT/health" >/dev/null; do
+    docker ps -q --filter "name=^$name$" | grep -q . || { echo "FAILED: $name exited"; docker logs --tail 40 "$name"; exit 1; }
+    [ $((SECONDS - t0)) -gt 3600 ] && { echo "FAILED: not ready after 3600s"; docker logs --tail 40 "$name"; exit 1; }
+    sleep 10
+  done
+  echo "READY after $((SECONDS - t0))s"
+  curl -s "http://localhost:$PORT/v1/models" | python3 -c 'import sys,json; print("serving:", [m["id"] for m in json.load(sys.stdin)["data"]])'
+}
+
+case "${1:-}" in
+  gemma4) start_gemma4; wait_ready ;;
+  qwen38) start_qwen38; wait_ready ;;
+  gemma26) start_gemma26; wait_ready ;;
+  gemma12) start_gemma12; wait_ready ;;
+  qwen27) start_qwen27; wait_ready ;;
+  stop)   stop_all ;;
+  status) docker ps -a --filter "name=^llm-" --format 'table {{.Names}}\t{{.Status}}'
+          curl -sf "http://localhost:$PORT/v1/models" 2>/dev/null \
+            | python3 -c 'import sys,json; print("serving:", [m["id"] for m in json.load(sys.stdin)["data"]])' \
+            || echo "serving: none" ;;
+  logs)   docker logs -f --tail 100 "$(docker ps -a --filter "name=^llm-" --format '{{.Names}}' | head -1)" ;;
+  *) echo "usage: llm-serve {gemma4|qwen38|gemma26|gemma12|qwen27|stop|status|logs}"; exit 2 ;;
+esac

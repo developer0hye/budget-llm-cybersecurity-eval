@@ -1,0 +1,128 @@
+[
+  {
+    "model": "qwen3.8-27b",
+    "reasoning": "off",
+    "host": "spark-1",
+    "wall_s": 7282,
+    "server_seqs": 32,
+    "client_concurrency": 64,
+    "log": "wall-clock line printed by run_local.py (knowledge/spark_logs/qwen3.8-27b_off.log on the device)"
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "reasoning": "off",
+    "host": "spark-1",
+    "wall_s": 1939,
+    "server_seqs": 32,
+    "client_concurrency": 64,
+    "log": "wall-clock line printed by run_local.py"
+  },
+  {
+    "model": "gemma-4-12b",
+    "reasoning": "off",
+    "host": "spark-1 then spark-2",
+    "wall_s": 4736,
+    "server_seqs": "8 (first 1,944 rows) / 32",
+    "client_concurrency": "16 / 64",
+    "log": "two segments: spark-1 rows 1-1,944, stopped by hand to switch the server to Qwen3.8-27B, about 2,940 s (last progress line: 1,907 rows at 49.0 min); spark-2 resumed the remaining 2,552 rows in 1,796 s (wall-clock line). The first 1,944 rows are byte-identical in both copies."
+  },
+  {
+    "model": "qwen3.8-flash-next",
+    "reasoning": "off",
+    "host": "spark-1",
+    "wall_s": 11776,
+    "server_seqs": 16,
+    "client_concurrency": 64,
+    "log": "wall-clock line printed by run_local.py; KV-cache bound (96 GiB weights): 15 running / 48 waiting at GPU_UTIL 0.8"
+  },
+  {
+    "model": "gemma-4-31b",
+    "reasoning": "off",
+    "host": "spark-2",
+    "wall_s": 1967,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "wall-clock line printed by run_local.py"
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "reasoning": "on (greedy)",
+    "host": "spark-2",
+    "wall_s": 14400,
+    "server_seqs": "32 / 64 / 128 / 256 / 128",
+    "client_concurrency": "64-384",
+    "log": "22:23-02:23 including four server restarts for the concurrency A/B (each discarded in-flight generations, which were re-sent); the last segment alone took 9,613 s"
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "reasoning": "on (card sampling)",
+    "host": "spark-2",
+    "wall_s": 6660,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "wall-clock line printed by run_local.py"
+  },
+  {
+    "model": "qwen3.8-flash-next",
+    "reasoning": "on (greedy)",
+    "host": "spark-1",
+    "wall_s": 44753,
+    "server_seqs": 32,
+    "client_concurrency": 192,
+    "log": "wall-clock lines printed by run_local.py: 44,499 s first pass (1 transport error) + 254 s second pass for that item; GPU_UTIL 0.9"
+  },
+  {
+    "model": "qwen3.8-27b",
+    "reasoning": "on (greedy)",
+    "host": "spark-2",
+    "wall_s": 41994,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "wall-clock lines printed by run_local.py: 33,090 s first pass + 1,783 s second pass + 7,121 s third pass (the last 2 items, sharing the server with the card-sampling run)"
+  },
+  {
+    "model": "qwen3.8-27b",
+    "reasoning": "on (card sampling)",
+    "host": "spark-2",
+    "wall_s": 49637,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "two passes: about 48,166 s first pass (timestamp delta; run_local wall-clock not retained by the queue) + 1,471 s second pass for one re-sent item; the qwen27 server was shared with the greedy run's third pass (its last 2 items), which slowed the first pass"
+  },
+  {
+    "model": "qwen3.8-flash-next",
+    "reasoning": "on (card sampling)",
+    "host": "spark-1",
+    "wall_s": 83015,
+    "server_seqs": 32,
+    "client_concurrency": 192,
+    "log": "two passes: about 78,009 s first pass (timestamp delta; run_local wall-clock not retained by the queue) + 5,006 s second pass; KV-cache-bound server (SEQS 32, GPU_UTIL 0.9, 96 GiB weights), and card sampling (temperature 1.0) generates longer traces than the greedy run, so the wall is nearly double the greedy 12.43 h"
+  },
+  {
+    "model": "gemma-4-31b",
+    "reasoning": "on (card sampling)",
+    "host": "spark-1",
+    "wall_s": 8910,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "single pass, no re-sends (0 transport errors, 0 truncations); ran on the gemma4 (31B) server reused from the queue after Flash-Next, reprioritized ahead of the greedy reasoning-on run"
+  },
+  {
+    "model": "gemma-4-12b",
+    "reasoning": "on (card sampling)",
+    "host": "spark-2",
+    "wall_s": 14166,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "single pass (0 transport errors); 59 truncations total (33 WMDP-cyber, 12 CTI-MCQ, 14 CTI-RCM); ran on the gemma12 server reused from the queue, reprioritized ahead of the greedy reasoning-on run"
+  },
+  {
+    "model": "gemma-4-31b",
+    "reasoning": "on (greedy)",
+    "host": "spark-1",
+    "wall_s": 7047,
+    "server_seqs": 128,
+    "client_concurrency": 192,
+    "log": "resumed after the card-sampling run from the 1,269 rows left by the pre-reprioritization attempt; this segment 7,047 s. Only 37 truncations total (7 WMDP-cyber, 29 CTI-MCQ, 1 CTI-RCM, ~0.8%), so unlike Gemma 4 26B-A4B and 12B the 31B does not loop under greedy thinking"
+  }
+]
